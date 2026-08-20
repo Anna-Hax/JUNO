@@ -53,6 +53,8 @@ uv run ruff check src tests
 
 See [personal-knowledge-graph-prd.md](personal-knowledge-graph-prd.md) and GitHub milestones M0→M5 (v1.0 foundation → v2.0 polish).
 
+**Session docs** (what was built, GitHub setup, codebase map, next work): [docs/sessions/](docs/sessions/).
+
 ## Windows keep-alive
 
 Create a Startup-folder shortcut to:

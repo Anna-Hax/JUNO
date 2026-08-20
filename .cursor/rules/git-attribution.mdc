@@ -1,0 +1,17 @@
+---
+description: Commits and GitHub pushes must be attributed only to the repo owner — never Cursor
+alwaysApply: true
+---
+
+# Git authorship (no Cursor collaborator)
+
+When the user asks you to **commit** or **push**:
+
+- Author and committer must be the user’s git identity only (`Anna-Hax` / their configured `user.name` + `user.email`). Never set author/committer to Cursor, `cursoragent@cursor.com`, or any Cursor identity.
+- Do **not** add any of these to commit messages, PR bodies, or `--trailer` / `--footer` flags:
+  - `Co-authored-by: Cursor`
+  - `Co-authored-by: ... <cursoragent@cursor.com>`
+  - `Made-with: Cursor` / `Made with Cursor`
+- Do not invite, add, or rely on Cursor as a GitHub collaborator or co-author.
+- If the environment injects a Cursor trailer anyway, strip it before finishing the commit (amend only when amend rules allow; otherwise fix in a follow-up commit message rewrite the user requests).
+- Prefer: Cursor Settings → **Git & PRs** → **Attribution** off, and `~/.cursor/cli-config.json` → `attribution.attributeCommitsToAgent` / `attributePRsToAgent` = `false`.
