@@ -1,0 +1,27 @@
+name: PR Checks
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  pr-hygiene:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Conventional title
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          if ! echo "$TITLE" | grep -Eq '^(feat|fix|chore|docs|test|ci|refactor)(\(.+\))?: .+'; then
+            echo "PR title must look like: feat(core): add write queue"
+            exit 1
+          fi
+
+      - name: Require Closes or Refs
+        env:
+          BODY: ${{ github.event.pull_request.body }}
+        run: |
+          if ! echo "$BODY" | grep -Eqi '(Closes|Fixes|Refs) #[0-9]+'; then
+            echo "PR body must include Closes #N or Refs #N"
+            exit 1
+          fi

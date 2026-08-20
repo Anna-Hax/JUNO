@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Juno Capture",
+  "version": "0.0.1",
+  "description": "Stub — Phase 2 browser capture for Juno (not active yet).",
+  "permissions": ["storage", "alarms"],
+  "host_permissions": ["http://127.0.0.1/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Juno (coming soon)"
+  }
+}

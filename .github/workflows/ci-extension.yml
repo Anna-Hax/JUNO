@@ -1,0 +1,23 @@
+name: CI Extension
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/extension/**"
+      - ".github/workflows/ci-extension.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/extension/**"
+      - ".github/workflows/ci-extension.yml"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate manifest JSON
+        run: python -m json.tool apps/extension/manifest.json > /dev/null
+      - name: Require background script
+        run: test -f apps/extension/background.js

@@ -1,0 +1,41 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.venv/
+venv/
+env/
+
+# Project data (local-first)
+data/
+inbox/*
+!inbox/.gitkeep
+.env
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Build / dist
+dist/
+build/
+*.egg-info/
+apps/extension/node_modules/
+apps/extension/dist/
+
+# HuggingFace / models cache (local)
+.cache/

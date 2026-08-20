@@ -1,0 +1,26 @@
+name: Project Automation
+
+on:
+  issues:
+    types: [opened, reopened]
+  pull_request:
+    types: [opened]
+
+jobs:
+  add-to-project:
+    runs-on: ubuntu-latest
+    # Requires repo secret PROJECT_PAT with project scope, and PROJECT_NUMBER.
+    # Skips gracefully if secrets are missing.
+    steps:
+      - name: Add item to project
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_PAT }}
+          PROJECT_NUMBER: ${{ secrets.PROJECT_NUMBER }}
+          OWNER: Anna-Hax
+          ITEM_URL: ${{ github.event.issue.html_url || github.event.pull_request.html_url }}
+        run: |
+          if [ -z "$GH_TOKEN" ] || [ -z "$PROJECT_NUMBER" ]; then
+            echo "PROJECT_PAT / PROJECT_NUMBER not set — skip board sync"
+            exit 0
+          fi
+          gh project item-add "$PROJECT_NUMBER" --owner "$OWNER" --url "$ITEM_URL"
