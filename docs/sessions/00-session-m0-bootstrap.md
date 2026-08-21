@@ -140,6 +140,7 @@ uv run ruff check src tests
 | [01-github-setup.md](01-github-setup.md)                 | Labels, milestones, issues, board, CI (how + current state) |
 | [02-codebase-map.md](02-codebase-map.md)                 | Map of packages/modules and what each does                  |
 | [03-next-work.md](03-next-work.md)                       | Ordered next tasks (open issues / M1 path)                  |
+| [04-session-chroma-client.md](04-session-chroma-client.md) | M1 #13 Chroma persistent client                             |
 
 
-Update these files as later sessions land work, or add `04-session-….md` for new execute sessions.
+Update these files as later sessions land work, or add `05-session-….md` for new execute sessions.

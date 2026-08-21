@@ -1,6 +1,6 @@
-# Codebase map (as of M0 / early M1 scaffold)
+# Codebase map (as of M0 / early M1)
 
-**Last updated:** 2026-08-20
+**Last updated:** 2026-08-21
 
 ---
 
@@ -33,6 +33,7 @@ JUNO/
 | API | `api/__init__.py` | FastAPI routes + token + loopback middleware |
 | Bot | `bot/handlers.py` | Telegram commands / text stub |
 | Graph DB | `graph/db.py` | Engine, WAL, write queue |
+| Vectors | `graph/vectors.py` | Persistent Chroma; one collection per embedding model ([ADR-04](../adr/004-chroma-collections.md)) |
 | Models | `models/__init__.py` | SQLAlchemy tables |
 | LLM | `llm/embedder.py`, `llm/chat.py` | Embeddings + chat providers |
 | Ingest | `ingest/` | Placeholder (M1) |
@@ -42,7 +43,7 @@ JUNO/
 
 - `uv run juno serve` → `runtime.main_sync()`
 - `uv run juno db-init` → `Database.create_all()`
-- Tests: `apps/core/tests/test_foundation.py`
+- Tests: `apps/core/tests/test_foundation.py`, `apps/core/tests/test_vectors.py`
 
 ### Dependencies
 
@@ -63,7 +64,7 @@ Optional: `--extra embeddings` for sentence-transformers; `--extra dev` for pyte
 | Path | Contents |
 |------|----------|
 | `data/juno.db` | SQLite graph (after `db-init` / serve) |
-| `data/chroma/` | Planned vector store (not fully wired) |
+| `data/chroma/` | Persistent Chroma collections (one per embedding model) |
 | `inbox/` | Future watched uploads |
 | `.env` | Secrets (never commit) |
 
@@ -77,3 +78,4 @@ Optional: `--extra embeddings` for sentence-transformers; `--extra dev` for pyte
 4. Empty Telegram allowlist ⇒ reject all users (secure default).
 5. API token required even on localhost.
 6. Stub embedder so CI never downloads torch.
+7. Chroma collections are per embedding model; Juno supplies embeddings (no Chroma default ONNX). Blocking Chroma I/O uses `asyncio.to_thread`.
