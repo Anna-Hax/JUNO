@@ -1,6 +1,6 @@
 # Next work (after M0 bootstrap)
 
-**Last updated:** 2026-08-20  
+**Last updated:** 2026-08-22  
 **Track issues on:** https://github.com/Anna-Hax/JUNO/issues
 
 ---
@@ -26,8 +26,8 @@ Prefer one open issue ≈ one PR (`Closes #N`).
 
 | Order | Issue | Work |
 |-------|-------|------|
-| 1 | #13 | Chroma persistent client (collection per embedding model) |
-| 2 | #11 | First Alembic revision (stop relying only on `create_all`) |
+| 1 | #13 | Chroma persistent client — **on `feat/chroma-persistent-client`** (PR / `Closes #13` not opened yet) |
+| 2 | #11 | First Alembic revision — `db-init` / serve run `upgrade head` |
 | 3 | #16 | Ingest pipeline + extractors + inbox watcher |
 | 4 | #14 / #15 | Confirm MiniLM path + LLM health in `/status` |
 | 5 | #17 | Retrieve-only → sourced RAG + confidence |
@@ -36,7 +36,7 @@ Prefer one open issue ≈ one PR (`Closes #N`).
 | 8 | #21 | Harden API (already stubbed) |
 | 9 | #22–#24 | Integration tests, export/wipe, v1.0 gate |
 
-Already partially landed (keep issues open until acceptance fully met): #11 models/`db-init`, #12 write queue, #14 stub embedder, #15 chat adapters, #18 allowlist handlers, #21 basic routes.
+Already partially landed (keep issues open until acceptance fully met): #13 Chroma wrapper (branch, unmerged), #12 write queue, #14 stub embedder, #15 chat adapters, #18 allowlist handlers, #21 basic routes.
 
 ---
 

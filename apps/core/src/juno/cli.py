@@ -12,7 +12,7 @@ def main(argv: list[str] | None = None) -> None:
     sub = parser.add_subparsers(dest="command")
 
     sub.add_parser("serve", help="Start API + Telegram bot (shared event loop)")
-    sub.add_parser("db-init", help="Create SQLite schema")
+    sub.add_parser("db-init", help="Create or upgrade SQLite schema (Alembic)")
     sub.add_parser("version", help="Print version")
 
     args = parser.parse_args(argv)
@@ -52,9 +52,9 @@ async def _db_init() -> None:
 
     settings = get_settings()
     db = Database(settings)
-    await db.create_all()
+    action = await db.migrate()
     await db.dispose()
-    print(f"Initialized database at {settings.sqlite_path}")
+    print(f"Initialized database at {settings.sqlite_path} (alembic {action})")
 
 
 if __name__ == "__main__":
