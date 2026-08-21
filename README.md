@@ -7,7 +7,7 @@ Personal knowledge-graph agent: passively (and manually) capture what you read, 
 ## Architecture (v1)
 
 - **Python core** (`apps/core`): FastAPI on `127.0.0.1` + Telegram long-polling in one shared asyncio event loop ([ADR-01](docs/adr/001-shared-event-loop.md))
-- **SQLite + write queue** for the graph ([ADR-02](docs/adr/002-sqlite-write-queue.md))
+- **SQLite + write queue** for the graph ([ADR-02](docs/adr/002-sqlite-write-queue.md)); **Alembic** for schema changes ([ADR-03](docs/adr/003-alembic.md))
 - **Chroma** for vectors (wired next); **stub embedder** in CI
 - **Browser extension** (`apps/extension`): stub until Phase 2
 - **Inbox** (`inbox/`): drop files/links for ingest (watcher coming)
@@ -52,6 +52,8 @@ uv run ruff check src tests
 ## Roadmap
 
 See [personal-knowledge-graph-prd.md](personal-knowledge-graph-prd.md) and GitHub milestones M0→M5 (v1.0 foundation → v2.0 polish).
+
+**Session docs** (what was built, GitHub setup, codebase map, next work): [docs/sessions/](docs/sessions/).
 
 ## Windows keep-alive
 
