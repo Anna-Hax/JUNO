@@ -26,7 +26,7 @@ Prefer one open issue ≈ one PR (`Closes #N`).
 
 | Order | Issue | Work |
 |-------|-------|------|
-| 1 | #13 | Chroma persistent client — **on `feat/chroma-persistent-client`** (PR / `Closes #13` not opened yet) |
+| 1 | #13 | Chroma persistent client — **done on `feat/chroma-persistent-client`** (PR / `Closes #13` not opened yet) |
 | 2 | #11 | First Alembic revision — `db-init` / serve run `upgrade head` |
 | 3 | #16 | Ingest pipeline + extractors + inbox watcher |
 | 4 | #14 / #15 | Confirm MiniLM path + LLM health in `/status` |
