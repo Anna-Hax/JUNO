@@ -8,23 +8,6 @@ from juno.llm.embedder import StubEmbedder, create_embedder
 from juno.models import AppSetting, Capture
 
 
-@pytest.fixture
-def settings(tmp_path, monkeypatch):
-    from juno.config import Settings
-
-    data = tmp_path / "data"
-    inbox = tmp_path / "inbox"
-    data.mkdir()
-    inbox.mkdir()
-    return Settings(
-        juno_data_dir=data,
-        juno_inbox_dir=inbox,
-        embedding_backend="stub",
-        juno_api_token="test-token",
-        telegram_bot_token="",
-    )
-
-
 @pytest.mark.asyncio
 async def test_db_init_and_write_queue(settings):
     db = Database(settings)
