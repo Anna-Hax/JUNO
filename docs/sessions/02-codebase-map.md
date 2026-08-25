@@ -46,7 +46,7 @@ JUNO/
 
 - `uv run juno serve` → `runtime.main_sync()`
 - `uv run juno db-init` → `Database.migrate()` (Alembic `upgrade head`, or stamp legacy `create_all` DBs)
-- Tests: `test_foundation.py`, `test_migrations.py`, `test_ingest.py`, `test_vectors.py`, `test_embedder.py`, `test_chat.py`, `test_rag.py`, `test_bot.py`, `test_review.py`, `test_bot_review.py`
+- Tests: `test_foundation.py`, `test_migrations.py`, `test_ingest.py`, `test_vectors.py`, `test_embedder.py`, `test_chat.py`, `test_rag.py`, `test_bot.py`, `test_review.py`, `test_bot_review.py`, `test_api.py`
 
 ### Dependencies
 
@@ -79,7 +79,7 @@ Optional: `--extra embeddings` for sentence-transformers; `--extra dev` for pyte
 2. Serialized SQLite writes (ADR-02).
 3. Migrations via Alembic (ADR-03); `db-init` / serve run `upgrade head` (stamp pre-Alembic files).
 4. Empty Telegram allowlist ⇒ reject all users (secure default).
-5. API token required even on localhost.
+5. API token required even on localhost. Empty / `change-me` never authorize; `juno serve` refuses a non-loopback bind. `/docs` is disabled ([#21](https://github.com/Anna-Hax/JUNO/issues/21)).
 6. Stub embedder so CI never downloads torch; MiniLM is `--extra embeddings`. `/status` reports the live backend (and `embedding_fallback` if serve dropped to stub).
 7. Chroma collections are per embedding model; Juno supplies embeddings (no Chroma default ONNX). Blocking Chroma I/O uses `asyncio.to_thread`.
 8. Chat adapters switch on `LLM_PROVIDER` (`ollama` / `openai_compat` / `offline`). `/status` live-probes `llm_healthy` + provider/model. Unhealthy LLM ⇒ retrieve-only (#17).
