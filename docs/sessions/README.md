@@ -20,5 +20,7 @@ Living notes for what was implemented, how GitHub is set up, and what to do next
 | [12-session-write-queue.md](12-session-write-queue.md) | **M1 #12** — WAL + concurrent ingest write queue |
 | [13-session-integration-tests.md](13-session-integration-tests.md) | **M1 #22** — ingest → retrieve → review integration tests |
 | [14-session-export-wipe.md](14-session-export-wipe.md) | **M1 #23** — `juno export` + `juno wipe` |
+| [15-session-v1-release-gate.md](15-session-v1-release-gate.md) | **M1 #24** — v1.0 release gate |
+| [v1.0-release-gate.md](../v1.0-release-gate.md) | M1 checklist (all P0 closed) |
 
 Architecture decisions live in [`../adr/`](../adr/). Product requirements: [`../../personal-knowledge-graph-prd.md](../../personal-knowledge-graph-prd.md).

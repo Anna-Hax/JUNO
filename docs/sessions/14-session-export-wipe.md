@@ -11,7 +11,7 @@
 
 `juno export` dumps all graph tables plus the active Chroma collection (ids, documents, metadatas, embeddings) to JSON under `data/`. `juno wipe --confirm wipe-all-data` deletes the SQLite file and Chroma directory, then runs Alembic `upgrade head` on a fresh database.
 
-Work is on branch `feat/export-wipe-23`. PR / `Closes #23` not opened yet.
+Work landed on `main` via [PR #39](https://github.com/Anna-Hax/JUNO/pull/39) (`Closes #23`).
 
 ---
 
