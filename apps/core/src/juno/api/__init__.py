@@ -5,10 +5,11 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from fastapi import Depends, FastAPI, Header, HTTPException, Request
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request
 from fastapi.responses import JSONResponse
 
 from juno.config import Settings
+from juno.rag.engine import search as rag_search
 
 
 def create_app(
@@ -105,7 +106,19 @@ def create_app(
         return result.to_dict()
 
     @app.get("/search", dependencies=[Depends(require_token)])
-    async def search(q: str) -> dict[str, Any]:
-        return {"query": q, "results": [], "note": "RAG retrieve not fully wired yet"}
+    async def search(
+        q: str = Query(..., min_length=1),
+        k: int = Query(8, ge=1, le=32),
+        mode: str = Query("auto"),
+    ) -> dict[str, Any]:
+        outcome = await rag_search(
+            q,
+            vectors=app.state.vectors,
+            db=app.state.db,
+            chat=getattr(app.state, "chat", None),
+            n_results=k,
+            mode=mode,
+        )
+        return outcome.to_dict()
 
     return app

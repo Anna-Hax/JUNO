@@ -66,6 +66,6 @@ The wrapper is `VectorStore`. Runtime attaches it to `app.state.vectors`. `/stat
 ### Follow-ups
 
 - Ingest pipeline (#16) assigns `chunks.chroma_id` as `c{capture_id}-n{ordinal}` and upserts through the attached `VectorStore`.
-- RAG retrieve (#17) should query `VectorStore` then join hits to SQLite captures.
+- RAG retrieve (#17) queries `VectorStore` then joins hits to SQLite captures (`juno.rag.engine`).
 - Export/wipe (#23) should delete or recreate `data/chroma/` as well as the graph DB.
 - Optional: record active collection name in SQLite `settings` so `/status` and HITL can explain a model mismatch.

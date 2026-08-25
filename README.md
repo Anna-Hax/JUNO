@@ -33,7 +33,8 @@ uv run juno serve
 ```
 
 - API: `http://127.0.0.1:8787/health`
-- Token-gated `GET /status` reports the live embedder (model / backend / dimensions) and LLM health (`llm_healthy`, `llm_provider`, `llm_model`). If Ollama is down, `llm_healthy` is false and answers should stay retrieve-only.
+- Token-gated `GET /status` reports the live embedder (model / backend / dimensions) and LLM health (`llm_healthy`, `llm_provider`, `llm_model`). If Ollama is down, `llm_healthy` is false and answers stay retrieve-only.
+- Token-gated `GET /search?q=` returns citations + confidence (sourced answer when the LLM is healthy).
 - Bot runs only while this process (and PC) is on. Telegram queues updates ~24h; longer downtime can drop messages — `/status` will surface this once fully wired.
 
 ### Tests
