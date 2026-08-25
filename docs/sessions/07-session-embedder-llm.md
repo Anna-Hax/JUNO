@@ -50,7 +50,7 @@ Rules encoded in code:
 
 ## Not in this session
 
-- Merge of [PR #32](https://github.com/Anna-Hax/JUNO/pull/32) (`Closes #14` / `#15`)
+- Merge of [PR #32](https://github.com/Anna-Hax/JUNO/pull/32) — **done** (`Closes #14` / `#15`)
 - RAG `/search` sourced answers (#17) — next
 - Telegram `/status` command (#19)
 - Live MiniLM download / Ollama smoke (#4)
