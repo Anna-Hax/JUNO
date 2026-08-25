@@ -26,19 +26,19 @@ Prefer one open issue ≈ one PR (`Closes #N`).
 
 | Order | Issue | Work |
 |-------|-------|------|
-| 1 | #13 | Chroma persistent client — **merged** ([PR #29](https://github.com/Anna-Hax/JUNO/pull/29)) |
-| 2 | #11 | First Alembic revision — **merged** ([PR #30](https://github.com/Anna-Hax/JUNO/pull/30)) |
-| 3 | #16 | Ingest pipeline + extractors + inbox watcher — **merged** ([PR #31](https://github.com/Anna-Hax/JUNO/pull/31)) |
-| 4 | #14 / #15 | Confirm MiniLM path + LLM health in `/status` — **done on `feat/embedder-llm-status`** |
-| 5 | #17 | Retrieve-only → sourced RAG + confidence — in progress (`feat/rag-retrieve`) |
-| 6 | #18–#19 | Bot query + forward-to-capture + digest/pause/status — in progress (worktree) |
+| 1 | #13 | Chroma persistent client — **merged** ([PR #29](https://github.com/Anna-Hax/JUNO/pull/29), `Closes #13`) |
+| 2 | #11 | First Alembic revision — **merged** (`Closes #11`) |
+| 3 | #16 | Ingest pipeline + extractors + inbox watcher — **merged** ([PR #31](https://github.com/Anna-Hax/JUNO/pull/31), `Closes #16`) |
+| 4 | #14 / #15 | Confirm MiniLM path + LLM health in `/status` — **merged** ([PR #32](https://github.com/Anna-Hax/JUNO/pull/32), `Closes #14` `#15`) |
+| 5 | #17 | Retrieve-only → sourced RAG + confidence — **merged** ([PR #33](https://github.com/Anna-Hax/JUNO/pull/33), `Closes #17`) |
+| 6 | #18–#19 | Bot query + forward-to-capture + digest/pause/status — **merged** ([PR #34](https://github.com/Anna-Hax/JUNO/pull/34), `Closes #18` `#19`) |
 | 7 | #20 | HITL `/review` inline buttons — **done on `feat/hitl-review`** (PR / `Closes #20` not opened yet) |
-| 8 | #21 | Harden API (already stubbed; `/ingest` now persists) |
+| 8 | #21 | Harden API (already stubbed; `/ingest` persists; `/search` retrieves) |
 | 9 | #22–#24 | Integration tests, export/wipe, v1.0 gate |
 
-**Next coding issue:** #17 / #18–#19 (parallel); then merge #20 after those land (expect `handlers.py` / `runtime.py` conflicts).
+**Next coding issue:** #21 after #20 is merged.
 
-Already partially landed (keep issues open until acceptance fully met): #12 write queue, #14/#15 on `feat/embedder-llm-status`, #18 allowlist handlers, #21 basic routes. Ingest upserts into the #13 `VectorStore`. HITL queue + `/review` buttons are on this branch (#20).
+Already partially landed (keep issues open until acceptance fully met): #12 write queue, #21 basic routes. Telegram query/capture/pause: [PR #34](https://github.com/Anna-Hax/JUNO/pull/34). MiniLM + LLM health: [PR #32](https://github.com/Anna-Hax/JUNO/pull/32). `/search`: [PR #33](https://github.com/Anna-Hax/JUNO/pull/33). HITL `/review`: this branch.
 
 ---
 

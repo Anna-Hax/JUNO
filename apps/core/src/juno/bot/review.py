@@ -5,37 +5,37 @@ from __future__ import annotations
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
+from juno.bot.services import BOT_DATA_KEY, BotServices, user_allowed
 from juno.config import Settings, get_settings
 from juno.hitl.queue import Decision, ReviewCard, ReviewQueue
 
 _VERBS = {"approve": "Approved", "reject": "Rejected", "skip": "Skipped"}
 
 
+def _services(context: ContextTypes.DEFAULT_TYPE) -> BotServices | None:
+    raw = context.application.bot_data.get(BOT_DATA_KEY)
+    return raw if isinstance(raw, BotServices) else None
+
+
 def _settings(context: ContextTypes.DEFAULT_TYPE) -> Settings:
     stored = context.application.bot_data.get("settings")
     if stored is not None:
         return stored
-    services = context.application.bot_data.get("juno")
-    if services is not None and getattr(services, "settings", None) is not None:
-        return services.settings
-    return get_settings()
+    svc = _services(context)
+    return svc.settings if svc is not None else get_settings()
 
 
 def _allowed(user_id: int | None, context: ContextTypes.DEFAULT_TYPE) -> bool:
-    allow = _settings(context).allowed_user_id_set()
-    if not allow:
-        return False
-    return user_id is not None and user_id in allow
+    return user_allowed(user_id, _settings(context))
 
 
 def review_queue_from_context(context: ContextTypes.DEFAULT_TYPE) -> ReviewQueue | None:
     queue = context.application.bot_data.get("review")
     if isinstance(queue, ReviewQueue):
         return queue
-    services = context.application.bot_data.get("juno")
-    db = getattr(services, "db", None) if services is not None else None
-    if db is not None:
-        queue = ReviewQueue(db)
+    svc = _services(context)
+    if svc is not None and svc.db is not None:
+        queue = ReviewQueue(svc.db)
         context.application.bot_data["review"] = queue
         return queue
     return None

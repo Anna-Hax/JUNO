@@ -6,6 +6,7 @@ import pytest
 from telegram.ext import CallbackQueryHandler, CommandHandler
 
 from juno.bot.review import parse_review_callback, review_callback, review_cmd, review_keyboard
+from juno.bot.services import BOT_DATA_KEY, BotServices
 from juno.graph.db import Database
 from juno.hitl.queue import EDGE_COMMITTED, EDGE_PENDING, ReviewQueue
 from juno.models import Edge
@@ -138,11 +139,9 @@ async def test_skip_callback_does_not_commit(allowed_settings, queue):
 @pytest.mark.asyncio
 async def test_review_queue_falls_back_to_juno_bot_data(allowed_settings, queue):
     card = await queue.propose_merge(from_name="X", to_name="Y", confidence=0.5)
-    services = MagicMock()
-    services.settings = allowed_settings
-    services.db = queue.db
+    services = BotServices(settings=allowed_settings, db=queue.db)
     ctx = MagicMock()
-    ctx.application.bot_data = {"juno": services}
+    ctx.application.bot_data = {BOT_DATA_KEY: services}
     update = _message_update(42)
     await review_cmd(update, ctx)
     text = update.message.reply_text.await_args.args[0]

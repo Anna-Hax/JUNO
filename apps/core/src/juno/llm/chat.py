@@ -8,8 +8,26 @@ from typing import Any
 import httpx
 
 
+def _ollama_model_present(names: list[str], want: str) -> bool:
+    """True if Ollama's /api/tags list includes the configured model (tag optional)."""
+    want = (want or "").strip()
+    if not want:
+        return False
+    want_base = want.split(":", 1)[0]
+    for name in names:
+        raw = (name or "").strip()
+        if not raw:
+            continue
+        if raw == want or raw.startswith(f"{want}:"):
+            return True
+        if raw.split(":", 1)[0] == want_base:
+            return True
+    return False
+
+
 class ChatProvider(ABC):
     name: str
+    model: str
 
     @abstractmethod
     async def complete(
@@ -22,7 +40,7 @@ class ChatProvider(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def healthy(self) -> bool:
+    async def healthy(self, *, timeout: float = 3.0) -> bool:
         raise NotImplementedError
 
 
@@ -51,11 +69,15 @@ class OllamaProvider(ChatProvider):
             data: dict[str, Any] = resp.json()
             return str(data.get("message", {}).get("content", ""))
 
-    async def healthy(self) -> bool:
+    async def healthy(self, *, timeout: float = 3.0) -> bool:
         try:
-            async with httpx.AsyncClient(timeout=3.0) as client:
+            async with httpx.AsyncClient(timeout=timeout) as client:
                 resp = await client.get(f"{self.base_url}/api/tags")
-                return resp.status_code == 200
+                if resp.status_code != 200:
+                    return False
+                models = resp.json().get("models") or []
+                names = [str(m.get("name", "")) for m in models if isinstance(m, dict)]
+                return _ollama_model_present(names, self.model)
         except Exception:
             return False
 
@@ -90,14 +112,30 @@ class OpenAICompatProvider(ChatProvider):
             data = resp.json()
             return str(data["choices"][0]["message"]["content"])
 
-    async def healthy(self) -> bool:
-        return bool(self.api_key)
+    async def healthy(self, *, timeout: float = 3.0) -> bool:
+        if not self.api_key:
+            return False
+        try:
+            async with httpx.AsyncClient(timeout=timeout) as client:
+                resp = await client.get(
+                    f"{self.base_url}/models",
+                    headers={"Authorization": f"Bearer {self.api_key}"},
+                )
+                if resp.status_code == 404:
+                    # Some local OpenAI-compat servers omit /models.
+                    return True
+                return resp.status_code == 200
+        except Exception:
+            return False
 
 
 class OfflineProvider(ChatProvider):
     """Fallback when no LLM is available — callers should use retrieve-only mode."""
 
     name = "offline"
+
+    def __init__(self, model: str = "") -> None:
+        self.model = model
 
     async def complete(
         self,
@@ -108,7 +146,7 @@ class OfflineProvider(ChatProvider):
     ) -> str:
         raise RuntimeError("LLM offline — use retrieve-only fallback")
 
-    async def healthy(self) -> bool:
+    async def healthy(self, *, timeout: float = 3.0) -> bool:
         return False
 
 
@@ -121,6 +159,8 @@ def create_chat_provider(
     openai_api_key: str,
     openai_model: str,
 ) -> ChatProvider:
+    if provider == "offline":
+        return OfflineProvider()
     if provider == "ollama":
         return OllamaProvider(ollama_base_url, ollama_model)
     if provider == "openai_compat":
