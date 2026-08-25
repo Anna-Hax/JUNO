@@ -18,6 +18,7 @@ from juno.api import create_app
 from juno.bot.handlers import help_cmd, start_cmd, text_query
 from juno.config import Settings, get_settings
 from juno.graph.db import Database
+from juno.graph.vectors import VectorStore
 from juno.ingest.pipeline import IngestPipeline
 from juno.ingest.watcher import InboxWatcher
 from juno.llm.chat import create_chat_provider
@@ -104,11 +105,15 @@ async def run_server(settings: Settings | None = None) -> None:
         logger.warning("Falling back to stub embedder: %s", exc)
         embedder = create_embedder("stub", settings.embedding_model)
 
-    pipeline = IngestPipeline(db=db, vectors=None)
-    fastapi_app = create_app(settings, db=db, embedder=embedder, pipeline=pipeline)
+    vectors = VectorStore(settings, embedder)
+    pipeline = IngestPipeline(db=db, vectors=vectors)
+    fastapi_app = create_app(
+        settings, db=db, embedder=embedder, vectors=vectors, pipeline=pipeline
+    )
     fastapi_app.state.settings = settings
     fastapi_app.state.db = db
     fastapi_app.state.embedder = embedder
+    fastapi_app.state.vectors = vectors
     fastapi_app.state.pipeline = pipeline
     fastapi_app.state.ptb = build_telegram_application(settings)
     attach_lifespan(fastapi_app)

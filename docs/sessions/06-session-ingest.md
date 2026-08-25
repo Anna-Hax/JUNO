@@ -40,7 +40,7 @@ Rules encoded in code:
 - Writes go through `Database.write()` (ADR-02)
 - PDF/HTML CPU work and Chroma (when attached) stay off the serve loop (`asyncio.to_thread`)
 - Chunk ids are `c{capture_id}-n{ordinal}` so they can match `chunks.chroma_id` (ADR-04)
-- Vector upsert is optional: `IngestPipeline(vectors=…)` when #13’s `VectorStore` is attached; `juno serve` still passes `vectors=None` until that PR lands
+- Vector upsert is optional: `IngestPipeline(vectors=…)` when a `VectorStore` is attached; `juno serve` now passes the persistent Chroma wrapper (#13)
 - Hidden / temp files (`.gitkeep`, `*.tmp`, `*.crdownload`) are ignored
 - `/pause` is not wired yet; `app.state.capture_paused` already gates `/ingest` and the watcher
 
@@ -58,7 +58,6 @@ Rules encoded in code:
 ## Not in this session
 
 - PR / merge to `main` (`Closes #16`)
-- Chroma `VectorStore` on this branch (#13 still on `feat/chroma-persistent-client`)
 - RAG `/search` (#17)
 - Telegram forward-to-capture (#19)
 - Live Telegram smoke (#4) and Projects board (#9)
