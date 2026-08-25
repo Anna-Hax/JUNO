@@ -69,3 +69,8 @@ def test_status_reports_chroma_collection(settings):
     assert body["chroma_collection"] == vectors.collection_name
     assert body["chroma_count"] == 1
     assert body["embedding_model"] == "stub-hash-v1"
+    assert body["embedding_backend"] == "stub"
+    assert body["embedding_dimensions"] == 64
+    assert body["embedding_fallback"] is False
+    assert body["llm_healthy"] is False
+    assert "llm_provider" in body

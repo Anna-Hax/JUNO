@@ -24,6 +24,8 @@ Personal knowledge-graph agent: passively (and manually) capture what you read, 
 ```powershell
 cd apps/core
 uv sync --extra dev
+# Local MiniLM embeddings (optional; without this, serve falls back to the stub):
+uv sync --extra dev --extra embeddings
 copy ..\..\.env.example ..\..\.env   # from repo root: copy .env.example .env
 # Edit .env: TELEGRAM_BOT_TOKEN, ALLOWED_TELEGRAM_USER_IDS, JUNO_API_TOKEN
 uv run juno db-init
@@ -31,6 +33,7 @@ uv run juno serve
 ```
 
 - API: `http://127.0.0.1:8787/health`
+- Token-gated `GET /status` reports the live embedder (model / backend / dimensions) and LLM health (`llm_healthy`, `llm_provider`, `llm_model`). If Ollama is down, `llm_healthy` is false and answers should stay retrieve-only.
 - Bot runs only while this process (and PC) is on. Telegram queues updates ~24h; longer downtime can drop messages — `/status` will surface this once fully wired.
 
 ### Tests
