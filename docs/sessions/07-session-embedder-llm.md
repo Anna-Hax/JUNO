@@ -13,7 +13,7 @@ Confirmed the local MiniLM embedder path without pulling torch in CI (mocked `se
 
 Chat adapters now include an explicit `offline` provider. `/status` live-probes the attached LLM (`llm_healthy`, `llm_provider`, `llm_model`) instead of a one-shot startup flag. Unhealthy Ollama/OpenAI is retrieve-only for #17.
 
-Work is on branch `feat/embedder-llm-status` (from `main`). PR / `Closes #14` `Closes #15` not opened yet.
+Work is on branch `feat/embedder-llm-status` (from `main`). PR: [https://github.com/Anna-Hax/JUNO/pull/32](https://github.com/Anna-Hax/JUNO/pull/32) (`Closes #14` `#15`).
 
 ---
 
@@ -50,7 +50,7 @@ Rules encoded in code:
 
 ## Not in this session
 
-- PR / merge to `main` (`Closes #14` / `#15`)
+- Merge of [PR #32](https://github.com/Anna-Hax/JUNO/pull/32) (`Closes #14` / `#15`)
 - RAG `/search` sourced answers (#17) — next
 - Telegram `/status` command (#19)
 - Live MiniLM download / Ollama smoke (#4)

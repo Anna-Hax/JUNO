@@ -29,7 +29,7 @@ Prefer one open issue ≈ one PR (`Closes #N`).
 | 1 | #13 | Chroma persistent client — **merged** ([PR #29](https://github.com/Anna-Hax/JUNO/pull/29), `Closes #13`) |
 | 2 | #11 | First Alembic revision — **merged** (`Closes #11`) |
 | 3 | #16 | Ingest pipeline + extractors + inbox watcher — **merged** ([PR #31](https://github.com/Anna-Hax/JUNO/pull/31), `Closes #16`) |
-| 4 | #14 / #15 | Confirm MiniLM path + LLM health in `/status` — **done on `feat/embedder-llm-status`** (PR / `Closes #14` `#15` not opened yet) |
+| 4 | #14 / #15 | Confirm MiniLM path + LLM health in `/status` — **PR opened** ([PR #32](https://github.com/Anna-Hax/JUNO/pull/32), `Closes #14` `#15`) |
 | 5 | #17 | Retrieve-only → sourced RAG + confidence |
 | 6 | #18–#19 | Bot query + forward-to-capture + digest/pause/status |
 | 7 | #20 | HITL `/review` inline buttons |
@@ -38,7 +38,7 @@ Prefer one open issue ≈ one PR (`Closes #N`).
 
 **Next coding issue:** #17.
 
-Already partially landed (keep issues open until acceptance fully met): #12 write queue, #18 allowlist handlers, #21 basic routes. Ingest now upserts into the #13 `VectorStore`. MiniLM + LLM health are confirmed on this branch (#14 / #15).
+Already partially landed (keep issues open until acceptance fully met): #12 write queue, #18 allowlist handlers, #21 basic routes. Ingest upserts into the #13 `VectorStore`. MiniLM + LLM health are in [PR #32](https://github.com/Anna-Hax/JUNO/pull/32).
 
 ---
 
