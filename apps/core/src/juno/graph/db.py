@@ -49,7 +49,7 @@ class Database:
         return action
 
     async def write(self, fn: Callable[[AsyncSession], Awaitable[T]]) -> T:
-        """Serialize all write transactions through one lock."""
+        """Serialize all write transactions (the ADR-02 write queue)."""
         async with self._write_lock:
             async with self.session_factory() as session:
                 async with session.begin():
@@ -58,6 +58,13 @@ class Database:
     async def read(self, fn: Callable[[AsyncSession], Awaitable[T]]) -> T:
         async with self.session_factory() as session:
             return await fn(session)
+
+    async def journal_mode(self) -> str:
+        async def query(session: AsyncSession) -> str:
+            result = await session.execute(text("PRAGMA journal_mode"))
+            return str(result.scalar_one())
+
+        return await self.read(query)
 
     async def dispose(self) -> None:
         await self.engine.dispose()
