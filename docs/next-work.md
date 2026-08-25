@@ -34,12 +34,11 @@ Prefer one open issue ≈ one PR (`Closes #N`).
 | 6 | #18–#19 | Bot query + forward-to-capture + digest/pause/status — **merged** ([PR #34](https://github.com/Anna-Hax/JUNO/pull/34), `Closes #18` `#19`) |
 | 7 | #20 | HITL `/review` inline buttons — **merged** ([PR #35](https://github.com/Anna-Hax/JUNO/pull/35), `Closes #20`) |
 | 8 | #21 | Harden API — **merged** ([PR #36](https://github.com/Anna-Hax/JUNO/pull/36), `Closes #21`) |
-| 9 | #12 | Concurrent ingest through the write queue — **done on `feat/write-queue-12`** (PR / `Closes #12` not opened yet) |
-| 10 | #22–#24 | Integration tests, export/wipe, v1.0 gate |
+| 9 | #12 | Concurrent ingest through the write queue — **merged** ([PR #37](https://github.com/Anna-Hax/JUNO/pull/37), `Closes #12`) |
+| 10 | #22 | Integration tests ingest → retrieve → review — **done on `feat/integration-tests-22`** (PR / `Closes #22` not opened yet) |
+| 11 | #23–#24 | Export/wipe, v1.0 gate |
 
-**Next coding issue:** #22 after #12 is merged.
-
-Telegram query/capture/pause: [PR #34](https://github.com/Anna-Hax/JUNO/pull/34). MiniLM + LLM health: [PR #32](https://github.com/Anna-Hax/JUNO/pull/32). `/search`: [PR #33](https://github.com/Anna-Hax/JUNO/pull/33). HITL `/review`: [PR #35](https://github.com/Anna-Hax/JUNO/pull/35). API harden: [PR #36](https://github.com/Anna-Hax/JUNO/pull/36). Write queue: this branch.
+**Next coding issue:** #23 after #22 is merged.
 
 ---
 
