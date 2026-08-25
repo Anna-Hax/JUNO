@@ -7,6 +7,7 @@ from juno.api import create_app
 from juno.graph.db import Database
 from juno.graph.vectors import VectorStore
 from juno.ingest.pipeline import IngestPipeline
+from juno.llm.chat import OfflineProvider
 from juno.llm.embedder import StubEmbedder
 from juno.rag.engine import similarity_from_distance
 
@@ -28,7 +29,7 @@ class FakeChat:
         self.complete_calls = 0
         self.healthy_calls = 0
 
-    async def healthy(self) -> bool:
+    async def healthy(self, *, timeout: float = 3.0) -> bool:
         self.healthy_calls += 1
         return self._healthy
 
@@ -203,4 +204,26 @@ async def test_answer_without_markers_still_attaches_hits(settings, db, vectors,
     body = resp.json()
     assert body["mode"] == "rag"
     assert body["citations"]
+    assert body["citations"][0]["title"] == "Rust notes"
+
+
+@pytest.mark.asyncio
+async def test_offline_provider_stays_retrieve_only(settings, db, vectors, pipeline):
+    await pipeline.ingest_text(NOTE_A, source_type="upload", title="Rust notes")
+    client, _ = await _client(
+        settings,
+        db=db,
+        vectors=vectors,
+        pipeline=pipeline,
+        chat=OfflineProvider(),
+    )
+    async with client:
+        resp = await client.get(
+            "/search",
+            params={"q": NOTE_A, "mode": "auto"},
+            headers={"Authorization": "Bearer test-token"},
+        )
+    body = resp.json()
+    assert body["mode"] == "retrieve"
+    assert body["answer"] is None
     assert body["citations"][0]["title"] == "Rust notes"

@@ -32,7 +32,9 @@ Rules encoded in code:
 - Citations are required on every response (`citations` mirrors hits, or the `[n]` subset after generate)
 - Confidence is `max(score)` over the cited hits; score is `1 - cosine distance`
 - LLM generate is skipped when `chat` is missing/unhealthy, `complete` raises, or the answer is empty
+- Health probe uses `healthy(timeout=1.5)` (same as `/status` after PR #32)
 - Stub embedder tests query the **same** ingested string (hash vectors are not semantic)
+- `LLM_PROVIDER=offline` / `OfflineProvider` stays retrieve-only
 
 ### Docs
 
@@ -47,8 +49,9 @@ Rules encoded in code:
 
 - PR / merge to `main` (`Closes #17`)
 - Telegram text query using RAG (#18)
-- Live MiniLM / Ollama smoke (#4, #14/#15)
-- Merge with [PR #32](https://github.com/Anna-Hax/JUNO/pull/32) (`create_app(..., chat=)` lands in both; combine `/status` + `/search`)
+- Live MiniLM / Ollama smoke (#4)
+
+Merged [PR #32](https://github.com/Anna-Hax/JUNO/pull/32) into this branch; `/status` live probe and `/search` both remain.
 
 ---
 
@@ -62,7 +65,7 @@ uv run pytest
 uv run ruff check src tests
 ```
 
-Expect **36** tests passing (28 prior + 8 RAG).
+Expect **56** tests passing (foundation + ingest + migrations + vectors + embedder + chat + 9 RAG).
 
 Manual (after ingesting something, `juno serve`):
 
@@ -80,6 +83,6 @@ Response should include `results`, `citations`, and `confidence`. With Ollama he
 |------|----------|
 | [08-session-rag.md](08-session-rag.md) | This file |
 | [06-session-ingest.md](06-session-ingest.md) | M1 #16 ingest |
-| PR #32 (`feat/embedder-llm-status`) | M1 #14 / #15 MiniLM + LLM health (not on this branch) |
+| [07-session-embedder-llm.md](07-session-embedder-llm.md) | M1 #14 / #15 MiniLM + LLM health (PR #32, now on this branch) |
 | [next-work.md](../next-work.md) | Global next-work tracker |
 | [../adr/004-chroma-collections.md](../adr/004-chroma-collections.md) | Query `VectorStore`, then join SQLite |

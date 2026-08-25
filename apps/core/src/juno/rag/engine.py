@@ -173,10 +173,10 @@ async def _chat_is_healthy(chat: Any) -> bool:
     if probe is None:
         return False
     try:
-        return bool(await probe())
+        return bool(await probe(timeout=1.5))
     except TypeError:
         try:
-            return bool(await probe(timeout=1.5))
+            return bool(await probe())
         except Exception:  # noqa: BLE001
             return False
     except Exception:  # noqa: BLE001
