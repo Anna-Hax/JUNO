@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
@@ -10,11 +11,18 @@ from fastapi.responses import JSONResponse
 from juno.config import Settings
 
 
-def create_app(settings: Settings, *, db: Any = None, embedder: Any = None) -> FastAPI:
+def create_app(
+    settings: Settings,
+    *,
+    db: Any = None,
+    embedder: Any = None,
+    vectors: Any = None,
+) -> FastAPI:
     app = FastAPI(title="Juno", version="0.1.0")
     app.state.settings = settings
     app.state.db = db
     app.state.embedder = embedder
+    app.state.vectors = vectors
     app.state.capture_paused = False
     app.state.llm_healthy = False
 
@@ -39,11 +47,18 @@ def create_app(settings: Settings, *, db: Any = None, embedder: Any = None) -> F
 
     @app.get("/status", dependencies=[Depends(require_token)])
     async def status() -> dict[str, Any]:
+        embedder = app.state.embedder
+        vectors = app.state.vectors
+        chroma_count = 0
+        if vectors is not None:
+            chroma_count = await asyncio.to_thread(vectors.count)
         return {
             "capture_paused": app.state.capture_paused,
             "llm_healthy": app.state.llm_healthy,
-            "embedding_model": settings.embedding_model,
+            "embedding_model": getattr(embedder, "model_id", settings.embedding_model),
             "embedding_backend": settings.embedding_backend,
+            "chroma_collection": getattr(vectors, "collection_name", None),
+            "chroma_count": chroma_count,
             "api_host": settings.juno_api_host,
             "api_port": settings.juno_api_port,
         }

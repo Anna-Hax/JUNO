@@ -1,6 +1,6 @@
 # Codebase map (as of M0 / early M1)
 
-**Last updated:** 2026-08-22
+**Last updated:** 2026-08-25
 
 ---
 
