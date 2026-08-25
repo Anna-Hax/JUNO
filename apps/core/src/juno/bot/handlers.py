@@ -210,7 +210,7 @@ async def _capture_text(update: Update, context: ContextTypes.DEFAULT_TYPE, text
         else:
             title = None
             if is_forwarded(update.message):
-                title = (update.message.forward_sender_name or None)
+                title = update.message.forward_sender_name or None
             result = await svc.pipeline.ingest_text(
                 text,
                 source_type="telegram",
