@@ -18,6 +18,8 @@ from juno.api import create_app
 from juno.bot.handlers import help_cmd, start_cmd, text_query
 from juno.config import Settings, get_settings
 from juno.graph.db import Database
+from juno.ingest.pipeline import IngestPipeline
+from juno.ingest.watcher import InboxWatcher
 from juno.llm.chat import create_chat_provider
 from juno.llm.embedder import create_embedder
 
@@ -54,6 +56,16 @@ def attach_lifespan(fastapi_app: FastAPI) -> FastAPI:
         app.state.llm_healthy = await chat.healthy()
         app.state.chat = chat
 
+        pipeline = getattr(app.state, "pipeline", None)
+        if pipeline is not None:
+            watcher = InboxWatcher(
+                settings.juno_inbox_dir,
+                pipeline.ingest_path,
+                is_paused=lambda: bool(app.state.capture_paused),
+            )
+            await watcher.start()
+            app.state.inbox_watcher = watcher
+
         ptb: Application | None = app.state.ptb
         if ptb is not None:
             await ptb.initialize()
@@ -63,6 +75,10 @@ def attach_lifespan(fastapi_app: FastAPI) -> FastAPI:
             logger.info("Telegram bot polling started")
 
         yield
+
+        watcher = getattr(app.state, "inbox_watcher", None)
+        if watcher is not None:
+            await watcher.stop()
 
         if ptb is not None:
             if ptb.updater is not None:
@@ -88,10 +104,12 @@ async def run_server(settings: Settings | None = None) -> None:
         logger.warning("Falling back to stub embedder: %s", exc)
         embedder = create_embedder("stub", settings.embedding_model)
 
-    fastapi_app = create_app(settings, db=db, embedder=embedder)
+    pipeline = IngestPipeline(db=db, vectors=None)
+    fastapi_app = create_app(settings, db=db, embedder=embedder, pipeline=pipeline)
     fastapi_app.state.settings = settings
     fastapi_app.state.db = db
     fastapi_app.state.embedder = embedder
+    fastapi_app.state.pipeline = pipeline
     fastapi_app.state.ptb = build_telegram_application(settings)
     attach_lifespan(fastapi_app)
 

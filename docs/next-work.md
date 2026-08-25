@@ -26,9 +26,7 @@ Prefer one open issue ≈ one PR (`Closes #N`).
 
 | Order | Issue | Work |
 |-------|-------|------|
-| 1 | #13 | Chroma persistent client — **done on `feat/chroma-persistent-client`** (PR / `Closes #13` not opened yet) |
-| 2 | #11 | First Alembic revision — `db-init` / serve run `upgrade head` |
-| 3 | #16 | Ingest pipeline + extractors + inbox watcher |
+| 3 | #16 | Ingest pipeline + extractors + inbox watcher — **done on `feat/ingest-pipeline`** (PR / `Closes #16` not opened yet) |
 | 4 | #14 / #15 | Confirm MiniLM path + LLM health in `/status` |
 | 5 | #17 | Retrieve-only → sourced RAG + confidence |
 | 6 | #18–#19 | Bot query + forward-to-capture + digest/pause/status |
@@ -36,7 +34,7 @@ Prefer one open issue ≈ one PR (`Closes #N`).
 | 8 | #21 | Harden API (already stubbed) |
 | 9 | #22–#24 | Integration tests, export/wipe, v1.0 gate |
 
-Already partially landed (keep issues open until acceptance fully met): #13 Chroma wrapper (branch, unmerged), #12 write queue, #14 stub embedder, #15 chat adapters, #18 allowlist handlers, #21 basic routes.
+Already partially landed (keep issues open until acceptance fully met): #13 Chroma wrapper (branch, unmerged), #16 ingest (branch, unmerged), #12 write queue, #14 stub embedder, #15 chat adapters, #18 allowlist handlers, #21 basic routes.
 
 ---
 
@@ -55,4 +53,5 @@ Add a new file: `docs/sessions/0N-session-<short-name>.md` describing:
 - What broke or was deferred
 - How to verify
 
-Keep this `03-next-work.md` updated so the board and docs stay aligned.
+Keep this `docs/next-work.md` updated so the board and docs stay aligned.
+Do not recreate `docs/sessions/03-next-work.md`. This file is kept as-is across branch merges.

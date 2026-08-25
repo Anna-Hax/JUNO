@@ -10,7 +10,7 @@ Personal knowledge-graph agent: passively (and manually) capture what you read, 
 - **SQLite + write queue** for the graph ([ADR-02](docs/adr/002-sqlite-write-queue.md)); **Alembic** for schema changes ([ADR-03](docs/adr/003-alembic.md))
 - **Chroma** for vectors — persistent client, one collection per embedding model ([ADR-04](docs/adr/004-chroma-collections.md)); **stub embedder** in CI
 - **Browser extension** (`apps/extension`): stub until Phase 2
-- **Inbox** (`inbox/`): drop files/links for ingest (watcher coming)
+- **Inbox** (`inbox/`): drop `.txt` / `.md` / `.pdf` / `.url` (or a one-line http(s) text file). `juno serve` watches the folder; good files move to `inbox/.processed/`, unreadable PDFs to `inbox/.failed/`.
 
 ## Prerequisites
 
@@ -53,7 +53,8 @@ uv run ruff check src tests
 
 See [personal-knowledge-graph-prd.md](personal-knowledge-graph-prd.md) and GitHub milestones M0→M5 (v1.0 foundation → v2.0 polish).
 
-**Session docs** (what was built, GitHub setup, codebase map, next work): [docs/sessions/](docs/sessions/).
+**Next work:** [docs/next-work.md](docs/next-work.md) (living queue; kept as-is across branch merges).  
+**Session docs** (what was built, GitHub setup, codebase map): [docs/sessions/](docs/sessions/).
 
 ## Windows keep-alive
 

@@ -10,13 +10,29 @@ from fastapi.responses import JSONResponse
 from juno.config import Settings
 
 
-def create_app(settings: Settings, *, db: Any = None, embedder: Any = None) -> FastAPI:
+def create_app(
+    settings: Settings,
+    *,
+    db: Any = None,
+    embedder: Any = None,
+    vectors: Any = None,
+    pipeline: Any = None,
+) -> FastAPI:
     app = FastAPI(title="Juno", version="0.1.0")
     app.state.settings = settings
     app.state.db = db
     app.state.embedder = embedder
+    app.state.vectors = vectors
     app.state.capture_paused = False
     app.state.llm_healthy = False
+    if pipeline is not None:
+        app.state.pipeline = pipeline
+    elif db is not None:
+        from juno.ingest.pipeline import IngestPipeline
+
+        app.state.pipeline = IngestPipeline(db=db, vectors=vectors)
+    else:
+        app.state.pipeline = None
 
     def require_token(authorization: str | None = Header(default=None)) -> None:
         expected = settings.juno_api_token
@@ -52,8 +68,11 @@ def create_app(settings: Settings, *, db: Any = None, embedder: Any = None) -> F
     async def ingest(payload: dict[str, Any]) -> dict[str, Any]:
         if app.state.capture_paused:
             raise HTTPException(status_code=423, detail="Capture paused")
-        # Full ingest wired in later milestones; acknowledge payload shape
-        return {"accepted": True, "source_type": payload.get("source_type", "api")}
+        pipeline = app.state.pipeline
+        if pipeline is None:
+            return {"accepted": True, "source_type": payload.get("source_type", "api")}
+        result = await pipeline.ingest_payload(payload)
+        return result.to_dict()
 
     @app.get("/search", dependencies=[Depends(require_token)])
     async def search(q: str) -> dict[str, Any]:

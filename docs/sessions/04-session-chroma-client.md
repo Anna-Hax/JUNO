@@ -86,6 +86,6 @@ curl -H "Authorization: Bearer <token>" http://127.0.0.1:8787/status
 | File | Contents |
 |------|----------|
 | [04-session-chroma-client.md](04-session-chroma-client.md) | This file |
-| [03-next-work.md](03-next-work.md) | Next issue after #13 is **#11** (Alembic) |
+| [next-work.md](../next-work.md) | Global next-work tracker (kept as-is across merges) |
 | [02-codebase-map.md](02-codebase-map.md) | `graph/vectors.py` on the module map |
 | [../adr/004-chroma-collections.md](../adr/004-chroma-collections.md) | Why collection-per-model |
