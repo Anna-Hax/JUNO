@@ -30,7 +30,7 @@ uv run juno db-init
 uv run juno serve
 ```
 
-- API: `http://127.0.0.1:8787/health`
+- API: `http://127.0.0.1:8787/health` — token-gated `GET /search?q=` returns citations + confidence (sourced answer when the LLM is healthy)
 - Bot runs only while this process (and PC) is on. Telegram queues updates ~24h; longer downtime can drop messages — `/status` will surface this once fully wired.
 
 ### Tests

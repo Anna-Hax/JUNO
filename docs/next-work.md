@@ -1,6 +1,6 @@
 # Next work (after M0 bootstrap)
 
-**Last updated:** 2026-08-22  
+**Last updated:** 2026-08-26  
 **Track issues on:** https://github.com/Anna-Hax/JUNO/issues
 
 ---
@@ -26,15 +26,19 @@ Prefer one open issue ≈ one PR (`Closes #N`).
 
 | Order | Issue | Work |
 |-------|-------|------|
-| 3 | #16 | Ingest pipeline + extractors + inbox watcher — **done on `feat/ingest-pipeline`** (PR / `Closes #16` not opened yet) |
-| 4 | #14 / #15 | Confirm MiniLM path + LLM health in `/status` |
-| 5 | #17 | Retrieve-only → sourced RAG + confidence |
+| 1 | #13 | Chroma persistent client — **merged** ([PR #29](https://github.com/Anna-Hax/JUNO/pull/29), `Closes #13`) |
+| 2 | #11 | First Alembic revision — **merged** (`Closes #11`) |
+| 3 | #16 | Ingest pipeline + extractors + inbox watcher — **merged** ([PR #31](https://github.com/Anna-Hax/JUNO/pull/31), `Closes #16`) |
+| 4 | #14 / #15 | Confirm MiniLM path + LLM health in `/status` — **PR opened** ([PR #32](https://github.com/Anna-Hax/JUNO/pull/32), `Closes #14` `#15`) |
+| 5 | #17 | Retrieve-only → sourced RAG + confidence — **done on `feat/rag-retrieve`** (PR / `Closes #17` not opened yet) |
 | 6 | #18–#19 | Bot query + forward-to-capture + digest/pause/status |
 | 7 | #20 | HITL `/review` inline buttons |
-| 8 | #21 | Harden API (already stubbed) |
+| 8 | #21 | Harden API (already stubbed; `/ingest` now persists; `/search` now retrieves) |
 | 9 | #22–#24 | Integration tests, export/wipe, v1.0 gate |
 
-Already partially landed (keep issues open until acceptance fully met): #13 Chroma wrapper (branch, unmerged), #16 ingest (branch, unmerged), #12 write queue, #14 stub embedder, #15 chat adapters, #18 allowlist handlers, #21 basic routes.
+**Next coding issue:** #18 / #19.
+
+Already partially landed (keep issues open until acceptance fully met): #12 write queue, #18 allowlist handlers, #21 basic routes. Ingest upserts into the #13 `VectorStore`. MiniLM + LLM health are in [PR #32](https://github.com/Anna-Hax/JUNO/pull/32). `/search` joins Chroma hits to SQLite captures and cites them.
 
 ---
 

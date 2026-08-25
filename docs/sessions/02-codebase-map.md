@@ -1,6 +1,6 @@
 # Codebase map (as of M0 / early M1)
 
-**Last updated:** 2026-08-25
+**Last updated:** 2026-08-26
 
 ---
 
@@ -38,13 +38,14 @@ JUNO/
 | Alembic | `alembic/` + `alembic.ini` | Revision `0001` = current ORM ([ADR-03](../adr/003-alembic.md)) |
 | LLM | `llm/embedder.py`, `llm/chat.py` | Embeddings + chat providers |
 | Ingest | `ingest/extractors.py`, `chunking.py`, `pipeline.py`, `watcher.py` | File/URL extract, chunk, persist, inbox watch ([#16](https://github.com/Anna-Hax/JUNO/issues/16)) |
+| RAG | `rag/engine.py` | Vector retrieve, join captures, sourced answer + confidence ([#17](https://github.com/Anna-Hax/JUNO/issues/17)) |
 | Jobs | `jobs/` | Placeholder (M4) |
 
 ### Entry points
 
 - `uv run juno serve` → `runtime.main_sync()`
 - `uv run juno db-init` → `Database.migrate()` (Alembic `upgrade head`, or stamp legacy `create_all` DBs)
-- Tests: `apps/core/tests/test_foundation.py`, `test_migrations.py`, `test_ingest.py`, `test_vectors.py`
+- Tests: `apps/core/tests/test_foundation.py`, `test_migrations.py`, `test_ingest.py`, `test_vectors.py`, `test_rag.py`
 
 ### Dependencies
 
