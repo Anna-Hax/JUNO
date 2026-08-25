@@ -8,6 +8,7 @@ from abc import ABC, abstractmethod
 
 
 class Embedder(ABC):
+    backend: str
     model_id: str
     dimensions: int
 
@@ -18,6 +19,8 @@ class Embedder(ABC):
 
 class StubEmbedder(Embedder):
     """Deterministic hash-based vectors for tests/CI (no torch download)."""
+
+    backend = "stub"
 
     def __init__(self, model_id: str = "stub-hash-v1", dimensions: int = 64) -> None:
         self.model_id = model_id
@@ -46,16 +49,29 @@ class StubEmbedder(Embedder):
 
 
 class SentenceTransformerEmbedder(Embedder):
+    backend = "sentence_transformers"
+
     def __init__(self, model_id: str = "all-MiniLM-L6-v2") -> None:
-        from sentence_transformers import SentenceTransformer
+        try:
+            from sentence_transformers import SentenceTransformer
+        except ImportError as exc:
+            raise ImportError(
+                "sentence-transformers is not installed. "
+                "From apps/core run: uv sync --extra embeddings"
+            ) from exc
 
         self.model_id = model_id
         self._model = SentenceTransformer(model_id)
         self.dimensions = int(self._model.get_sentence_embedding_dimension())
 
     def embed(self, texts: list[str]) -> list[list[float]]:
+        if not texts:
+            return []
         vectors = self._model.encode(texts, normalize_embeddings=True)
-        return [v.tolist() for v in vectors]
+        rows = vectors.tolist() if hasattr(vectors, "tolist") else [list(v) for v in vectors]
+        if rows and isinstance(rows[0], (int, float)):
+            return [list(rows)]
+        return [list(row) for row in rows]
 
 
 def create_embedder(backend: str, model_id: str) -> Embedder:

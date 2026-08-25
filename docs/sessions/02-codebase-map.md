@@ -36,7 +36,7 @@ JUNO/
 | Vectors | `graph/vectors.py` | Persistent Chroma; one collection per embedding model ([ADR-04](../adr/004-chroma-collections.md)) |
 | Models | `models/__init__.py` | SQLAlchemy tables |
 | Alembic | `alembic/` + `alembic.ini` | Revision `0001` = current ORM ([ADR-03](../adr/003-alembic.md)) |
-| LLM | `llm/embedder.py`, `llm/chat.py` | Embeddings + chat providers |
+| LLM | `llm/embedder.py`, `llm/chat.py` | MiniLM (optional extra) + stub embedder; Ollama / OpenAI-compat / offline chat; health probes |
 | Ingest | `ingest/extractors.py`, `chunking.py`, `pipeline.py`, `watcher.py` | File/URL extract, chunk, persist, inbox watch ([#16](https://github.com/Anna-Hax/JUNO/issues/16)) |
 | RAG | `rag/engine.py` | Vector retrieve, join captures, sourced answer + confidence ([#17](https://github.com/Anna-Hax/JUNO/issues/17)) |
 | Jobs | `jobs/` | Placeholder (M4) |
@@ -45,7 +45,7 @@ JUNO/
 
 - `uv run juno serve` → `runtime.main_sync()`
 - `uv run juno db-init` → `Database.migrate()` (Alembic `upgrade head`, or stamp legacy `create_all` DBs)
-- Tests: `apps/core/tests/test_foundation.py`, `test_migrations.py`, `test_ingest.py`, `test_vectors.py`, `test_rag.py`
+- Tests: `test_foundation.py`, `test_migrations.py`, `test_ingest.py`, `test_vectors.py`, `test_embedder.py`, `test_chat.py`, `test_rag.py`
 
 ### Dependencies
 
@@ -79,5 +79,6 @@ Optional: `--extra embeddings` for sentence-transformers; `--extra dev` for pyte
 3. Migrations via Alembic (ADR-03); `db-init` / serve run `upgrade head` (stamp pre-Alembic files).
 4. Empty Telegram allowlist ⇒ reject all users (secure default).
 5. API token required even on localhost.
-6. Stub embedder so CI never downloads torch.
+6. Stub embedder so CI never downloads torch; MiniLM is `--extra embeddings`. `/status` reports the live backend (and `embedding_fallback` if serve dropped to stub).
 7. Chroma collections are per embedding model; Juno supplies embeddings (no Chroma default ONNX). Blocking Chroma I/O uses `asyncio.to_thread`.
+8. Chat adapters switch on `LLM_PROVIDER` (`ollama` / `openai_compat` / `offline`). `/status` live-probes `llm_healthy` + provider/model. Unhealthy LLM ⇒ retrieve-only (#17).
