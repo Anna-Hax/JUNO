@@ -107,9 +107,7 @@ async def run_server(settings: Settings | None = None) -> None:
 
     vectors = VectorStore(settings, embedder)
     pipeline = IngestPipeline(db=db, vectors=vectors)
-    fastapi_app = create_app(
-        settings, db=db, embedder=embedder, vectors=vectors, pipeline=pipeline
-    )
+    fastapi_app = create_app(settings, db=db, embedder=embedder, vectors=vectors, pipeline=pipeline)
     fastapi_app.state.settings = settings
     fastapi_app.state.db = db
     fastapi_app.state.embedder = embedder
