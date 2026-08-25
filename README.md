@@ -31,7 +31,7 @@ uv run juno serve
 ```
 
 - API: `http://127.0.0.1:8787/health`
-- Bot runs only while this process (and PC) is on. Telegram queues updates ~24h; longer downtime can drop messages — `/status` will surface this once fully wired.
+- Bot runs only while this process (and PC) is on. Telegram queues updates ~24h; longer downtime can drop messages — `/status` reports pause, LLM, and ingest health. Commands: `/start` `/help` `/digest today|week` `/pause` `/resume` `/status`. Forward a message, send a link, or attach a doc to capture; other text queries the graph.
 
 ### Tests
 
