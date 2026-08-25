@@ -5,12 +5,30 @@ from __future__ import annotations
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from juno.config import get_settings
+from juno.bot.review import review_callback, review_cmd
+from juno.config import Settings, get_settings
+
+__all__ = [
+    "help_cmd",
+    "review_callback",
+    "review_cmd",
+    "start_cmd",
+    "text_query",
+]
 
 
-def _allowed(user_id: int | None) -> bool:
-    settings = get_settings()
-    allow = settings.allowed_user_id_set()
+def _settings(context: ContextTypes.DEFAULT_TYPE) -> Settings:
+    stored = context.application.bot_data.get("settings")
+    if stored is not None:
+        return stored
+    services = context.application.bot_data.get("juno")
+    if services is not None and getattr(services, "settings", None) is not None:
+        return services.settings
+    return get_settings()
+
+
+def _allowed(user_id: int | None, context: ContextTypes.DEFAULT_TYPE) -> bool:
+    allow = _settings(context).allowed_user_id_set()
     if not allow:
         # Empty allowlist = reject everyone until configured (security default)
         return False
@@ -18,7 +36,9 @@ def _allowed(user_id: int | None) -> bool:
 
 
 async def start_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    if not update.effective_user or not _allowed(update.effective_user.id):
+    if not update.effective_user or not _allowed(update.effective_user.id, context):
+        return
+    if update.message is None:
         return
     await update.message.reply_text(
         "Juno online. Ask a question, or /help for commands.\n"
@@ -27,7 +47,9 @@ async def start_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 async def help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    if not update.effective_user or not _allowed(update.effective_user.id):
+    if not update.effective_user or not _allowed(update.effective_user.id, context):
+        return
+    if update.message is None:
         return
     await update.message.reply_text(
         "Commands:\n"
@@ -36,13 +58,15 @@ async def help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         "/digest today|week — (coming)\n"
         "/pause /resume — (coming)\n"
         "/status — (coming)\n"
-        "/review — HITL queue (coming)\n"
+        "/review — HITL queue (Approve / Reject / Skip)\n"
         "Or send a link/doc/text to capture."
     )
 
 
 async def text_query(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    if not update.effective_user or not _allowed(update.effective_user.id):
+    if not update.effective_user or not _allowed(update.effective_user.id, context):
+        return
+    if update.message is None:
         return
     text = (update.message.text or "").strip()
     if not text:

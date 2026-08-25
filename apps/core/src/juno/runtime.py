@@ -12,13 +12,15 @@ from contextlib import asynccontextmanager
 
 import uvicorn
 from fastapi import FastAPI
-from telegram.ext import Application, CommandHandler, MessageHandler, filters
+from telegram.ext import Application, CallbackQueryHandler, CommandHandler, MessageHandler, filters
 
 from juno.api import create_app
 from juno.bot.handlers import help_cmd, start_cmd, text_query
+from juno.bot.review import review_callback, review_cmd
 from juno.config import Settings, get_settings
 from juno.graph.db import Database
 from juno.graph.vectors import VectorStore
+from juno.hitl.queue import ReviewQueue
 from juno.ingest.pipeline import IngestPipeline
 from juno.ingest.watcher import InboxWatcher
 from juno.llm.chat import create_chat_provider
@@ -27,14 +29,22 @@ from juno.llm.embedder import create_embedder
 logger = logging.getLogger("juno.runtime")
 
 
-def build_telegram_application(settings: Settings) -> Application | None:
+def build_telegram_application(
+    settings: Settings,
+    db: Database | None = None,
+) -> Application | None:
     if not settings.telegram_bot_token:
         logger.warning("TELEGRAM_BOT_TOKEN empty — bot disabled")
         return None
 
     app = Application.builder().token(settings.telegram_bot_token).build()
+    app.bot_data["settings"] = settings
+    if db is not None:
+        app.bot_data["review"] = ReviewQueue(db)
     app.add_handler(CommandHandler("start", start_cmd))
     app.add_handler(CommandHandler("help", help_cmd))
+    app.add_handler(CommandHandler("review", review_cmd))
+    app.add_handler(CallbackQueryHandler(review_callback, pattern=r"^rev:"))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_query))
     return app
 
@@ -69,6 +79,8 @@ def attach_lifespan(fastapi_app: FastAPI) -> FastAPI:
 
         ptb: Application | None = app.state.ptb
         if ptb is not None:
+            ptb.bot_data["settings"] = settings
+            ptb.bot_data["review"] = ReviewQueue(db)
             await ptb.initialize()
             await ptb.start()
             if ptb.updater is not None:
@@ -113,7 +125,7 @@ async def run_server(settings: Settings | None = None) -> None:
     fastapi_app.state.embedder = embedder
     fastapi_app.state.vectors = vectors
     fastapi_app.state.pipeline = pipeline
-    fastapi_app.state.ptb = build_telegram_application(settings)
+    fastapi_app.state.ptb = build_telegram_application(settings, db=db)
     attach_lifespan(fastapi_app)
 
     config = uvicorn.Config(
