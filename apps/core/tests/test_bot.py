@@ -360,7 +360,7 @@ class _FakeChat:
         self.answer = answer
         self.complete_calls = 0
 
-    async def healthy(self) -> bool:
+    async def healthy(self, *, timeout: float = 3.0) -> bool:  # noqa: ARG002
         return True
 
     async def complete(self, system: str, messages: list[dict[str, str]], **kwargs):  # noqa: ANN001

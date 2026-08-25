@@ -14,6 +14,7 @@ from juno.config import Settings
 from juno.graph.db import Database
 from juno.ingest.pipeline import IngestResult
 from juno.models import AppSetting, Capture, ModuleHealth
+from juno.rag.engine import search as rag_search
 
 BOT_DATA_KEY = "juno"
 CAPTURE_PAUSED_KEY = "capture_paused"
@@ -126,20 +127,16 @@ def format_search_outcome(outcome: Any) -> str:
 async def answer_user_query(svc: BotServices, text: str) -> str:
     if svc.vectors is None:
         return f"Received ({len(text)} chars). Search is not attached in this runtime."
-    rag_search = _rag_search()
-    if rag_search is not None:
-        chat = getattr(svc.app.state, "chat", None) if svc.app is not None else None
-        outcome = await rag_search(
-            text,
-            vectors=svc.vectors,
-            db=svc.db,
-            chat=chat,
-            n_results=5,
-            mode="auto",
-        )
-        return format_search_outcome(outcome)
-    hits = await svc.vectors.query_async(text, n_results=5)
-    return format_retrieve_reply(text, hits)
+    chat = getattr(svc.app.state, "chat", None) if svc.app is not None else None
+    outcome = await rag_search(
+        text,
+        vectors=svc.vectors,
+        db=svc.db,
+        chat=chat,
+        n_results=5,
+        mode="auto",
+    )
+    return format_search_outcome(outcome)
 
 
 def format_capture_ack(result: IngestResult) -> str:
@@ -179,12 +176,22 @@ def format_status(
     health: list[ModuleHealth],
     api_host: str,
     api_port: int,
+    llm_provider: str | None = None,
+    llm_model: str | None = None,
+    embedding_backend: str | None = None,
 ) -> str:
+    llm = "healthy" if llm_healthy else "offline (retrieve-only)"
+    if llm_provider:
+        ident = f"{llm_provider}/{llm_model}" if llm_model else llm_provider
+        llm = f"{llm} ({ident})"
+    embedder_line = embedding_model
+    if embedding_backend:
+        embedder_line = f"{embedding_model} [{embedding_backend}]"
     lines = [
         "Juno status",
         f"Capture: {'paused' if paused else 'running'}",
-        f"LLM: {'healthy' if llm_healthy else 'offline (retrieve-only)'}",
-        f"Embedder: {embedding_model}",
+        f"LLM: {llm}",
+        f"Embedder: {embedder_line}",
         f"Vectors: {chroma_collection or 'n/a'} ({chroma_count} chunks)",
         f"API: http://{api_host}:{api_port}",
     ]
@@ -265,14 +272,6 @@ def _fmt_dt(value: datetime | None) -> str:
     if value.tzinfo is None:
         value = value.replace(tzinfo=UTC)
     return value.astimezone(UTC).strftime("%Y-%m-%d %H:%M UTC")
-
-
-def _rag_search():
-    try:
-        from juno.rag.engine import search as rag_search
-    except ImportError:
-        return None
-    return rag_search
 
 
 def _snippet(text: str | None) -> str:

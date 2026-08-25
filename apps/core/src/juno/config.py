@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     juno_api_port: int = 8787
     juno_api_token: str = "change-me"
 
-    llm_provider: str = "ollama"  # ollama | openai_compat
+    llm_provider: str = "ollama"  # ollama | openai_compat | offline
     ollama_base_url: str = "http://127.0.0.1:11434"
     ollama_model: str = "llama3.2"
     openai_api_key: str = ""
@@ -46,6 +46,14 @@ class Settings(BaseSettings):
     @property
     def chroma_path(self) -> Path:
         return self.juno_data_dir / "chroma"
+
+    @property
+    def llm_model(self) -> str:
+        if self.llm_provider == "openai_compat":
+            return self.openai_model
+        if self.llm_provider == "offline":
+            return ""
+        return self.ollama_model
 
 
 def get_settings() -> Settings:

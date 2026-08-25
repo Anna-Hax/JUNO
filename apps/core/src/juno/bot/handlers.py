@@ -122,7 +122,15 @@ async def status_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         return
     settings = svc.settings
     embedder = getattr(svc.app.state, "embedder", None) if svc.app is not None else None
+    chat = getattr(svc.app.state, "chat", None) if svc.app is not None else None
     llm_healthy = bool(svc.app is not None and getattr(svc.app.state, "llm_healthy", False))
+    if chat is not None:
+        try:
+            llm_healthy = bool(await chat.healthy(timeout=1.5))
+        except TypeError:
+            llm_healthy = bool(await chat.healthy())
+        if svc.app is not None:
+            svc.app.state.llm_healthy = llm_healthy
     chroma_count = 0
     chroma_collection = getattr(svc.vectors, "collection_name", None)
     if svc.vectors is not None and hasattr(svc.vectors, "count"):
@@ -134,7 +142,10 @@ async def status_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         format_status(
             paused=svc.is_paused(),
             llm_healthy=llm_healthy,
+            llm_provider=getattr(chat, "name", None) or settings.llm_provider,
+            llm_model=getattr(chat, "model", None) or settings.llm_model,
             embedding_model=getattr(embedder, "model_id", settings.embedding_model),
+            embedding_backend=getattr(embedder, "backend", settings.embedding_backend),
             chroma_collection=chroma_collection,
             chroma_count=chroma_count,
             health=health,

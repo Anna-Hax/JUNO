@@ -29,16 +29,16 @@ Prefer one open issue ≈ one PR (`Closes #N`).
 | 1 | #13 | Chroma persistent client — **merged** ([PR #29](https://github.com/Anna-Hax/JUNO/pull/29), `Closes #13`) |
 | 2 | #11 | First Alembic revision — **merged** (`Closes #11`) |
 | 3 | #16 | Ingest pipeline + extractors + inbox watcher — **merged** ([PR #31](https://github.com/Anna-Hax/JUNO/pull/31), `Closes #16`) |
-| 4 | #14 / #15 | Confirm MiniLM path + LLM health in `/status` — **PR opened** ([PR #32](https://github.com/Anna-Hax/JUNO/pull/32), `Closes #14` `#15`) |
-| 5 | #17 | Retrieve-only → sourced RAG + confidence — **done on `feat/rag-retrieve`** (PR / `Closes #17` not opened yet) |
+| 4 | #14 / #15 | Confirm MiniLM path + LLM health in `/status` — **merged** ([PR #32](https://github.com/Anna-Hax/JUNO/pull/32), `Closes #14` `#15`) |
+| 5 | #17 | Retrieve-only → sourced RAG + confidence — **merged** ([PR #33](https://github.com/Anna-Hax/JUNO/pull/33), `Closes #17`) |
 | 6 | #18–#19 | Bot query + forward-to-capture + digest/pause/status — **done on `feat/telegram-bot-18-19`** (PR / `Closes #18` `#19` not opened yet) |
 | 7 | #20 | HITL `/review` inline buttons — in progress on `feat/hitl-review` |
-| 8 | #21 | Harden API (already stubbed; `/ingest` now persists) |
+| 8 | #21 | Harden API (already stubbed; `/ingest` persists; `/search` retrieves) |
 | 9 | #22–#24 | Integration tests, export/wipe, v1.0 gate |
 
-**Next coding issue:** #20 (or finish PRs for #14/#15, #17, #18/#19).
+**Next coding issue:** #20.
 
-Already partially landed (keep issues open until acceptance fully met): #12 write queue, #21 basic routes. Telegram allowlist + query/capture/pause live on `feat/telegram-bot-18-19`. `GET /search` HTTP wiring stays on `feat/rag-retrieve`. MiniLM + LLM health are in [PR #32](https://github.com/Anna-Hax/JUNO/pull/32).
+Already partially landed (keep issues open until acceptance fully met): #12 write queue, #21 basic routes. Telegram allowlist + query/capture/pause live on `feat/telegram-bot-18-19` (queries use merged #17 `juno.rag`). MiniLM + LLM health: [PR #32](https://github.com/Anna-Hax/JUNO/pull/32). `/search`: [PR #33](https://github.com/Anna-Hax/JUNO/pull/33).
 
 ---
 
