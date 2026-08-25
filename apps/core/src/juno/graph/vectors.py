@@ -149,6 +149,36 @@ class VectorStore:
     def count(self) -> int:
         return self._collection.count()
 
+    def export_snapshot(self) -> dict[str, Any]:
+        """Full collection dump for ``juno export`` (ADR-04 / #23)."""
+        total = self.count()
+        base = {
+            "collection_name": self.collection_name,
+            "embedding_model": self._embedder.model_id,
+            "embedding_dimensions": self._embedder.dimensions,
+            "count": total,
+        }
+        if total == 0:
+            return {**base, "ids": [], "documents": [], "metadatas": [], "embeddings": []}
+        raw = self._collection.get(include=["documents", "metadatas", "embeddings"])
+        embeddings_raw = raw.get("embeddings")
+        if embeddings_raw is None:
+            embeddings: list[list[float]] = []
+        else:
+            embeddings = [[float(x) for x in row] for row in embeddings_raw]
+        return {
+            **base,
+            "ids": list(raw.get("ids") or []),
+            "documents": list(raw.get("documents") or []),
+            "metadatas": list(raw.get("metadatas") or []),
+            "embeddings": embeddings,
+        }
+
+    def close(self) -> None:
+        """Drop client handles so ``data/chroma`` can be deleted (``juno wipe``)."""
+        self._collection = None  # type: ignore[assignment]
+        self._client = None  # type: ignore[assignment]
+
     async def upsert_async(
         self,
         *,
