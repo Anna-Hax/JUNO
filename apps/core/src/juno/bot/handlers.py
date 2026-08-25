@@ -13,11 +13,11 @@ from juno.bot.services import (
     BOT_DATA_KEY,
     BotServices,
     all_module_health,
+    answer_user_query,
     clip,
     digest_since,
     format_capture_ack,
     format_digest,
-    format_retrieve_reply,
     format_status,
     is_forwarded,
     recent_captures,
@@ -215,18 +215,18 @@ async def _capture_text(update: Update, context: ContextTypes.DEFAULT_TYPE, text
 async def _query_text(update: Update, context: ContextTypes.DEFAULT_TYPE, text: str) -> None:
     assert update.message is not None
     svc = _services(context)
-    if svc is None or svc.vectors is None:
+    if svc is None:
         await update.message.reply_text(
             f"Received ({len(text)} chars). Search is not attached in this runtime."
         )
         return
     try:
-        hits = await svc.vectors.query_async(text, n_results=5)
+        reply = await answer_user_query(svc, text)
     except Exception:  # noqa: BLE001
         logger.exception("telegram query failed")
         await update.message.reply_text("Search failed. Try again after checking /status.")
         return
-    await update.message.reply_text(format_retrieve_reply(text, hits))
+    await update.message.reply_text(reply)
 
 
 def _telegram_tmp(svc: BotServices, filename: str, unique_id: str) -> Path:

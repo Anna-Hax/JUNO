@@ -87,20 +87,59 @@ def format_retrieve_reply(query: str, hits: list[Any]) -> str:
         q = q[:79].rstrip() + "…"
     lines = [f'Retrieve-only for "{q}" ({len(hits)} hit{"s" if len(hits) != 1 else ""}):']
     for i, hit in enumerate(hits, start=1):
-        meta = getattr(hit, "metadata", None) or {}
-        source = meta.get("source_type") or "capture"
-        capture_id = meta.get("capture_id")
-        label = f"{source}"
-        if capture_id is not None:
-            label = f"{source} #{capture_id}"
-        snippet = (getattr(hit, "text", None) or "").strip().replace("\n", " ")
-        if len(snippet) > 240:
-            snippet = snippet[:239].rstrip() + "…"
-        score = _similarity(getattr(hit, "distance", None))
-        lines.append(f"{i}. {label} ({score})")
+        lines.append(_format_vector_hit(i, hit))
+        snippet = _snippet(getattr(hit, "text", None))
         if snippet:
             lines.append(f"   {snippet}")
     return clip("\n".join(lines))
+
+
+def format_search_outcome(outcome: Any) -> str:
+    results = list(getattr(outcome, "results", None) or [])
+    if not results:
+        return (
+            "Nothing in the graph matched that yet. "
+            "Forward a note or drop a file in inbox/, then ask again."
+        )
+    citations = list(getattr(outcome, "citations", None) or results)
+    confidence = float(getattr(outcome, "confidence", 0.0) or 0.0)
+    answer = getattr(outcome, "answer", None)
+    mode = getattr(outcome, "mode", "retrieve")
+    lines: list[str] = []
+    if mode == "rag" and answer:
+        lines.append(str(answer).strip())
+        lines.append("")
+        lines.append(f"Confidence: {confidence:.0%}")
+        lines.append("Sources:")
+        for i, hit in enumerate(citations, start=1):
+            lines.append(_format_sourced_hit(i, hit))
+    else:
+        lines.append(f"Retrieve-only (confidence {confidence:.0%}):")
+        for i, hit in enumerate(results, start=1):
+            lines.append(_format_sourced_hit(i, hit))
+            snippet = _snippet(getattr(hit, "text", None))
+            if snippet:
+                lines.append(f"   {snippet}")
+    return clip("\n".join(lines))
+
+
+async def answer_user_query(svc: BotServices, text: str) -> str:
+    if svc.vectors is None:
+        return f"Received ({len(text)} chars). Search is not attached in this runtime."
+    rag_search = _rag_search()
+    if rag_search is not None:
+        chat = getattr(svc.app.state, "chat", None) if svc.app is not None else None
+        outcome = await rag_search(
+            text,
+            vectors=svc.vectors,
+            db=svc.db,
+            chat=chat,
+            n_results=5,
+            mode="auto",
+        )
+        return format_search_outcome(outcome)
+    hits = await svc.vectors.query_async(text, n_results=5)
+    return format_retrieve_reply(text, hits)
 
 
 def format_capture_ack(result: IngestResult) -> str:
@@ -226,3 +265,41 @@ def _fmt_dt(value: datetime | None) -> str:
     if value.tzinfo is None:
         value = value.replace(tzinfo=UTC)
     return value.astimezone(UTC).strftime("%Y-%m-%d %H:%M UTC")
+
+
+def _rag_search():
+    try:
+        from juno.rag.engine import search as rag_search
+    except ImportError:
+        return None
+    return rag_search
+
+
+def _snippet(text: str | None) -> str:
+    snippet = (text or "").strip().replace("\n", " ")
+    if len(snippet) > 240:
+        return snippet[:239].rstrip() + "…"
+    return snippet
+
+
+def _format_vector_hit(i: int, hit: Any) -> str:
+    meta = getattr(hit, "metadata", None) or {}
+    source = meta.get("source_type") or "capture"
+    capture_id = meta.get("capture_id")
+    label = f"{source} #{capture_id}" if capture_id is not None else str(source)
+    return f"{i}. {label} ({_similarity(getattr(hit, 'distance', None))})"
+
+
+def _format_sourced_hit(i: int, hit: Any) -> str:
+    source = getattr(hit, "source_type", None) or "capture"
+    capture_id = getattr(hit, "capture_id", None)
+    title = getattr(hit, "title", None) or getattr(hit, "uri", None) or ""
+    label = f"{source} #{capture_id}" if capture_id is not None else str(source)
+    if title:
+        label = f"{label} — {title}"
+    score = getattr(hit, "score", None)
+    if score is not None:
+        score_s = f"{float(score):.0%}"
+    else:
+        score_s = _similarity(getattr(hit, "distance", None))
+    return f"{i}. {label} ({score_s})"

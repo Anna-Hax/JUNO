@@ -1,0 +1,281 @@
+"""Query VectorStore, join SQLite captures, optionally generate a sourced answer."""
+
+from __future__ import annotations
+
+import logging
+import re
+from collections.abc import Sequence
+from dataclasses import dataclass
+from typing import Any
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from juno.graph.db import Database
+from juno.graph.vectors import VectorHit
+from juno.models import Capture, Chunk
+
+logger = logging.getLogger("juno.rag")
+
+DEFAULT_K = 8
+MAX_SOURCE_CHARS = 1200
+_CITE_RE = re.compile(r"\[(\d+)\]")
+
+RAG_SYSTEM = (
+    "You are Juno, a personal knowledge assistant. Answer using ONLY the numbered "
+    "sources. Cite sources as [1], [2], matching those numbers. If the sources do "
+    "not contain the answer, say you don't know. Do not invent facts or citations."
+)
+
+
+@dataclass(frozen=True)
+class SourcedHit:
+    chroma_id: str
+    text: str
+    score: float
+    capture_id: int | None = None
+    chunk_id: int | None = None
+    ordinal: int | None = None
+    title: str | None = None
+    uri: str | None = None
+    source_type: str | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "chroma_id": self.chroma_id,
+            "capture_id": self.capture_id,
+            "chunk_id": self.chunk_id,
+            "ordinal": self.ordinal,
+            "title": self.title,
+            "uri": self.uri,
+            "source_type": self.source_type,
+            "text": self.text,
+            "score": round(self.score, 4),
+        }
+
+
+@dataclass(frozen=True)
+class SearchOutcome:
+    query: str
+    mode: str
+    results: list[SourcedHit]
+    confidence: float
+    answer: str | None = None
+    citations: list[SourcedHit] | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        cites = self.citations if self.citations is not None else self.results
+        return {
+            "query": self.query,
+            "mode": self.mode,
+            "answer": self.answer,
+            "confidence": round(self.confidence, 4),
+            "results": [hit.to_dict() for hit in self.results],
+            "citations": [hit.to_dict() for hit in cites],
+        }
+
+
+def similarity_from_distance(distance: float | None) -> float:
+    """Chroma cosine space stores distance = 1 - cosine similarity."""
+    if distance is None:
+        return 0.0
+    return max(0.0, min(1.0, 1.0 - float(distance)))
+
+
+def _as_int(value: Any) -> int | None:
+    if value is None or isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _confidence(hits: Sequence[SourcedHit]) -> float:
+    if not hits:
+        return 0.0
+    return max(hit.score for hit in hits)
+
+
+async def retrieve(
+    query: str,
+    *,
+    vectors: Any,
+    db: Database | None,
+    n_results: int = DEFAULT_K,
+) -> list[SourcedHit]:
+    """Vector search then join hits to `chunks` / `captures` (ADR-04)."""
+    q = (query or "").strip()
+    if not q or vectors is None or n_results < 1:
+        return []
+    hits: list[VectorHit] = await vectors.query_async(q, n_results=n_results)
+    if not hits:
+        return []
+    by_chroma = await _load_chunks(db, [hit.id for hit in hits])
+    sourced: list[SourcedHit] = []
+    for hit in hits:
+        chunk, capture = by_chroma.get(hit.id, (None, None))
+        meta = hit.metadata or {}
+        text = (chunk.text if chunk is not None else None) or hit.text or ""
+        sourced.append(
+            SourcedHit(
+                chroma_id=hit.id,
+                text=text,
+                score=similarity_from_distance(hit.distance),
+                capture_id=(
+                    capture.id if capture is not None else _as_int(meta.get("capture_id"))
+                ),
+                chunk_id=chunk.id if chunk is not None else None,
+                ordinal=(
+                    chunk.ordinal if chunk is not None else _as_int(meta.get("ordinal"))
+                ),
+                title=capture.title if capture is not None else None,
+                uri=capture.uri if capture is not None else None,
+                source_type=(
+                    capture.source_type
+                    if capture is not None
+                    else (str(meta["source_type"]) if meta.get("source_type") else None)
+                ),
+            )
+        )
+    return sourced
+
+
+async def _load_chunks(
+    db: Database | None, chroma_ids: Sequence[str]
+) -> dict[str, tuple[Chunk | None, Capture | None]]:
+    if db is None or not chroma_ids:
+        return {}
+
+    async def fetch(
+        session: AsyncSession,
+    ) -> dict[str, tuple[Chunk | None, Capture | None]]:
+        result = await session.execute(
+            select(Chunk, Capture)
+            .join(Capture, Chunk.capture_id == Capture.id)
+            .where(Chunk.chroma_id.in_(list(chroma_ids)))
+        )
+        mapped: dict[str, tuple[Chunk | None, Capture | None]] = {}
+        for chunk, capture in result.all():
+            if chunk.chroma_id:
+                mapped[chunk.chroma_id] = (chunk, capture)
+        return mapped
+
+    return await db.read(fetch)
+
+
+async def _chat_is_healthy(chat: Any) -> bool:
+    if chat is None:
+        return False
+    probe = getattr(chat, "healthy", None)
+    if probe is None:
+        return False
+    try:
+        return bool(await probe())
+    except TypeError:
+        try:
+            return bool(await probe(timeout=1.5))
+        except Exception:  # noqa: BLE001
+            return False
+    except Exception:  # noqa: BLE001
+        logger.exception("LLM health probe failed")
+        return False
+
+
+def _format_sources(hits: Sequence[SourcedHit]) -> str:
+    lines: list[str] = []
+    for i, hit in enumerate(hits, start=1):
+        label = hit.title or hit.uri or hit.chroma_id
+        body = hit.text.strip()
+        if len(body) > MAX_SOURCE_CHARS:
+            body = body[: MAX_SOURCE_CHARS - 1] + "…"
+        lines.append(f"[{i}] {label}\n{body}")
+    return "\n\n".join(lines)
+
+
+def _cited_hits(answer: str, hits: Sequence[SourcedHit]) -> list[SourcedHit]:
+    cited: list[SourcedHit] = []
+    seen: set[int] = set()
+    for match in _CITE_RE.finditer(answer):
+        idx = int(match.group(1))
+        if idx in seen or idx < 1 or idx > len(hits):
+            continue
+        seen.add(idx)
+        cited.append(hits[idx - 1])
+    return cited
+
+
+async def search(
+    query: str,
+    *,
+    vectors: Any,
+    db: Database | None,
+    chat: Any = None,
+    n_results: int = DEFAULT_K,
+    mode: str = "auto",
+) -> SearchOutcome:
+    """Retrieve hits; generate a sourced answer when an LLM is healthy."""
+    q = (query or "").strip()
+    hits = await retrieve(q, vectors=vectors, db=db, n_results=n_results)
+    retrieve_confidence = _confidence(hits)
+    requested = (mode or "auto").strip().lower()
+    want_rag = requested in {"auto", "rag"} and bool(hits)
+
+    if requested == "retrieve" or not want_rag:
+        return SearchOutcome(
+            query=q,
+            mode="retrieve",
+            results=hits,
+            confidence=retrieve_confidence,
+            answer=None,
+            citations=hits,
+        )
+
+    if not await _chat_is_healthy(chat):
+        return SearchOutcome(
+            query=q,
+            mode="retrieve",
+            results=hits,
+            confidence=retrieve_confidence,
+            answer=None,
+            citations=hits,
+        )
+
+    try:
+        answer = (await chat.complete(
+            RAG_SYSTEM,
+            [{"role": "user", "content": f"Question: {q}\n\nSources:\n{_format_sources(hits)}"}],
+        )).strip()
+    except Exception:  # noqa: BLE001
+        logger.exception("RAG generate failed; falling back to retrieve-only")
+        return SearchOutcome(
+            query=q,
+            mode="retrieve",
+            results=hits,
+            confidence=retrieve_confidence,
+            answer=None,
+            citations=hits,
+        )
+
+    if not answer:
+        return SearchOutcome(
+            query=q,
+            mode="retrieve",
+            results=hits,
+            confidence=retrieve_confidence,
+            answer=None,
+            citations=hits,
+        )
+
+    citations = _cited_hits(answer, hits) or list(hits)
+    rag_confidence = _confidence(citations)
+    return SearchOutcome(
+        query=q,
+        mode="rag",
+        results=hits,
+        confidence=rag_confidence,
+        answer=answer,
+        citations=citations,
+    )

@@ -353,3 +353,41 @@ async def test_document_is_ingested(allowed_settings):
     dest = pipeline.calls[0][1]
     assert dest.name == "abc123.md"
     assert not dest.exists()
+
+
+class _FakeChat:
+    def __init__(self, answer: str) -> None:
+        self.answer = answer
+        self.complete_calls = 0
+
+    async def healthy(self) -> bool:
+        return True
+
+    async def complete(self, system: str, messages: list[dict[str, str]], **kwargs):  # noqa: ANN001
+        self.complete_calls += 1
+        return self.answer
+
+
+@pytest.mark.asyncio
+async def test_text_query_uses_rag_engine_when_llm_healthy(allowed_settings, db):
+    from juno.graph.vectors import VectorStore
+    from juno.llm.embedder import StubEmbedder
+
+    note = (
+        "Juno telegram rag marker rust-ownership-xyz. "
+        "Ownership in Rust means each value has a single owner."
+    )
+    vectors = VectorStore(allowed_settings, StubEmbedder())
+    pipe = IngestPipeline(db, vectors=vectors)
+    await pipe.ingest_text(note, source_type="upload", title="Rust notes")
+    app = create_app(allowed_settings, db=db, vectors=vectors, pipeline=pipe)
+    chat = _FakeChat("Each value has a single owner [1].")
+    app.state.chat = chat
+    svc = _svc(allowed_settings, db=db, app=app, vectors=vectors, pipeline=pipe)
+    update = _update(ALLOWED_ID, note)
+    await text_msg(update, _context(svc))
+    body = update.message.reply_text.await_args.args[0]
+    assert "Each value has a single owner [1]." in body
+    assert "Rust notes" in body
+    assert "Confidence:" in body
+    assert chat.complete_calls == 1
