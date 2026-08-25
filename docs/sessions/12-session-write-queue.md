@@ -11,7 +11,7 @@
 
 `Database.write()` already serialized commits with an `asyncio.Lock` (ADR-02) and connections already set `PRAGMA journal_mode=WAL` + `busy_timeout=5000`. This pass proves the acceptance: 24 overlapping `ingest_text` calls complete without `database is locked`, WAL is queryable, and reads proceed while a write is held.
 
-Work is on branch `feat/write-queue-12`. PR / `Closes #12` not opened yet.
+Work landed on `main` via [PR #37](https://github.com/Anna-Hax/JUNO/pull/37) (`Closes #12`).
 
 ---
 
@@ -36,8 +36,7 @@ Ingest, HITL, bot pause, and runtime health already go through `db.write()` — 
 
 ## Not in this session
 
-- PR / merge to `main` (`Closes #12`)
-- Integration tests ingest → retrieve → review (#22)
+- Integration tests (#22)
 - Export / wipe (#23)
 
 ---

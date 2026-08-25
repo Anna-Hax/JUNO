@@ -46,7 +46,7 @@ JUNO/
 
 - `uv run juno serve` → `runtime.main_sync()`
 - `uv run juno db-init` → `Database.migrate()` (Alembic `upgrade head`, or stamp legacy `create_all` DBs)
-- Tests: `test_foundation.py`, `test_migrations.py`, `test_ingest.py`, `test_vectors.py`, `test_embedder.py`, `test_chat.py`, `test_rag.py`, `test_bot.py`, `test_review.py`, `test_bot_review.py`, `test_api.py`, `test_write_queue.py`
+- Tests: `test_foundation.py`, `test_migrations.py`, `test_ingest.py`, `test_vectors.py`, `test_embedder.py`, `test_chat.py`, `test_rag.py`, `test_bot.py`, `test_review.py`, `test_bot_review.py`, `test_api.py`, `test_write_queue.py`, `test_integration.py`
 
 ### Dependencies
 
