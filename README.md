@@ -33,6 +33,14 @@ uv run juno db-init
 uv run juno serve
 ```
 
+Data ownership:
+
+```powershell
+uv run juno export -o ../../data/backup.json
+# Stop juno serve first on Windows, then:
+uv run juno wipe --confirm wipe-all-data
+```
+
 - API: `http://127.0.0.1:8787/health` (no token). `/status` `/ingest` `/search` need `Authorization: Bearer <JUNO_API_TOKEN>`. Serve refuses the example `change-me` token and any non-loopback `JUNO_API_HOST`.
 - Token-gated `GET /status` reports the live embedder (model / backend / dimensions) and LLM health (`llm_healthy`, `llm_provider`, `llm_model`). If Ollama is down, `llm_healthy` is false and answers stay retrieve-only.
 - Token-gated `GET /search?q=` returns citations + confidence (sourced answer when the LLM is healthy).

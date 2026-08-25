@@ -67,5 +67,5 @@ The wrapper is `VectorStore`. Runtime attaches it to `app.state.vectors`. `/stat
 
 - Ingest pipeline (#16) assigns `chunks.chroma_id` as `c{capture_id}-n{ordinal}` and upserts through the attached `VectorStore`.
 - RAG retrieve (#17) queries `VectorStore` then joins hits to SQLite captures (`juno.rag.engine`).
-- Export/wipe (#23) should delete or recreate `data/chroma/` as well as the graph DB.
+- Export/wipe ([#23](https://github.com/Anna-Hax/JUNO/issues/23)): `juno export` writes graph tables + active Chroma collection to JSON; `juno wipe --confirm wipe-all-data` deletes `data/juno.db` and `data/chroma/` then re-runs migrations. Stop `juno serve` before wipe on Windows (Chroma file locks).
 - Optional: record active collection name in SQLite `settings` so `/status` and HITL can explain a model mismatch.

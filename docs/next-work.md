@@ -35,10 +35,11 @@ Prefer one open issue ≈ one PR (`Closes #N`).
 | 7 | #20 | HITL `/review` inline buttons — **merged** ([PR #35](https://github.com/Anna-Hax/JUNO/pull/35), `Closes #20`) |
 | 8 | #21 | Harden API — **merged** ([PR #36](https://github.com/Anna-Hax/JUNO/pull/36), `Closes #21`) |
 | 9 | #12 | Concurrent ingest through the write queue — **merged** ([PR #37](https://github.com/Anna-Hax/JUNO/pull/37), `Closes #12`) |
-| 10 | #22 | Integration tests ingest → retrieve → review — **done on `feat/integration-tests-22`** (PR / `Closes #22` not opened yet) |
-| 11 | #23–#24 | Export/wipe, v1.0 gate |
+| 10 | #22 | Integration tests ingest → retrieve → review — **merged** ([PR #38](https://github.com/Anna-Hax/JUNO/pull/38), `Closes #22`) |
+| 11 | #23 | Export/wipe CLI — **done on `feat/export-wipe-23`** (PR / `Closes #23` not opened yet) |
+| 12 | #24 | v1.0 release gate checklist |
 
-**Next coding issue:** #23 after #22 is merged.
+**Next coding issue:** #24 after #23 is merged.
 
 ---
 

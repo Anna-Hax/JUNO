@@ -11,7 +11,7 @@
 
 Added `tests/test_integration.py` with three CI happy paths: pipeline ingest → `GET /search` retrieve → `ReviewQueue` approve; ingest + mocked RAG → skip then approve; `POST /ingest` → search. LLM is mocked via `FakeChat` (same pattern as `test_rag.py`).
 
-Work is on branch `feat/integration-tests-22`. PR / `Closes #22` not opened yet.
+Work landed on `main` via [PR #38](https://github.com/Anna-Hax/JUNO/pull/38) (`Closes #22`).
 
 ---
 
