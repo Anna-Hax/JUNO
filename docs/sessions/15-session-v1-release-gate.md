@@ -10,7 +10,7 @@
 
 Added [`docs/v1.0-release-gate.md`](../v1.0-release-gate.md) documenting every M1 P0/P1 issue and its merge PR. Bumped package version to **1.0.0**. Updated README + [`docs/next-work.md`](../next-work.md) to mark M1 foundation complete and point at M2 epic **#25**.
 
-Work is on branch `chore/v1-release-gate-24`. PR / `Closes #24` not opened yet.
+Work landed on `main` via [PR #40](https://github.com/Anna-Hax/JUNO/pull/40) (`Closes #24`).
 
 ---
 
