@@ -17,3 +17,7 @@ Multiple producers write the graph: Telegram handlers, inbox watcher, FastAPI
 ## Consequences
 Write throughput is limited to one transaction at a time (fine for personal use).
 Callers must use `db.write` / `db.read` instead of opening ad-hoc sessions for writes.
+
+`PRAGMA journal_mode` is WAL after migrate; `Database.journal_mode()` exposes that for tests.
+Concurrent ingest (`asyncio.gather` of many `IngestPipeline.ingest_text` calls) must not raise
+`database is locked` — covered by `tests/test_write_queue.py` ([#12](https://github.com/Anna-Hax/JUNO/issues/12)).

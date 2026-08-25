@@ -17,5 +17,6 @@ Living notes for what was implemented, how GitHub is set up, and what to do next
 | [09-session-telegram-bot.md](09-session-telegram-bot.md) | **M1 #18 / #19** — Telegram query, capture, pause/digest/status |
 | [10-session-hitl-review.md](10-session-hitl-review.md) | **M1 #20** — HITL review queue + `/review` buttons |
 | [11-session-api-harden.md](11-session-api-harden.md) | **M1 #21** — loopback API + token auth |
+| [12-session-write-queue.md](12-session-write-queue.md) | **M1 #12** — WAL + concurrent ingest write queue |
 
 Architecture decisions live in [`../adr/`](../adr/). Product requirements: [`../../personal-knowledge-graph-prd.md](../../personal-knowledge-graph-prd.md).

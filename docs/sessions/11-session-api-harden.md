@@ -11,7 +11,7 @@
 
 Routes were already stubbed (ingest persists; search retrieves). This pass fails closed: a missing, wrong, or example `change-me` token is **401**; `juno serve` refuses to bind a non-loopback host or start with the example token; `/docs` is off; `/ingest` no longer returns a fake `{accepted: true}` when the pipeline is missing (503 instead).
 
-Work is on branch `feat/api-harden-21`. PR / `Closes #21` not opened yet.
+Work landed on `main` via [PR #36](https://github.com/Anna-Hax/JUNO/pull/36) (`Closes #21`).
 
 ---
 
@@ -44,7 +44,6 @@ Rules encoded in code:
 
 ## Not in this session
 
-- PR / merge to `main` (`Closes #21`)
 - Concurrent ingest lock test (#12)
 - Integration tests (#22) and export/wipe (#23)
 
