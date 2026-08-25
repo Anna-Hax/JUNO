@@ -11,6 +11,7 @@ Personal knowledge-graph agent: passively (and manually) capture what you read, 
 - **Chroma** for vectors — persistent client, one collection per embedding model ([ADR-04](docs/adr/004-chroma-collections.md)); **stub embedder** in CI
 - **Browser extension** (`apps/extension`): stub until Phase 2
 - **Inbox** (`inbox/`): drop `.txt` / `.md` / `.pdf` / `.url` (or a one-line http(s) text file). `juno serve` watches the folder; good files move to `inbox/.processed/`, unreadable PDFs to `inbox/.failed/`.
+- **HITL** (`/review`): inline Approve / Reject / Skip for pending graph merges
 
 ## Prerequisites
 
@@ -35,7 +36,7 @@ uv run juno serve
 - API: `http://127.0.0.1:8787/health`
 - Token-gated `GET /status` reports the live embedder (model / backend / dimensions) and LLM health (`llm_healthy`, `llm_provider`, `llm_model`). If Ollama is down, `llm_healthy` is false and answers stay retrieve-only.
 - Token-gated `GET /search?q=` returns citations + confidence (sourced answer when the LLM is healthy).
-- Bot runs only while this process (and PC) is on. Telegram queues updates ~24h; longer downtime can drop messages. Commands: `/start` `/help` `/digest today|week` `/pause` `/resume` `/status`. Forward a message, send a link, or attach a doc to capture; other text queries the graph.
+- Bot runs only while this process (and PC) is on. Telegram queues updates ~24h; longer downtime can drop messages. Commands: `/start` `/help` `/digest today|week` `/pause` `/resume` `/status` `/review`. Forward a message, send a link, or attach a doc to capture; other text queries the graph.
 
 ### Tests
 

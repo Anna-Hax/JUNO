@@ -14,7 +14,7 @@ from datetime import UTC, datetime
 import uvicorn
 from fastapi import FastAPI
 from sqlalchemy.ext.asyncio import AsyncSession
-from telegram.ext import Application, CommandHandler, MessageHandler, filters
+from telegram.ext import Application, CallbackQueryHandler, CommandHandler, MessageHandler, filters
 
 from juno.api import create_app
 from juno.bot.handlers import (
@@ -27,10 +27,12 @@ from juno.bot.handlers import (
     status_cmd,
     text_msg,
 )
+from juno.bot.review import review_callback, review_cmd
 from juno.bot.services import BOT_DATA_KEY, BotServices, load_capture_paused
 from juno.config import Settings, get_settings
 from juno.graph.db import Database
 from juno.graph.vectors import VectorStore
+from juno.hitl.queue import ReviewQueue
 from juno.ingest.pipeline import IngestPipeline
 from juno.ingest.watcher import InboxWatcher
 from juno.llm.chat import ChatProvider, create_chat_provider
@@ -46,12 +48,15 @@ def build_telegram_application(settings: Settings) -> Application | None:
         return None
 
     app = Application.builder().token(settings.telegram_bot_token).build()
+    app.bot_data["settings"] = settings
     app.add_handler(CommandHandler("start", start_cmd))
     app.add_handler(CommandHandler("help", help_cmd))
     app.add_handler(CommandHandler("digest", digest_cmd))
     app.add_handler(CommandHandler("pause", pause_cmd))
     app.add_handler(CommandHandler("resume", resume_cmd))
     app.add_handler(CommandHandler("status", status_cmd))
+    app.add_handler(CommandHandler("review", review_cmd))
+    app.add_handler(CallbackQueryHandler(review_callback, pattern=r"^rev:"))
     app.add_handler(MessageHandler(filters.Document.ALL, document_msg))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_msg))
     return app
@@ -140,6 +145,8 @@ def attach_lifespan(fastapi_app: FastAPI) -> FastAPI:
 
         ptb: Application | None = app.state.ptb
         if ptb is not None:
+            ptb.bot_data["settings"] = settings
+            ptb.bot_data["review"] = ReviewQueue(db)
             ptb.bot_data[BOT_DATA_KEY] = BotServices(
                 settings=settings,
                 db=db,

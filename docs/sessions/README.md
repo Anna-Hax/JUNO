@@ -15,5 +15,6 @@ Living notes for what was implemented, how GitHub is set up, and what to do next
 | [07-session-embedder-llm.md](07-session-embedder-llm.md) | **M1 #14 / #15** — MiniLM path + LLM health in `/status` |
 | [08-session-rag.md](08-session-rag.md) | **M1 #17** — retrieve-only + sourced RAG with citations |
 | [09-session-telegram-bot.md](09-session-telegram-bot.md) | **M1 #18 / #19** — Telegram query, capture, pause/digest/status |
+| [10-session-hitl-review.md](10-session-hitl-review.md) | **M1 #20** — HITL review queue + `/review` buttons |
 
-Architecture decisions live in [`../adr/`](../adr/). Product requirements: [`../../personal-knowledge-graph-prd.md`](../../personal-knowledge-graph-prd.md).
+Architecture decisions live in [`../adr/`](../adr/). Product requirements: [`../../personal-knowledge-graph-prd.md](../../personal-knowledge-graph-prd.md).
