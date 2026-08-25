@@ -1,6 +1,6 @@
 # Next work (after M0 bootstrap)
 
-**Last updated:** 2026-08-22  
+**Last updated:** 2026-08-26  
 **Track issues on:** https://github.com/Anna-Hax/JUNO/issues
 
 ---
@@ -26,15 +26,19 @@ Prefer one open issue ≈ one PR (`Closes #N`).
 
 | Order | Issue | Work |
 |-------|-------|------|
-| 3 | #16 | Ingest pipeline + extractors + inbox watcher — **done on `feat/ingest-pipeline`** (PR / `Closes #16` not opened yet) |
-| 4 | #14 / #15 | Confirm MiniLM path + LLM health in `/status` |
-| 5 | #17 | Retrieve-only → sourced RAG + confidence |
-| 6 | #18–#19 | Bot query + forward-to-capture + digest/pause/status |
-| 7 | #20 | HITL `/review` inline buttons |
-| 8 | #21 | Harden API (already stubbed) |
+| 1 | #13 | Chroma persistent client — **merged** ([PR #29](https://github.com/Anna-Hax/JUNO/pull/29)) |
+| 2 | #11 | First Alembic revision — **merged** ([PR #30](https://github.com/Anna-Hax/JUNO/pull/30)) |
+| 3 | #16 | Ingest pipeline + extractors + inbox watcher — **merged** ([PR #31](https://github.com/Anna-Hax/JUNO/pull/31)) |
+| 4 | #14 / #15 | Confirm MiniLM path + LLM health in `/status` — **done on `feat/embedder-llm-status`** |
+| 5 | #17 | Retrieve-only → sourced RAG + confidence — in progress (`feat/rag-retrieve`) |
+| 6 | #18–#19 | Bot query + forward-to-capture + digest/pause/status — in progress (worktree) |
+| 7 | #20 | HITL `/review` inline buttons — **done on `feat/hitl-review`** (PR / `Closes #20` not opened yet) |
+| 8 | #21 | Harden API (already stubbed; `/ingest` now persists) |
 | 9 | #22–#24 | Integration tests, export/wipe, v1.0 gate |
 
-Already partially landed (keep issues open until acceptance fully met): #13 Chroma wrapper (branch, unmerged), #16 ingest (branch, unmerged), #12 write queue, #14 stub embedder, #15 chat adapters, #18 allowlist handlers, #21 basic routes.
+**Next coding issue:** #17 / #18–#19 (parallel); then merge #20 after those land (expect `handlers.py` / `runtime.py` conflicts).
+
+Already partially landed (keep issues open until acceptance fully met): #12 write queue, #14/#15 on `feat/embedder-llm-status`, #18 allowlist handlers, #21 basic routes. Ingest upserts into the #13 `VectorStore`. HITL queue + `/review` buttons are on this branch (#20).
 
 ---
 

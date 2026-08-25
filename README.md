@@ -11,6 +11,7 @@ Personal knowledge-graph agent: passively (and manually) capture what you read, 
 - **Chroma** for vectors — persistent client, one collection per embedding model ([ADR-04](docs/adr/004-chroma-collections.md)); **stub embedder** in CI
 - **Browser extension** (`apps/extension`): stub until Phase 2
 - **Inbox** (`inbox/`): drop `.txt` / `.md` / `.pdf` / `.url` (or a one-line http(s) text file). `juno serve` watches the folder; good files move to `inbox/.processed/`, unreadable PDFs to `inbox/.failed/`.
+- **HITL** (`/review`): inline Approve / Reject / Skip for pending graph merges
 
 ## Prerequisites
 
