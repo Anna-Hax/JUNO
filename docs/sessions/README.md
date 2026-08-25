@@ -9,5 +9,6 @@ Living notes for what was implemented, how GitHub is set up, and what to do next
 | [02-codebase-map.md](02-codebase-map.md) | Module map of the scaffold |
 | [03-next-work.md](03-next-work.md) | Ordered next tasks |
 | [04-session-chroma-client.md](04-session-chroma-client.md) | **M1 #13** — persistent Chroma client |
+| [05-session-alembic.md](05-session-alembic.md) | **M1 #11** — first Alembic revision |
 
 Architecture decisions live in [`../adr/`](../adr/). Product requirements: [`../../personal-knowledge-graph-prd.md`](../../personal-knowledge-graph-prd.md).

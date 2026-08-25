@@ -1,2 +1,0 @@
-# Alembic placeholder — first revision lands with schema churn (ADR-03).
-# Until then, use: uv run juno db-init

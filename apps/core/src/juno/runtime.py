@@ -42,7 +42,7 @@ def attach_lifespan(fastapi_app: FastAPI) -> FastAPI:
     async def lifespan(app: FastAPI):
         settings: Settings = app.state.settings
         db: Database = app.state.db
-        await db.create_all()
+        await db.migrate()
 
         chat = create_chat_provider(
             settings.llm_provider,

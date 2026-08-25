@@ -36,6 +36,11 @@ jobs:
       - name: Ruff format
         run: uv run ruff format --check src tests
 
+      - name: Alembic upgrade head
+        env:
+          JUNO_DATA_DIR: ${{ runner.temp }}/juno-ci-data
+        run: uv run alembic upgrade head
+
       - name: Pytest
         env:
           EMBEDDING_BACKEND: stub

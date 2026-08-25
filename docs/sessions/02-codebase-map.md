@@ -1,6 +1,6 @@
 # Codebase map (as of M0 / early M1)
 
-**Last updated:** 2026-08-21
+**Last updated:** 2026-08-25
 
 ---
 
@@ -32,9 +32,10 @@ JUNO/
 | Runtime | `runtime.py` | Shared asyncio: uvicorn + PTB lifespan |
 | API | `api/__init__.py` | FastAPI routes + token + loopback middleware |
 | Bot | `bot/handlers.py` | Telegram commands / text stub |
-| Graph DB | `graph/db.py` | Engine, WAL, write queue |
+| Graph DB | `graph/db.py`, `graph/migrations.py` | Engine, WAL, write queue, Alembic upgrade/stamp |
 | Vectors | `graph/vectors.py` | Persistent Chroma; one collection per embedding model ([ADR-04](../adr/004-chroma-collections.md)) |
 | Models | `models/__init__.py` | SQLAlchemy tables |
+| Alembic | `alembic/` + `alembic.ini` | Revision `0001` = current ORM ([ADR-03](../adr/003-alembic.md)) |
 | LLM | `llm/embedder.py`, `llm/chat.py` | Embeddings + chat providers |
 | Ingest | `ingest/` | Placeholder (M1) |
 | Jobs | `jobs/` | Placeholder (M4) |
@@ -42,8 +43,8 @@ JUNO/
 ### Entry points
 
 - `uv run juno serve` → `runtime.main_sync()`
-- `uv run juno db-init` → `Database.create_all()`
-- Tests: `apps/core/tests/test_foundation.py`, `apps/core/tests/test_vectors.py`
+- `uv run juno db-init` → `Database.migrate()` (Alembic `upgrade head`, or stamp legacy `create_all` DBs)
+- Tests: `apps/core/tests/test_foundation.py`, `test_vectors.py`, `test_migrations.py`
 
 ### Dependencies
 
@@ -74,7 +75,7 @@ Optional: `--extra embeddings` for sentence-transformers; `--extra dev` for pyte
 
 1. One process, one asyncio loop (ADR-01).
 2. Serialized SQLite writes (ADR-02).
-3. Migrations via Alembic when schema churns (ADR-03); scaffold still uses `create_all`.
+3. Migrations via Alembic (ADR-03); `db-init` / serve run `upgrade head` (stamp pre-Alembic files).
 4. Empty Telegram allowlist ⇒ reject all users (secure default).
 5. API token required even on localhost.
 6. Stub embedder so CI never downloads torch.

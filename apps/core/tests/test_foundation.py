@@ -11,7 +11,7 @@ from juno.models import AppSetting, Capture
 @pytest.mark.asyncio
 async def test_db_init_and_write_queue(settings):
     db = Database(settings)
-    await db.create_all()
+    await db.migrate()
 
     async def insert(session):
         session.add(

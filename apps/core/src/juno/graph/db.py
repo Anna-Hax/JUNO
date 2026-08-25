@@ -20,6 +20,7 @@ class Database:
 
     def __init__(self, settings: Settings) -> None:
         settings.juno_data_dir.mkdir(parents=True, exist_ok=True)
+        self.settings = settings
         url = f"sqlite+aiosqlite:///{settings.sqlite_path.as_posix()}"
         self.engine = create_async_engine(url, echo=False)
         self.session_factory = async_sessionmaker(self.engine, expire_on_commit=False)
@@ -33,9 +34,19 @@ class Database:
             cursor.close()
 
     async def create_all(self) -> None:
+        """Create tables from ORM metadata (tests / legacy bootstrap only)."""
         async with self.engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
             await conn.execute(text("PRAGMA journal_mode=WAL"))
+
+    async def migrate(self) -> str:
+        """Bring the SQLite file to Alembic head (ADR-03). Does not block the loop."""
+        from juno.graph.migrations import upgrade_to_head
+
+        action = await asyncio.to_thread(upgrade_to_head, self.settings.sqlite_path)
+        async with self.engine.begin() as conn:
+            await conn.execute(text("PRAGMA journal_mode=WAL"))
+        return action
 
     async def write(self, fn: Callable[[AsyncSession], Awaitable[T]]) -> T:
         """Serialize all write transactions through one lock."""
