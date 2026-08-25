@@ -1,0 +1,289 @@
+"""Review queue: proposed merges stay pending until an Approve tap."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from typing import Any, Literal
+
+from sqlalchemy import case, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from juno.graph.db import Database
+from juno.models import Edge, Node, ReviewItem
+
+Decision = Literal["approve", "reject", "skip"]
+
+KIND_MERGE = "merge"
+STATUS_PENDING = "pending"
+STATUS_SKIPPED = "skipped"
+STATUS_DECIDED = "decided"
+EDGE_PENDING = "pending"
+EDGE_COMMITTED = "committed"
+EDGE_REJECTED = "rejected"
+
+_ALLOWED_DECISIONS: frozenset[str] = frozenset({"approve", "reject", "skip"})
+
+
+@dataclass(frozen=True)
+class ReviewCard:
+    id: int
+    kind: str
+    confidence: float
+    payload: dict[str, Any]
+    status: str
+    decision: str | None
+
+    def summary(self) -> str:
+        lines = [
+            f"Review #{self.id} · {self.kind}",
+            f"Confidence: {self.confidence:.2f}",
+        ]
+        if self.kind == KIND_MERGE:
+            src = str(self.payload.get("from_name") or "?")
+            dst = str(self.payload.get("to_name") or "?")
+            lines.append(f'Merge "{src}" → "{dst}"')
+            reason = self.payload.get("reason")
+            if reason:
+                lines.append(str(reason))
+            lines.append("This merge stays pending until you Approve.")
+        else:
+            preview = str(self.payload)[:500]
+            if preview:
+                lines.append(preview)
+        return "\n".join(lines)
+
+
+@dataclass(frozen=True)
+class DecideResult:
+    card: ReviewCard
+    applied: bool
+    already_decided: bool
+    next_card: ReviewCard | None
+
+
+class ReviewQueue:
+    """Persist HITL items and apply merge payloads only on approve."""
+
+    def __init__(self, db: Database) -> None:
+        self.db = db
+
+    async def enqueue(
+        self,
+        *,
+        kind: str,
+        payload: dict[str, Any],
+        confidence: float = 0.5,
+    ) -> ReviewCard:
+        async def write(session: AsyncSession) -> ReviewCard:
+            item = ReviewItem(
+                kind=kind,
+                confidence=confidence,
+                payload=payload,
+                status=STATUS_PENDING,
+            )
+            session.add(item)
+            await session.flush()
+            return _card(item)
+
+        return await self.db.write(write)
+
+    async def propose_merge(
+        self,
+        *,
+        from_name: str,
+        to_name: str,
+        confidence: float,
+        reason: str | None = None,
+        relation: str = "same_as",
+        from_kind: str = "topic",
+        to_kind: str = "topic",
+    ) -> ReviewCard:
+        """Create nodes (if needed) plus a *pending* edge and a review item.
+
+        The edge is not committed here — that requires ``decide(..., "approve")``.
+        """
+
+        async def write(session: AsyncSession) -> ReviewCard:
+            src = await _get_or_create_node(session, from_name.strip(), from_kind)
+            dst = await _get_or_create_node(session, to_name.strip(), to_kind)
+            edge = await _pending_edge(
+                session,
+                from_id=src.id,
+                to_id=dst.id,
+                relation=relation,
+                confidence=confidence,
+            )
+            item = ReviewItem(
+                kind=KIND_MERGE,
+                confidence=confidence,
+                payload={
+                    "from_name": src.canonical_name,
+                    "to_name": dst.canonical_name,
+                    "from_node_id": src.id,
+                    "to_node_id": dst.id,
+                    "edge_id": edge.id,
+                    "relation": relation,
+                    "reason": reason,
+                },
+                status=STATUS_PENDING,
+            )
+            session.add(item)
+            await session.flush()
+            return _card(item)
+
+        return await self.db.write(write)
+
+    async def next_open(self) -> ReviewCard | None:
+        async def load(session: AsyncSession) -> ReviewCard | None:
+            row = await _next_row(session)
+            return _card(row) if row is not None else None
+
+        return await self.db.read(load)
+
+    async def get(self, item_id: int) -> ReviewCard | None:
+        async def load(session: AsyncSession) -> ReviewCard | None:
+            row = await session.get(ReviewItem, item_id)
+            return _card(row) if row is not None else None
+
+        return await self.db.read(load)
+
+    async def decide(self, item_id: int, decision: Decision) -> DecideResult:
+        if decision not in _ALLOWED_DECISIONS:
+            raise ValueError(f"unknown decision: {decision}")
+
+        async def write(session: AsyncSession) -> DecideResult:
+            row = await session.get(ReviewItem, item_id)
+            if row is None:
+                raise LookupError(f"review item {item_id} not found")
+
+            already = row.status == STATUS_DECIDED
+            applied = False
+            if not already:
+                if decision == "skip":
+                    row.status = STATUS_SKIPPED
+                    row.decision = None
+                    row.decided_at = None
+                else:
+                    row.status = STATUS_DECIDED
+                    row.decision = decision
+                    row.decided_at = datetime.now(UTC)
+                    if decision == "approve":
+                        applied = await _apply(session, row)
+                    else:
+                        await _reject(session, row)
+
+            card = _card(row)
+            nxt = await _next_row(session, exclude_id=row.id)
+            if nxt is not None:
+                next_card = _card(nxt)
+            elif row.status != STATUS_DECIDED:
+                next_card = card
+            else:
+                next_card = None
+            return DecideResult(
+                card=card,
+                applied=applied,
+                already_decided=already,
+                next_card=next_card,
+            )
+
+        return await self.db.write(write)
+
+
+def _card(row: ReviewItem) -> ReviewCard:
+    payload = row.payload if isinstance(row.payload, dict) else {}
+    return ReviewCard(
+        id=row.id,
+        kind=row.kind,
+        confidence=row.confidence,
+        payload=dict(payload),
+        status=row.status,
+        decision=row.decision,
+    )
+
+
+async def _next_row(
+    session: AsyncSession,
+    *,
+    exclude_id: int | None = None,
+) -> ReviewItem | None:
+    priority = case((ReviewItem.status == STATUS_PENDING, 0), else_=1)
+    stmt = (
+        select(ReviewItem)
+        .where(ReviewItem.status.in_((STATUS_PENDING, STATUS_SKIPPED)))
+        .order_by(priority, ReviewItem.created_at, ReviewItem.id)
+    )
+    if exclude_id is not None:
+        stmt = stmt.where(ReviewItem.id != exclude_id)
+    result = await session.execute(stmt.limit(1))
+    return result.scalar_one_or_none()
+
+
+async def _get_or_create_node(session: AsyncSession, name: str, kind: str) -> Node:
+    result = await session.execute(select(Node).where(Node.canonical_name == name))
+    node = result.scalar_one_or_none()
+    if node is not None:
+        return node
+    node = Node(canonical_name=name, kind=kind, status="committed")
+    session.add(node)
+    await session.flush()
+    return node
+
+
+async def _pending_edge(
+    session: AsyncSession,
+    *,
+    from_id: int,
+    to_id: int,
+    relation: str,
+    confidence: float,
+) -> Edge:
+    result = await session.execute(
+        select(Edge).where(
+            Edge.from_id == from_id,
+            Edge.to_id == to_id,
+            Edge.relation == relation,
+            Edge.status != EDGE_REJECTED,
+        )
+    )
+    existing = result.scalar_one_or_none()
+    if existing is not None:
+        if existing.status != EDGE_COMMITTED:
+            existing.status = EDGE_PENDING
+            existing.confidence = confidence
+        return existing
+    edge = Edge(
+        from_id=from_id,
+        to_id=to_id,
+        relation=relation,
+        confidence=confidence,
+        status=EDGE_PENDING,
+    )
+    session.add(edge)
+    await session.flush()
+    return edge
+
+
+async def _apply(session: AsyncSession, row: ReviewItem) -> bool:
+    if row.kind != KIND_MERGE:
+        return False
+    edge_id = (row.payload or {}).get("edge_id")
+    if edge_id is None:
+        return False
+    edge = await session.get(Edge, int(edge_id))
+    if edge is None:
+        return False
+    edge.status = EDGE_COMMITTED
+    return True
+
+
+async def _reject(session: AsyncSession, row: ReviewItem) -> None:
+    if row.kind != KIND_MERGE:
+        return
+    edge_id = (row.payload or {}).get("edge_id")
+    if edge_id is None:
+        return
+    edge = await session.get(Edge, int(edge_id))
+    if edge is not None and edge.status != EDGE_COMMITTED:
+        edge.status = EDGE_REJECTED
