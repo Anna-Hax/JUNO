@@ -1,0 +1,16 @@
+---
+description: docs/next-work.md is the global next-work tracker and must be kept as-is across merges
+alwaysApply: true
+---
+
+# Global next-work file
+
+The living board is **`docs/next-work.md` only**.
+
+- After a coding session, update that file (status of issues, what is next). Do not duplicate the queue in session logs.
+- Session logs (`docs/sessions/0N-session-*.md`) may *link* to it. Do **not** recreate `docs/sessions/03-next-work.md`.
+- On **merge or rebase** with `main` or any other branch:
+  - Leave `docs/next-work.md` as it already is on the branch you are on.
+  - Run git with `-c merge.ours.driver=true` so the `merge=ours` attribute in `.gitattributes` applies.
+  - If that file still conflicts: `git checkout --ours -- docs/next-work.md` then `git add docs/next-work.md`. Never take the incoming copy.
+  - Do not resolve by combining both versions.

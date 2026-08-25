@@ -80,7 +80,7 @@ A DB that already has `captures` but no `alembic_version` (old `create_all`) is 
 |------|----------|
 | [05-session-alembic.md](05-session-alembic.md) | This file |
 | [04-session-chroma-client.md](04-session-chroma-client.md) | M1 #13 Chroma session (other branch) |
-| [03-next-work.md](03-next-work.md) | #11 done on branch; next M1 work |
+| [next-work.md](../next-work.md) | Global next-work tracker (kept as-is across merges) |
 | [02-codebase-map.md](02-codebase-map.md) | Alembic + `migrate()` on the module map |
 | [../adr/003-alembic.md](../adr/003-alembic.md) | Why Alembic; stamp vs upgrade |
 | [../adr/004-chroma-collections.md](../adr/004-chroma-collections.md) | Persistent Chroma; one collection per model |

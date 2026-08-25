@@ -10,7 +10,7 @@
 JUNO/
   apps/core/          # Python agent (source of truth for v1)
   apps/extension/     # Browser capture stub (Phase 2)
-  inbox/              # Manual upload drop zone (watcher not wired)
+  inbox/              # Manual upload drop zone (watched by juno serve)
   data/               # Runtime DB/vectors (gitignored)
   docs/adr/           # Architecture decisions
   docs/sessions/      # What we did / how GitHub is set up / next work
@@ -29,7 +29,7 @@ JUNO/
 |--------|---------|------|
 | Config | `config.py` | pydantic-settings from `.env` |
 | CLI | `cli.py` | `juno serve` / `db-init` / `version` |
-| Runtime | `runtime.py` | Shared asyncio: uvicorn + PTB lifespan |
+| Runtime | `runtime.py` | Shared asyncio: uvicorn + PTB + inbox watcher lifespan |
 | API | `api/__init__.py` | FastAPI routes + token + loopback middleware |
 | Bot | `bot/handlers.py` | Telegram commands / text stub |
 | Graph DB | `graph/db.py`, `graph/migrations.py` | Engine, WAL, write queue, Alembic upgrade/stamp |
@@ -37,14 +37,14 @@ JUNO/
 | Models | `models/__init__.py` | SQLAlchemy tables |
 | Alembic | `alembic/` + `alembic.ini` | Revision `0001` = current ORM ([ADR-03](../adr/003-alembic.md)) |
 | LLM | `llm/embedder.py`, `llm/chat.py` | Embeddings + chat providers |
-| Ingest | `ingest/` | Placeholder (M1) |
+| Ingest | `ingest/extractors.py`, `chunking.py`, `pipeline.py`, `watcher.py` | File/URL extract, chunk, persist, inbox watch ([#16](https://github.com/Anna-Hax/JUNO/issues/16)) |
 | Jobs | `jobs/` | Placeholder (M4) |
 
 ### Entry points
 
 - `uv run juno serve` → `runtime.main_sync()`
 - `uv run juno db-init` → `Database.migrate()` (Alembic `upgrade head`, or stamp legacy `create_all` DBs)
-- Tests: `apps/core/tests/test_foundation.py`, `test_vectors.py`, `test_migrations.py`
+- Tests: `apps/core/tests/test_foundation.py`, `test_migrations.py`, `test_ingest.py`, `test_vectors.py`
 
 ### Dependencies
 
@@ -66,7 +66,7 @@ Optional: `--extra embeddings` for sentence-transformers; `--extra dev` for pyte
 |------|----------|
 | `data/juno.db` | SQLite graph (after `db-init` / serve) |
 | `data/chroma/` | Persistent Chroma collections (one per embedding model) |
-| `inbox/` | Future watched uploads |
+| `inbox/` | Watched uploads; processed files go to `inbox/.processed/` (failed → `inbox/.failed/`) |
 | `.env` | Secrets (never commit) |
 
 ---
