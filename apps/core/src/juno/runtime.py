@@ -29,7 +29,7 @@ from juno.bot.handlers import (
 )
 from juno.bot.review import review_callback, review_cmd
 from juno.bot.services import BOT_DATA_KEY, BotServices, load_capture_paused
-from juno.config import Settings, get_settings
+from juno.config import Settings, get_settings, validate_serve_settings
 from juno.graph.db import Database
 from juno.graph.vectors import VectorStore
 from juno.hitl.queue import ReviewQueue
@@ -180,6 +180,7 @@ def attach_lifespan(fastapi_app: FastAPI) -> FastAPI:
 
 async def run_server(settings: Settings | None = None) -> None:
     settings = settings or get_settings()
+    validate_serve_settings(settings)
     settings.juno_data_dir.mkdir(parents=True, exist_ok=True)
     settings.juno_inbox_dir.mkdir(parents=True, exist_ok=True)
 

@@ -2,7 +2,7 @@
 
 Personal knowledge-graph agent: passively (and manually) capture what you read, code, and discuss — query it from **Telegram**. Local-first on your PC.
 
-**Status:** M0 / early M1 scaffold. Not a daily driver yet.
+**Status:** M1 — local API + Telegram query/capture/HITL. Not a daily driver yet.
 
 ## Architecture (v1)
 
@@ -33,7 +33,7 @@ uv run juno db-init
 uv run juno serve
 ```
 
-- API: `http://127.0.0.1:8787/health`
+- API: `http://127.0.0.1:8787/health` (no token). `/status` `/ingest` `/search` need `Authorization: Bearer <JUNO_API_TOKEN>`. Serve refuses the example `change-me` token and any non-loopback `JUNO_API_HOST`.
 - Token-gated `GET /status` reports the live embedder (model / backend / dimensions) and LLM health (`llm_healthy`, `llm_provider`, `llm_model`). If Ollama is down, `llm_healthy` is false and answers stay retrieve-only.
 - Token-gated `GET /search?q=` returns citations + confidence (sourced answer when the LLM is healthy).
 - Bot runs only while this process (and PC) is on. Telegram queues updates ~24h; longer downtime can drop messages. Commands: `/start` `/help` `/digest today|week` `/pause` `/resume` `/status` `/review`. Forward a message, send a link, or attach a doc to capture; other text queries the graph.

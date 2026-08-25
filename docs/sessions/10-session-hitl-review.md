@@ -13,7 +13,7 @@ Proposed graph merges now land as a `pending` edge plus a `review_items` row. Th
 
 This branch was rebased onto `main` after PRs **#32–#34** (#14/#15, #17, #18/#19). `/review` is registered next to the merged bot commands and uses `BotServices` / `user_allowed`.
 
-Work is on branch `feat/hitl-review`. PR / `Closes #20` not opened yet.
+Work landed on `main` via [PR #35](https://github.com/Anna-Hax/JUNO/pull/35) (`Closes #20`).
 
 ---
 
@@ -46,7 +46,6 @@ Rules encoded in code:
 
 ## Not in this session
 
-- PR / merge to `main` (`Closes #20`)
 - Auto-enqueue from ingest or RAG (call `ReviewQueue.propose_merge`)
 - Live Telegram smoke (#4)
 

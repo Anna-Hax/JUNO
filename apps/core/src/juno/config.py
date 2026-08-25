@@ -6,6 +6,28 @@ from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+INSECURE_API_TOKENS = frozenset({"", "change-me"})
+LOOPBACK_BIND_HOSTS = frozenset({"127.0.0.1", "::1", "localhost"})
+LOOPBACK_CLIENT_HOSTS = LOOPBACK_BIND_HOSTS | {"testclient"}
+
+
+def api_token_is_configured(token: str | None) -> bool:
+    """True when JUNO_API_TOKEN is set to something other than the example default."""
+    return (token or "").strip().lower() not in INSECURE_API_TOKENS
+
+
+def is_loopback_bind_host(host: str | None) -> bool:
+    return (host or "").strip().lower() in LOOPBACK_BIND_HOSTS
+
+
+def is_loopback_client_host(host: str | None) -> bool:
+    h = (host or "").strip().lower()
+    if h in LOOPBACK_CLIENT_HOSTS:
+        return True
+    if h.startswith("::ffff:"):
+        return h[7:] == "127.0.0.1"
+    return False
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -58,3 +80,16 @@ class Settings(BaseSettings):
 
 def get_settings() -> Settings:
     return Settings()
+
+
+def validate_serve_settings(settings: Settings) -> None:
+    """Refuse to listen if the API would be misconfigured for a local-first agent."""
+    if not api_token_is_configured(settings.juno_api_token):
+        raise ValueError(
+            "JUNO_API_TOKEN is unset or still 'change-me'. Set a secret in .env before serving."
+        )
+    if not is_loopback_bind_host(settings.juno_api_host):
+        raise ValueError(
+            "JUNO_API_HOST must be loopback (127.0.0.1 / ::1 / localhost), "
+            f"got {settings.juno_api_host!r}"
+        )

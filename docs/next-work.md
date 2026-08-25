@@ -32,13 +32,14 @@ Prefer one open issue ≈ one PR (`Closes #N`).
 | 4 | #14 / #15 | Confirm MiniLM path + LLM health in `/status` — **merged** ([PR #32](https://github.com/Anna-Hax/JUNO/pull/32), `Closes #14` `#15`) |
 | 5 | #17 | Retrieve-only → sourced RAG + confidence — **merged** ([PR #33](https://github.com/Anna-Hax/JUNO/pull/33), `Closes #17`) |
 | 6 | #18–#19 | Bot query + forward-to-capture + digest/pause/status — **merged** ([PR #34](https://github.com/Anna-Hax/JUNO/pull/34), `Closes #18` `#19`) |
-| 7 | #20 | HITL `/review` inline buttons — **done on `feat/hitl-review`** (PR / `Closes #20` not opened yet) |
-| 8 | #21 | Harden API (already stubbed; `/ingest` persists; `/search` retrieves) |
-| 9 | #22–#24 | Integration tests, export/wipe, v1.0 gate |
+| 7 | #20 | HITL `/review` inline buttons — **merged** ([PR #35](https://github.com/Anna-Hax/JUNO/pull/35), `Closes #20`) |
+| 8 | #21 | Harden API — **done on `feat/api-harden-21`** (PR / `Closes #21` not opened yet) |
+| 9 | #12 | Concurrent ingest through the write queue (WAL already on; lock landed) |
+| 10 | #22–#24 | Integration tests, export/wipe, v1.0 gate |
 
-**Next coding issue:** #21 after #20 is merged.
+**Next coding issue:** #12 after #21 is merged.
 
-Already partially landed (keep issues open until acceptance fully met): #12 write queue, #21 basic routes. Telegram query/capture/pause: [PR #34](https://github.com/Anna-Hax/JUNO/pull/34). MiniLM + LLM health: [PR #32](https://github.com/Anna-Hax/JUNO/pull/32). `/search`: [PR #33](https://github.com/Anna-Hax/JUNO/pull/33). HITL `/review`: this branch.
+Already partially landed (keep issues open until acceptance fully met): #12 write queue. Telegram query/capture/pause: [PR #34](https://github.com/Anna-Hax/JUNO/pull/34). MiniLM + LLM health: [PR #32](https://github.com/Anna-Hax/JUNO/pull/32). `/search`: [PR #33](https://github.com/Anna-Hax/JUNO/pull/33). HITL `/review`: [PR #35](https://github.com/Anna-Hax/JUNO/pull/35). API harden: this branch.
 
 ---
 
