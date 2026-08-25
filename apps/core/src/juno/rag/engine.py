@@ -124,13 +124,9 @@ async def retrieve(
                 chroma_id=hit.id,
                 text=text,
                 score=similarity_from_distance(hit.distance),
-                capture_id=(
-                    capture.id if capture is not None else _as_int(meta.get("capture_id"))
-                ),
+                capture_id=(capture.id if capture is not None else _as_int(meta.get("capture_id"))),
                 chunk_id=chunk.id if chunk is not None else None,
-                ordinal=(
-                    chunk.ordinal if chunk is not None else _as_int(meta.get("ordinal"))
-                ),
+                ordinal=(chunk.ordinal if chunk is not None else _as_int(meta.get("ordinal"))),
                 title=capture.title if capture is not None else None,
                 uri=capture.uri if capture is not None else None,
                 source_type=(
@@ -244,10 +240,17 @@ async def search(
         )
 
     try:
-        answer = (await chat.complete(
-            RAG_SYSTEM,
-            [{"role": "user", "content": f"Question: {q}\n\nSources:\n{_format_sources(hits)}"}],
-        )).strip()
+        answer = (
+            await chat.complete(
+                RAG_SYSTEM,
+                [
+                    {
+                        "role": "user",
+                        "content": f"Question: {q}\n\nSources:\n{_format_sources(hits)}",
+                    }
+                ],
+            )
+        ).strip()
     except Exception:  # noqa: BLE001
         logger.exception("RAG generate failed; falling back to retrieve-only")
         return SearchOutcome(
