@@ -3,13 +3,31 @@
 from __future__ import annotations
 
 import asyncio
+import hmac
 from typing import Any
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request
 from fastapi.responses import JSONResponse
 
-from juno.config import Settings
+from juno.config import Settings, api_token_is_configured, is_loopback_client_host
 from juno.rag.engine import search as rag_search
+
+_AUTH_DETAIL = "Invalid or missing API token"
+
+
+def _bearer_token(authorization: str | None) -> str:
+    if not authorization:
+        return ""
+    scheme, _, remainder = authorization.partition(" ")
+    if scheme.lower() != "bearer":
+        return ""
+    return remainder.strip()
+
+
+def token_matches(provided: str, expected: str) -> bool:
+    if not provided or not api_token_is_configured(expected):
+        return False
+    return hmac.compare_digest(provided, expected.strip())
 
 
 def create_app(
@@ -21,7 +39,13 @@ def create_app(
     pipeline: Any = None,
     chat: Any = None,
 ) -> FastAPI:
-    app = FastAPI(title="Juno", version="0.1.0")
+    app = FastAPI(
+        title="Juno",
+        version="0.1.0",
+        docs_url=None,
+        redoc_url=None,
+        openapi_url=None,
+    )
     app.state.settings = settings
     app.state.db = db
     app.state.embedder = embedder
@@ -40,16 +64,13 @@ def create_app(
 
     def require_token(authorization: str | None = Header(default=None)) -> None:
         expected = settings.juno_api_token
-        if not expected or expected == "change-me":
-            # Still require a matching token so misconfig is obvious
-            pass
-        if authorization != f"Bearer {expected}":
-            raise HTTPException(status_code=401, detail="Invalid or missing API token")
+        if not token_matches(_bearer_token(authorization), expected):
+            raise HTTPException(status_code=401, detail=_AUTH_DETAIL)
 
     @app.middleware("http")
     async def loopback_only(request: Request, call_next):  # noqa: ANN001
         client = request.client.host if request.client else ""
-        if client not in {"127.0.0.1", "::1", "localhost", "testclient"}:
+        if not is_loopback_client_host(client):
             return JSONResponse(status_code=403, content={"detail": "Loopback only"})
         return await call_next(request)
 
@@ -101,7 +122,7 @@ def create_app(
             raise HTTPException(status_code=423, detail="Capture paused")
         pipeline = app.state.pipeline
         if pipeline is None:
-            return {"accepted": True, "source_type": payload.get("source_type", "api")}
+            raise HTTPException(status_code=503, detail="Ingest pipeline not ready")
         result = await pipeline.ingest_payload(payload)
         return result.to_dict()
 

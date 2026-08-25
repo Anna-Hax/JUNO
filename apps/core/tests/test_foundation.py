@@ -71,13 +71,14 @@ def test_ingest_requires_token(settings):
     app = create_app(settings)
     client = TestClient(app)
     assert client.post("/ingest", json={"source_type": "browser"}).status_code == 401
+    # Pipeline is not attached in this smoke test — auth still fails closed (401),
+    # and a valid token does not get a fake accepted stub (503 instead).
     ok = client.post(
         "/ingest",
         json={"source_type": "browser"},
         headers={"Authorization": "Bearer test-token"},
     )
-    assert ok.status_code == 200
-    assert ok.json()["accepted"] is True
+    assert ok.status_code == 503
 
 
 def test_status_requires_token(settings):
