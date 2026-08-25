@@ -31,14 +31,14 @@ Prefer one open issue ≈ one PR (`Closes #N`).
 | 3 | #16 | Ingest pipeline + extractors + inbox watcher — **merged** ([PR #31](https://github.com/Anna-Hax/JUNO/pull/31), `Closes #16`) |
 | 4 | #14 / #15 | Confirm MiniLM path + LLM health in `/status` — **merged** ([PR #32](https://github.com/Anna-Hax/JUNO/pull/32), `Closes #14` `#15`) |
 | 5 | #17 | Retrieve-only → sourced RAG + confidence — **merged** ([PR #33](https://github.com/Anna-Hax/JUNO/pull/33), `Closes #17`) |
-| 6 | #18–#19 | Bot query + forward-to-capture + digest/pause/status — **done on `feat/telegram-bot-18-19`** (PR / `Closes #18` `#19` not opened yet) |
+| 6 | #18–#19 | Bot query + forward-to-capture + digest/pause/status — **merged** ([PR #34](https://github.com/Anna-Hax/JUNO/pull/34), `Closes #18` `#19`) |
 | 7 | #20 | HITL `/review` inline buttons — in progress on `feat/hitl-review` |
 | 8 | #21 | Harden API (already stubbed; `/ingest` persists; `/search` retrieves) |
 | 9 | #22–#24 | Integration tests, export/wipe, v1.0 gate |
 
 **Next coding issue:** #20.
 
-Already partially landed (keep issues open until acceptance fully met): #12 write queue, #21 basic routes. Telegram allowlist + query/capture/pause live on `feat/telegram-bot-18-19` (queries use merged #17 `juno.rag`). MiniLM + LLM health: [PR #32](https://github.com/Anna-Hax/JUNO/pull/32). `/search`: [PR #33](https://github.com/Anna-Hax/JUNO/pull/33).
+Already partially landed (keep issues open until acceptance fully met): #12 write queue, #21 basic routes. Telegram query/capture/pause: [PR #34](https://github.com/Anna-Hax/JUNO/pull/34). MiniLM + LLM health: [PR #32](https://github.com/Anna-Hax/JUNO/pull/32). `/search`: [PR #33](https://github.com/Anna-Hax/JUNO/pull/33).
 
 ---
 

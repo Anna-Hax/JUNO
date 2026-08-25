@@ -11,7 +11,7 @@
 
 Allowlisted users get real replies: questions go through the merged #17 RAG engine (`juno.rag.engine.search` — sourced answer when the LLM is healthy, retrieve-only otherwise). Strangers get silence. Forwards, bare http(s) links, and document attachments ingest as `source_type=telegram`. `/pause` persists to `settings.capture_paused` and stops inbox, `POST /ingest`, and Telegram capture; `/resume` clears the flag and scans the inbox backlog. `/digest today|week` lists recent captures; `/status` live-probes LLM health like `GET /status`.
 
-Work is on branch `feat/telegram-bot-18-19` (from `main`, including PRs #32 and #33). PR / `Closes #18` `#19` not opened yet.
+Work landed on `main` via [PR #34](https://github.com/Anna-Hax/JUNO/pull/34) (`Closes #18` `#19`), including PRs #32 and #33.
 
 ---
 
@@ -44,7 +44,6 @@ Rules encoded in code:
 
 ## Not in this session
 
-- PR / merge to `main` (`Closes #18` / `#19`)
 - HITL `/review` inline buttons (#20)
 - Voice / photo OCR capture (later milestones)
 - Live Telegram smoke (#4)
