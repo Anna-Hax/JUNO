@@ -9,9 +9,11 @@ from __future__ import annotations
 import asyncio
 import logging
 from contextlib import asynccontextmanager
+from datetime import UTC, datetime
 
 import uvicorn
 from fastapi import FastAPI
+from sqlalchemy.ext.asyncio import AsyncSession
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 
 from juno.api import create_app
@@ -21,8 +23,9 @@ from juno.graph.db import Database
 from juno.graph.vectors import VectorStore
 from juno.ingest.pipeline import IngestPipeline
 from juno.ingest.watcher import InboxWatcher
-from juno.llm.chat import create_chat_provider
-from juno.llm.embedder import create_embedder
+from juno.llm.chat import ChatProvider, create_chat_provider
+from juno.llm.embedder import Embedder, create_embedder
+from juno.models import AppSetting, ModuleHealth
 
 logger = logging.getLogger("juno.runtime")
 
@@ -39,12 +42,53 @@ def build_telegram_application(settings: Settings) -> Application | None:
     return app
 
 
+async def persist_embedder_settings(db: Database, embedder: Embedder) -> None:
+    """Record the live embedding model id so a later reindex can see what was used."""
+
+    async def write(session: AsyncSession) -> None:
+        pairs = {
+            "embedding_model": embedder.model_id,
+            "embedding_backend": embedder.backend,
+            "embedding_dimensions": str(embedder.dimensions),
+        }
+        for key, value in pairs.items():
+            row = await session.get(AppSetting, key)
+            if row is None:
+                session.add(AppSetting(key=key, value=value))
+            else:
+                row.value = value
+
+    await db.write(write)
+
+
+async def persist_llm_health(db: Database, chat: ChatProvider, *, ok: bool) -> None:
+    async def write(session: AsyncSession) -> None:
+        row = await session.get(ModuleHealth, "llm")
+        if row is None:
+            row = ModuleHealth(module="llm")
+            session.add(row)
+        now = datetime.now(UTC)
+        row.detail = f"{chat.name}:{chat.model}" if chat.model else chat.name
+        if ok:
+            row.last_success_at = now
+            row.last_error = None
+        else:
+            row.last_error_at = now
+            row.last_error = "health probe failed"
+
+    await db.write(write)
+
+
 def attach_lifespan(fastapi_app: FastAPI) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         settings: Settings = app.state.settings
         db: Database = app.state.db
         await db.migrate()
+
+        embedder: Embedder | None = getattr(app.state, "embedder", None)
+        if embedder is not None:
+            await persist_embedder_settings(db, embedder)
 
         chat = create_chat_provider(
             settings.llm_provider,
@@ -54,8 +98,16 @@ def attach_lifespan(fastapi_app: FastAPI) -> FastAPI:
             openai_api_key=settings.openai_api_key,
             openai_model=settings.openai_model,
         )
-        app.state.llm_healthy = await chat.healthy()
+        llm_healthy = await chat.healthy()
+        if not llm_healthy:
+            logger.warning(
+                "LLM provider %s is unhealthy — /status will keep probing; "
+                "answers should use retrieve-only fallback",
+                chat.name,
+            )
+        app.state.llm_healthy = llm_healthy
         app.state.chat = chat
+        await persist_llm_health(db, chat, ok=llm_healthy)
 
         pipeline = getattr(app.state, "pipeline", None)
         if pipeline is not None:
@@ -107,7 +159,13 @@ async def run_server(settings: Settings | None = None) -> None:
 
     vectors = VectorStore(settings, embedder)
     pipeline = IngestPipeline(db=db, vectors=vectors)
-    fastapi_app = create_app(settings, db=db, embedder=embedder, vectors=vectors, pipeline=pipeline)
+    fastapi_app = create_app(
+        settings,
+        db=db,
+        embedder=embedder,
+        vectors=vectors,
+        pipeline=pipeline,
+    )
     fastapi_app.state.settings = settings
     fastapi_app.state.db = db
     fastapi_app.state.embedder = embedder
