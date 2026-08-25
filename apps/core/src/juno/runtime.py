@@ -15,7 +15,17 @@ from fastapi import FastAPI
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 
 from juno.api import create_app
-from juno.bot.handlers import help_cmd, start_cmd, text_query
+from juno.bot.handlers import (
+    digest_cmd,
+    document_msg,
+    help_cmd,
+    pause_cmd,
+    resume_cmd,
+    start_cmd,
+    status_cmd,
+    text_msg,
+)
+from juno.bot.services import BOT_DATA_KEY, BotServices, load_capture_paused
 from juno.config import Settings, get_settings
 from juno.graph.db import Database
 from juno.graph.vectors import VectorStore
@@ -35,7 +45,12 @@ def build_telegram_application(settings: Settings) -> Application | None:
     app = Application.builder().token(settings.telegram_bot_token).build()
     app.add_handler(CommandHandler("start", start_cmd))
     app.add_handler(CommandHandler("help", help_cmd))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_query))
+    app.add_handler(CommandHandler("digest", digest_cmd))
+    app.add_handler(CommandHandler("pause", pause_cmd))
+    app.add_handler(CommandHandler("resume", resume_cmd))
+    app.add_handler(CommandHandler("status", status_cmd))
+    app.add_handler(MessageHandler(filters.Document.ALL, document_msg))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_msg))
     return app
 
 
@@ -45,6 +60,7 @@ def attach_lifespan(fastapi_app: FastAPI) -> FastAPI:
         settings: Settings = app.state.settings
         db: Database = app.state.db
         await db.migrate()
+        app.state.capture_paused = await load_capture_paused(db)
 
         chat = create_chat_provider(
             settings.llm_provider,
@@ -69,6 +85,13 @@ def attach_lifespan(fastapi_app: FastAPI) -> FastAPI:
 
         ptb: Application | None = app.state.ptb
         if ptb is not None:
+            ptb.bot_data[BOT_DATA_KEY] = BotServices(
+                settings=settings,
+                db=db,
+                pipeline=getattr(app.state, "pipeline", None),
+                vectors=getattr(app.state, "vectors", None),
+                app=app,
+            )
             await ptb.initialize()
             await ptb.start()
             if ptb.updater is not None:
