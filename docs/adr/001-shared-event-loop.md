@@ -6,7 +6,8 @@ Accepted (v1)
 
 ## Date
 
-2026-08-20 (M0 scaffold)
+2026-08-20 (M0 scaffold)  
+**Last reviewed:** 2026-08-26 (after M1 / v1.0 foundation)
 
 ## Context
 
@@ -14,11 +15,11 @@ Juno is a **local-first** personal knowledge-graph agent. In v1 it must run on t
 
 1. Serves a **loopback FastAPI** API (`127.0.0.1`) for health, status, ingest, and search.
 2. Runs a **Telegram bot** via long polling so the user can capture and query from their phone.
-3. Later hosts **inbox watching**, **scheduled jobs**, and other background work without a separate daemon.
+3. Hosts **background work** on the same process — inbox watching today, scheduled / proactive jobs later — without a second daemon.
 
-Those pieces all need I/O concurrency. The natural fit in Python is one **asyncio** event loop. The friction is how to combine **uvicorn** (FastAPI) with **python-telegram-bot (python-tg-bot)**.
+Those pieces all need I/O concurrency. The natural fit in Python is one **asyncio** event loop. The friction is how to combine **uvicorn** (FastAPI) with **python-telegram-bot (PTB)**.
 
-python-tg-bot’s convenience entrypoint `Application.run_polling()`:
+PTB’s convenience entrypoint `Application.run_polling()`:
 
 - Blocks the calling thread.
 - Owns (or expects to own) the asyncio lifecycle.
@@ -28,57 +29,59 @@ If we used `run_polling()` in one thread and uvicorn in another, we would get **
 
 ## Options considered
 
-
-| Option                                         | Summary                                                                                         | Why not (for v1)                                                              |
-| ---------------------------------------------- | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| **A. Two processes** (uvicorn + `run_polling`) | Separate API and bot                                                                            | Extra process management, shared state harder, worse Windows keep-alive story |
-| **B. Threads with separate loops**             | Bot thread + API thread                                                                         | Dual loops; locking across SQLAlchemy async sessions; harder lifespan         |
-| **C. Shared loop, manual python-tg-bot lifecycle**       | uvicorn `Server.serve()` + python-tg-bot `initialize` / `start` / `start_polling` inside FastAPI lifespan | Chosen                                                                        |
-| **D. Webhooks instead of polling**             | Telegram pushes to a public URL                                                                 | Needs a public endpoint; conflicts with loopback-only privacy defaults        |
-
-
-
+| Option | Summary | Why not (for v1) |
+|--------|---------|------------------|
+| **A. Two processes** (uvicorn + `run_polling`) | Separate API and bot | Extra process management, shared state harder, worse Windows keep-alive story |
+| **B. Threads with separate loops** | Bot thread + API thread | Dual loops; locking across SQLAlchemy async sessions; harder lifespan |
+| **C. Shared loop, manual PTB lifecycle** | uvicorn `Server.serve()` + PTB `initialize` / `start` / `start_polling` inside FastAPI lifespan | **Chosen** |
+| **D. Webhooks instead of polling** | Telegram pushes to a public URL | Needs a public endpoint; conflicts with loopback-only privacy defaults |
 
 ## Decision
 
-Run **one process, one asyncio event loop**, shared by FastAPI and the Telegram bot.
+Run **one process, one asyncio event loop**, shared by FastAPI, the Telegram bot, and all in-process background work.
 
-Concrete rules:
+Concrete rules (implemented in `apps/core/src/juno/runtime.py`):
 
-1. Entry is `asyncio.run(run_server())` (see `juno/runtime.py` / `juno serve`).
-2. Start the HTTP server with `uvicorn.Server.serve()` (awaitable), not a blocking `uvicorn.run()` that fights the outer loop.
-3. Build the python-tg-bot `Application` normally, but **never** call `Application.run_polling()`.
+1. **Entry** is `asyncio.run(run_server())` via `juno serve` (or bare `juno` with no subcommand).
+2. Start the HTTP server with **`uvicorn.Server.serve()`** (awaitable), not a blocking `uvicorn.run()` that fights the outer loop.
+3. Build the PTB `Application` normally, but **never** call `Application.run_polling()`.
 4. Inside FastAPI **lifespan**:
-  - startup: `await python-tg-bot.initialize()` → `await python-tg-bot.start()` → `await python-tg-bot.updater.start_polling(...)`
-  - shutdown (reverse): `updater.stop()` → `python-tg-bot.stop()` → `python-tg-bot.shutdown()`
-5. Future background work (inbox watcher, APScheduler jobs, Chroma maintenance) must be **asyncio tasks or async-compatible schedulers on this same loop**, not a second “main” loop in another thread.
+   - **Startup:** `await ptb.initialize()` → `await ptb.start()` → `await ptb.updater.start_polling(...)`
+   - **Shutdown (reverse):** `updater.stop()` → `ptb.stop()` → `ptb.shutdown()`, then stop the inbox watcher and dispose the DB.
+5. **All background work** on this process must be asyncio tasks, lifespan-managed objects, or async-compatible schedulers on **this same loop** — not a second “main” loop in another thread. That includes:
+   - The inbox watcher (`InboxWatcher`, landed in M1 / #16)
+   - Future APScheduler / proactive jobs (dependency declared; wiring deferred to M4 / epic #27)
+   - Chroma I/O via `VectorStore` async helpers ([ADR-04](004-chroma-collections.md))
+6. If `TELEGRAM_BOT_TOKEN` is empty, the API (and inbox watcher) still run and the bot is simply disabled — same process model either way.
+7. Before listen, `validate_serve_settings()` refuses a non-loopback bind and the example API token ([#21](https://github.com/Anna-Hax/JUNO/issues/21)).
 
-If `TELEGRAM_BOT_TOKEN` is empty, the API still runs and the bot is simply disabled — same process model either way.
+Blocking CPU work (PDF extract, embeddings, Chroma sync APIs) must use `asyncio.to_thread` (or the wrappers that already do) so HTTP and Telegram polling stay responsive.
 
 ## Consequences
-
-
 
 ### Positive
 
 - One mental model: “Juno is up” means one process answers `/health` and (when configured) polls Telegram.
-- Shared in-memory handles (`Database`, embedder, chat provider) without IPC.
+- Shared in-memory handles (`Database`, `VectorStore`, embedder, chat provider, `IngestPipeline`, `ReviewQueue`) without IPC.
 - Clean shutdown path through FastAPI lifespan.
 - Matches Windows Startup-folder shortcut: one `uv run juno serve` command.
-
-
+- Inbox drops and API ingest share the same pause flag and write queue as the bot.
 
 ### Negative / constraints
 
-- Everything long-running must play by asyncio rules; blocking CPU work needs `asyncio.to_thread` (or similar) so polling and HTTP stay responsive.
-- python-tg-bot and uvicorn upgrade notes must be checked together — lifecycle APIs are the integration surface.
-- You cannot casually call `run_polling()` in scripts or tests without recreating the dual-loop problem; tests should exercise the manual lifecycle or mock the bot.
+- Everything long-running must play by asyncio rules; accidental blocking work freezes the bot and the API together.
+- PTB and uvicorn upgrade notes must be checked together — lifecycle APIs are the integration surface.
+- You cannot casually call `run_polling()` in scripts or tests without recreating the dual-loop problem; tests should mock handlers or exercise the manual lifecycle.
+- On Windows, open Chroma clients hold file locks under `data/chroma/` — stop `juno serve` before `juno wipe` ([ADR-04](004-chroma-collections.md) / #23).
 
+### What landed (M1)
 
+- Inbox watcher started/stopped in the same lifespan as the bot ([#16](https://github.com/Anna-Hax/JUNO/issues/16)).
+- Telegram query / capture / pause / digest / status / HITL review all registered on that PTB application ([#18](https://github.com/Anna-Hax/JUNO/issues/18)–[#20](https://github.com/Anna-Hax/JUNO/issues/20)).
+- Chroma access goes through `VectorStore.upsert_async` / `query_async` ([ADR-04](004-chroma-collections.md)).
 
-### Follow-ups
+### Follow-ups (not M1)
 
-- Wire inbox watcher and APScheduler as tasks on this loop (M1).
-- Chroma access goes through `VectorStore` async helpers / `asyncio.to_thread` ([ADR-04](004-chroma-collections.md)).
-- Keep documenting “no `run_polling()`” next to any new entrypoint so the ADR is not rediscovered the hard way.
-
+- Wire **APScheduler** (already in `pyproject.toml`) as an asyncio-friendly scheduler on this loop for digests / resurfacing (M4 / epic [#27](https://github.com/Anna-Hax/JUNO/issues/27)).
+- Keep documenting “no `run_polling()`” next to any new entrypoint so this ADR is not rediscovered the hard way.
+- Live Spike S1 ([#4](https://github.com/Anna-Hax/JUNO/issues/4)): confirm `/health` + Telegram `/start` together on a real machine.
