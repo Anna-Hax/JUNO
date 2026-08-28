@@ -24,6 +24,7 @@ Living notes for what was implemented, how GitHub is set up, and what to do next
 | [16-session-spike-s1-live.md](16-session-spike-s1-live.md) | **#4** — Live Spike S1 (shared-loop smoke) |
 | [17-session-projects-board.md](17-session-projects-board.md) | **#9** — Projects v2 board + auto-add |
 | [18-session-before-m2-ops.md](18-session-before-m2-ops.md) | Before M2 — branch protection + M1 close |
+| [19-session-spike-s2.md](19-session-spike-s2.md) | **#44** — Spike S2 browser → /ingest |
 | [v1.0-release-gate.md](../v1.0-release-gate.md) | M1 checklist (all P0 closed) |
 
 Architecture decisions live in [`../adr/`](../adr/). Product requirements: [`../../personal-knowledge-graph-prd.md](../../personal-knowledge-graph-prd.md).

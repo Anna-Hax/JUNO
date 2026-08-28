@@ -68,9 +68,22 @@ All four prep items done. Next: expand epic [#25](https://github.com/Anna-Hax/JU
 Epic only today: [#25](https://github.com/Anna-Hax/JUNO/issues/25) — *Epic: M2 Browser capture (v1.1)*.  
 Milestone: [M2: v1.1 Browser Capture](https://github.com/Anna-Hax/JUNO/milestone/8).
 
-**First coding task:** expand #25 into concrete child issues (wave policy — do **not** invent the whole M3–M5 backlog yet). Suggested titles below; create with milestone **M2**, labels `area: extension` / `area: api` / `area: bot` as appropriate, and `priority: P0` or `P1`.
+**First coding task:** expand #25 into concrete child issues — **done 2026-08-29** (#44–#53).
 
-Stub today: `apps/extension/` (MV3 manifest + log-only `background.js`, host permission for `127.0.0.1`). Extension must talk **HTTP to the loopback API** — no second Chroma/SQLite client ([ADR-04](adr/004-chroma-collections.md)).
+| Order | Issue | Title |
+| ----- | ----- | ----- |
+| 1 | [#44](https://github.com/Anna-Hax/JUNO/issues/44) | Spike S2 — POST /ingest smoke |
+| 2 | [#45](https://github.com/Anna-Hax/JUNO/issues/45) | MV3 scaffold |
+| 3 | [#46](https://github.com/Anna-Hax/JUNO/issues/46) | URL + title + timestamp |
+| 4 | [#47](https://github.com/Anna-Hax/JUNO/issues/47) | Engagement metrics |
+| 5 | [#48](https://github.com/Anna-Hax/JUNO/issues/48) | Highlights / selections |
+| 6 | [#49](https://github.com/Anna-Hax/JUNO/issues/49) | Domain excludes + /pause |
+| 7 | [#50](https://github.com/Anna-Hax/JUNO/issues/50) | Module health |
+| 8 | [#51](https://github.com/Anna-Hax/JUNO/issues/51) | Cross-reference browser vs inbox |
+| 9 | [#52](https://github.com/Anna-Hax/JUNO/issues/52) | Digest enrichment |
+| 10 | [#53](https://github.com/Anna-Hax/JUNO/issues/53) | Extension tests + M2 gate |
+
+Stub today: `apps/extension/` (MV3 manifest + service worker + options). Extension must talk **HTTP to the loopback API** — no second Chroma/SQLite client ([ADR-04](adr/004-chroma-collections.md), [ADR-05](adr/005-browser-extension-client.md)).
 
 ---
 
@@ -84,16 +97,16 @@ Prefer one issue ≈ one PR. Order is dependency-aware.
 
 | Order | Proposed work                                                                                                                                | Notes / acceptance sketch                                                                                  |
 | ----- | -------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| 1     | **Spike S2** — custom MV3 extension vs lighter history/bookmark APIs; prove one capture reaches `POST /ingest` with Bearer token             | Decision recorded in a session doc or short ADR note; smoke on Chrome (or Edge) against local `juno serve` |
-| 2     | **MV3 scaffold** — real permissions, options/popup for `JUNO_API_TOKEN` + API base URL, service worker structure, bump CI extension checks   | Load unpacked extension; token stored locally; CI still validates manifest                                 |
-| 3     | **Capture URL + title + timestamp** (`source_type=browser`) via `/ingest`                                                                    | Row in `captures`; shows up in `/search` / bot query                                                       |
-| 4     | **Engagement metrics** — active time on page, scroll depth (and any other cheap signals)                                                     | Stored on capture (`raw_json` and/or new columns via **new Alembic revision**, not edit of `0001`)         |
-| 5     | **Highlights / selections**                                                                                                                  | Highlight text attached to the page capture; retrievable                                                   |
-| 6     | **Domain / URL excludes** + respect global `/pause`                                                                                          | Banking etc. never ingested; pause returns 423 from API and extension backs off                            |
-| 7     | **Module health** — extension last-success / last-error in `module_health`; Telegram `/status` and `GET /status` show browser sync freshness | Silent breakage is visible within a day of testing                                                         |
-| 8     | **Cross-reference** browser captures vs upload/inbox content in retrieve / digest text                                                       | “You also uploaded notes on X” style citations or digest lines                                             |
-| 9     | **Digest enrichment** — `/digest today|week` includes browser reading (on-demand already exists; deepen for M2)                              | Scheduled *push* digests stay M4 unless explicitly pulled forward                                          |
-| 10    | **Extension tests + docs** — unit/integration where feasible; README load steps; session log; M2 gate checklist                              | CI green on `apps/extension/`**                                                                            |
+| 1     | **Spike S2** ([#44](https://github.com/Anna-Hax/JUNO/issues/44)) — custom MV3 extension; prove one capture reaches `POST /ingest` with Bearer token             | [ADR-05](adr/005-browser-extension-client.md) + [session 19](sessions/19-session-spike-s2.md) |
+| 2     | **MV3 scaffold** ([#45](https://github.com/Anna-Hax/JUNO/issues/45)) — real permissions, options/popup for `JUNO_API_TOKEN` + API base URL, service worker structure, bump CI extension checks   | Load unpacked extension; token stored locally; CI still validates manifest                                 |
+| 3     | **Capture URL + title + timestamp** ([#46](https://github.com/Anna-Hax/JUNO/issues/46)) (`source_type=browser`) via `/ingest`                                                                    | Row in `captures`; shows up in `/search` / bot query                                                       |
+| 4     | **Engagement metrics** ([#47](https://github.com/Anna-Hax/JUNO/issues/47)) — active time on page, scroll depth (and any other cheap signals)                                                     | Stored on capture (`raw_json` and/or new columns via **new Alembic revision**, not edit of `0001`)         |
+| 5     | **Highlights / selections** ([#48](https://github.com/Anna-Hax/JUNO/issues/48))                                                                                                                  | Highlight text attached to the page capture; retrievable                                                   |
+| 6     | **Domain / URL excludes** ([#49](https://github.com/Anna-Hax/JUNO/issues/49)) + respect global `/pause`                                                                                          | Banking etc. never ingested; pause returns 423 from API and extension backs off                            |
+| 7     | **Module health** ([#50](https://github.com/Anna-Hax/JUNO/issues/50)) — extension last-success / last-error in `module_health`; Telegram `/status` and `GET /status` show browser sync freshness | Silent breakage is visible within a day of testing                                                         |
+| 8     | **Cross-reference** ([#51](https://github.com/Anna-Hax/JUNO/issues/51)) browser captures vs upload/inbox content in retrieve / digest text                                                       | “You also uploaded notes on X” style citations or digest lines                                             |
+| 9     | **Digest enrichment** ([#52](https://github.com/Anna-Hax/JUNO/issues/52)) — `/digest today|week` includes browser reading (on-demand already exists; deepen for M2)                              | Scheduled *push* digests stay M4 unless explicitly pulled forward                                          |
+| 10    | **Extension tests + docs** ([#53](https://github.com/Anna-Hax/JUNO/issues/53)) — unit/integration where feasible; README load steps; session log; M2 gate checklist                              | CI green on `apps/extension/`**                                                                            |
 
 
 

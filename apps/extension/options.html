@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Juno Capture</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 12px;
+        min-width: 280px;
+      }
+      label {
+        display: block;
+        font-size: 12px;
+        margin-top: 8px;
+      }
+      input {
+        width: 100%;
+        box-sizing: border-box;
+        margin-top: 4px;
+      }
+      button {
+        margin-top: 12px;
+      }
+      #status {
+        font-size: 12px;
+        margin-top: 8px;
+        color: #333;
+      }
+    </style>
+  </head>
+  <body>
+    <h1 style="font-size: 16px; margin: 0">Juno Capture</h1>
+    <p style="font-size: 12px; margin: 8px 0">Loopback client for local <code>juno serve</code>.</p>
+    <label>
+      API base URL
+      <input id="apiBaseUrl" type="url" placeholder="http://127.0.0.1:8787" />
+    </label>
+    <label>
+      API token (JUNO_API_TOKEN)
+      <input id="apiToken" type="password" autocomplete="off" />
+    </label>
+    <button type="button" id="save">Save</button>
+    <p id="status"></p>
+    <script src="options.js"></script>
+  </body>
+</html>

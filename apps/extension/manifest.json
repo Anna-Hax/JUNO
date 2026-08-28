@@ -1,14 +1,19 @@
 {
   "manifest_version": 3,
   "name": "Juno Capture",
-  "version": "0.0.1",
-  "description": "Stub — Phase 2 browser capture for Juno (not active yet).",
-  "permissions": ["storage", "alarms"],
-  "host_permissions": ["http://127.0.0.1/*"],
+  "version": "0.1.0",
+  "description": "Browser reading capture for Juno (loopback client — ADR-01).",
+  "permissions": ["storage", "tabs"],
+  "host_permissions": ["http://127.0.0.1:8787/*"],
   "background": {
     "service_worker": "background.js"
   },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": false
+  },
   "action": {
-    "default_title": "Juno (coming soon)"
+    "default_title": "Juno Capture",
+    "default_popup": "options.html"
   }
 }

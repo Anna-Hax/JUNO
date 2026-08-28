@@ -9,7 +9,7 @@ Personal knowledge-graph agent: passively (and manually) capture what you read, 
 - **Python core** (`apps/core`): FastAPI on `127.0.0.1` + Telegram long-polling in one shared asyncio event loop ([ADR-01](docs/adr/001-shared-event-loop.md))
 - **SQLite + write queue** for the graph ([ADR-02](docs/adr/002-sqlite-write-queue.md)); **Alembic** for schema changes ([ADR-03](docs/adr/003-alembic.md))
 - **Chroma** for vectors — persistent client, one collection per embedding model ([ADR-04](docs/adr/004-chroma-collections.md)); **stub embedder** in CI
-- **Browser extension** (`apps/extension`): stub until Phase 2
+- **Browser extension** (`apps/extension`): MV3 loopback client ([ADR-05](docs/adr/005-browser-extension-client.md)); Spike S2 captures tabs → `POST /ingest`
 - **Inbox** (`inbox/`): drop `.txt` / `.md` / `.pdf` / `.url` (or a one-line http(s) text file). `juno serve` watches the folder; good files move to `inbox/.processed/`, unreadable PDFs to `inbox/.failed/`.
 - **HITL** (`/review`): inline Approve / Reject / Skip for pending graph merges
 
