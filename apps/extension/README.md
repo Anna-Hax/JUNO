@@ -27,3 +27,10 @@ MV3 **loopback client** for [Juno](../../README.md). Sends page visits to local 
 - Only talks to `127.0.0.1` (configurable base URL).
 - Token stays in extension storage on your machine.
 - Respects global capture pause when API returns 423 (see core `/pause`).
+
+## Verify (CI / local)
+
+```powershell
+# from repo root
+python scripts/validate-extension.py
+```

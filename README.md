@@ -2,7 +2,7 @@
 
 Personal knowledge-graph agent: passively (and manually) capture what you read, code, and discuss — query it from **Telegram**. Local-first on your PC.
 
-**Status:** **v1.0 foundation** (M1 complete) — local ingest, RAG query, Telegram capture/HITL, export/wipe. Not a daily driver until M2+ capture modules land.
+**Status:** **v1.1 browser capture** (M2 complete) — v1.0 foundation plus MV3 extension → loopback ingest, metrics, highlights, grouped digests. IDE capture (M3) is next.
 
 ## Architecture (v1)
 
