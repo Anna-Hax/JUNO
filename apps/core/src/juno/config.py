@@ -11,6 +11,16 @@ LOOPBACK_BIND_HOSTS = frozenset({"127.0.0.1", "::1", "localhost"})
 LOOPBACK_CLIENT_HOSTS = LOOPBACK_BIND_HOSTS | {"testclient"}
 
 
+def resolve_env_file(*, start: Path | None = None) -> Path | None:
+    """Find `.env`: cwd first, then parents (repo root when run from apps/core)."""
+    here = (start or Path.cwd()).resolve()
+    for base in (here, *here.parents):
+        candidate = base / ".env"
+        if candidate.is_file():
+            return candidate
+    return None
+
+
 def api_token_is_configured(token: str | None) -> bool:
     """True when JUNO_API_TOKEN is set to something other than the example default."""
     return (token or "").strip().lower() not in INSECURE_API_TOKENS
@@ -31,6 +41,7 @@ def is_loopback_client_host(host: str | None) -> bool:
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
+        # Prefer get_settings() which re-resolves; this covers direct Settings().
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore",
@@ -79,6 +90,10 @@ class Settings(BaseSettings):
 
 
 def get_settings() -> Settings:
+    """Load settings from the environment and the nearest `.env` (cwd or parents)."""
+    env_file = resolve_env_file()
+    if env_file is not None:
+        return Settings(_env_file=env_file)
     return Settings()
 
 

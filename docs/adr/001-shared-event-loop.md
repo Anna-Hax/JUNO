@@ -80,8 +80,18 @@ Blocking CPU work (PDF extract, embeddings, Chroma sync APIs) must use `asyncio.
 - Telegram query / capture / pause / digest / status / HITL review all registered on that PTB application ([#18](https://github.com/Anna-Hax/JUNO/issues/18)–[#20](https://github.com/Anna-Hax/JUNO/issues/20)).
 - Chroma access goes through `VectorStore.upsert_async` / `query_async` ([ADR-04](004-chroma-collections.md)).
 
+### Live Spike S1 (#4, 2026-08-29)
+
+Confirmed on a real Windows machine with repo-root `.env`:
+
+- `juno serve` loads settings via parent `.env` discovery (`resolve_env_file` / `get_settings`) so `cd apps/core` matches the documented quick start.
+- `GET /health` → `{"status":"ok"}` without a token; `GET /status` → 401 without Bearer, 200 with `JUNO_API_TOKEN`.
+- Telegram bot token + allowlist load; PTB `start_polling` runs inside the FastAPI lifespan on the **same** asyncio loop (no second-loop crash). Outbound `sendMessage` to the allowlisted user succeeded; bot identity verified via `getMe`.
+- Optional: `POST /ingest` + `GET /search` round-trip committed a capture.
+
+Operator may still tap `/start`, a short query, and `/status` in Telegram for full UX confirm while `juno serve` is up.
+
 ### Follow-ups (not M1)
 
 - Wire **APScheduler** (already in `pyproject.toml`) as an asyncio-friendly scheduler on this loop for digests / resurfacing (M4 / epic [#27](https://github.com/Anna-Hax/JUNO/issues/27)).
 - Keep documenting “no `run_polling()`” next to any new entrypoint so this ADR is not rediscovered the hard way.
-- Live Spike S1 ([#4](https://github.com/Anna-Hax/JUNO/issues/4)): confirm `/health` + Telegram `/start` together on a real machine.
