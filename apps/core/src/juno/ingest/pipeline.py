@@ -132,9 +132,7 @@ class IngestPipeline:
             source_type=source_type,
             raw=raw or {"extractor": "inline"},
         )
-        return await self._commit(
-            extracted, source_type=source_type, captured_at=captured_at
-        )
+        return await self._commit(extracted, source_type=source_type, captured_at=captured_at)
 
     async def ingest_payload(self, payload: dict[str, Any]) -> IngestResult:
         source_type = str(payload.get("source_type") or "api")
