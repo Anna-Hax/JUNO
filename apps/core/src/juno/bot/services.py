@@ -6,8 +6,9 @@ import re
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any
+from urllib.parse import urlparse
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from juno.config import Settings
@@ -136,7 +137,22 @@ async def answer_user_query(svc: BotServices, text: str) -> str:
         n_results=5,
         mode="auto",
     )
-    return format_search_outcome(outcome)
+    reply = format_search_outcome(outcome)
+    if svc.db is None:
+        return reply
+    browser_hits = [
+        hit for hit in outcome.results if getattr(hit, "source_type", None) == "browser"
+    ]
+    if not browser_hits:
+        return reply
+    related = await related_upload_captures(svc.db, browser_hits=browser_hits)
+    if not related:
+        return reply
+    extra = ["", "You also uploaded notes on:"]
+    for row in related:
+        label = row.title or row.uri or f"capture #{row.id}"
+        extra.append(f"• #{row.id} {label}")
+    return clip(reply + "\n".join(extra))
 
 
 def format_capture_ack(result: IngestResult) -> str:
@@ -243,6 +259,49 @@ async def recent_captures(db: Database, *, since: datetime, limit: int = 20) -> 
         result = await session.execute(
             select(Capture)
             .where(Capture.captured_at >= since)
+            .order_by(Capture.captured_at.desc())
+            .limit(limit)
+        )
+        return list(result.scalars())
+
+    return await db.read(fn)
+
+
+async def related_upload_captures(
+    db: Database,
+    *,
+    browser_hits: list[Any],
+    limit: int = 3,
+) -> list[Capture]:
+    """Cross-reference browser hits with upload/inbox captures (#51)."""
+    titles: set[str] = set()
+    hosts: set[str] = set()
+    for hit in browser_hits:
+        title = (getattr(hit, "title", None) or "").strip()
+        if title:
+            titles.add(title[:80])
+        uri = getattr(hit, "uri", None) or ""
+        if uri:
+            host = urlparse(uri).netloc.lower()
+            if host:
+                hosts.add(host)
+    if not titles and not hosts:
+        return []
+
+    async def fn(session: AsyncSession) -> list[Capture]:
+        clauses = []
+        for title in list(titles)[:3]:
+            for word in re.findall(r"[A-Za-z]{4,}", title):
+                clauses.append(Capture.title.ilike(f"%{word}%"))
+        for host in list(hosts)[:3]:
+            clauses.append(Capture.uri.ilike(f"%{host}%"))
+        if not clauses:
+            return []
+        result = await session.execute(
+            select(Capture)
+            .where(Capture.source_type != "browser")
+            .where(Capture.status == "committed")
+            .where(or_(*clauses))
             .order_by(Capture.captured_at.desc())
             .limit(limit)
         )

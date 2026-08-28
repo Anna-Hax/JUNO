@@ -31,6 +31,7 @@ Living notes for what was implemented, how GitHub is set up, and what to do next
 | [23-session-highlights.md](23-session-highlights.md) | **#48** — Highlights / selections |
 | [24-session-domain-excludes.md](24-session-domain-excludes.md) | **#49** — Domain excludes + pause |
 | [25-session-module-health.md](25-session-module-health.md) | **#50** — Extension module health |
+| [26-session-cross-reference.md](26-session-cross-reference.md) | **#51** — Cross-reference browser vs inbox |
 | [v1.0-release-gate.md](../v1.0-release-gate.md) | M1 checklist (all P0 closed) |
 
 Architecture decisions live in [`../adr/`](../adr/). Product requirements: [`../../personal-knowledge-graph-prd.md](../../personal-knowledge-graph-prd.md).
