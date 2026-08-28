@@ -17,7 +17,7 @@ Before this make sure that docs/adr are up to date.
 | Order | Item                                                                                                                                                               | Issue                                                                         | Why                                                                                    |
 | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
 | 1     | **Live Spike S1** — ✅ done 2026-08-29 ([session 16](sessions/16-session-spike-s1-live.md)); optional interactive Telegram `/start` from the client while serve is up | [#4](https://github.com/Anna-Hax/JUNO/issues/4)                               | Proves ADR-01 on a real machine; M2 extension depends on the same loopback API + token |
-| 2     | **Projects v2 board** + optional auto-add secrets                                                                                                                  | [#9](https://github.com/Anna-Hax/JUNO/issues/9)                               | M2 will create many tickets; board keeps Ready / In Progress / Done honest             |
+| 2     | **Projects v2 board** — ✅ done 2026-08-29 ([session 17](sessions/17-session-projects-board.md)); board [#1](https://github.com/users/Anna-Hax/projects/1) + auto-add secrets | [#9](https://github.com/Anna-Hax/JUNO/issues/9)                               | M2 will create many tickets; board keeps Ready / In Progress / Done honest             |
 | 3     | **Branch protection** on `main` (require CI Python + PR Checks)                                                                                                    | (repo Settings)                                                               | Stops accidental direct pushes during the extension wave                               |
 | 4     | **Close / note M1 milestone** on GitHub if still open with 0 open issues                                                                                           | Milestone [M1: v1.0 Foundation](https://github.com/Anna-Hax/JUNO/milestone/7) | Hygiene only                                                                           |
 
@@ -48,10 +48,10 @@ Confirm together:
 
 ```powershell
 gh auth refresh -h github.com -s project,read:project
-.\scripts\bootstrap-project.ps1
+.\scripts\bootstrap-project.ps1   # idempotent — reuses JUNO Roadmap #1
 ```
 
-Then set Status columns in the UI; optionally add `PROJECT_PAT` + `PROJECT_NUMBER` secrets for `.github/workflows/project-automation.yml`.
+Board: [JUNO Roadmap](https://github.com/users/Anna-Hax/projects/1). Secrets `PROJECT_PAT` + `PROJECT_NUMBER=1` set for `.github/workflows/project-automation.yml`.
 
 ---
 
