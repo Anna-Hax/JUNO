@@ -171,15 +171,29 @@ def format_digest(captures: list[Capture], window: str) -> str:
     label = "today" if window == "today" else "this week"
     if not captures:
         return f"No captures {label}."
+    browser = [row for row in captures if row.source_type == "browser"]
+    other = [row for row in captures if row.source_type != "browser"]
     lines = [f"Digest {label} ({len(captures)}):"]
-    for row in captures:
+    if browser:
+        lines.append(f"Browser reading ({len(browser)}):")
+        lines.extend(_digest_lines(browser))
+    if other:
+        if browser:
+            lines.append(f"Uploads / other ({len(other)}):")
+        lines.extend(_digest_lines(other))
+    return clip("\n".join(lines))
+
+
+def _digest_lines(rows: list[Capture]) -> list[str]:
+    lines: list[str] = []
+    for row in rows:
         when = _fmt_dt(row.captured_at)
         title = row.title or row.uri or (row.text or "")[:60] or "(no text)"
         title = " ".join(str(title).split())
         if len(title) > 80:
             title = title[:79].rstrip() + "…"
         lines.append(f"• #{row.id} [{row.source_type}/{row.status}] {when} — {title}")
-    return clip("\n".join(lines))
+    return lines
 
 
 def format_status(
