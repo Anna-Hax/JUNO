@@ -10,6 +10,7 @@ from juno.config import (
     api_token_is_configured,
     is_loopback_bind_host,
     is_loopback_client_host,
+    resolve_env_file,
     validate_serve_settings,
 )
 
@@ -29,6 +30,17 @@ def test_token_helpers_reject_defaults():
     assert token_matches("test-token", "test-token")
     assert not token_matches("nope", "test-token")
     assert not token_matches("test-token", "test-token-extra")
+
+
+def test_resolve_env_file_walks_parents(tmp_path):
+    nested = tmp_path / "apps" / "core"
+    nested.mkdir(parents=True)
+    env = tmp_path / ".env"
+    env.write_text("JUNO_API_TOKEN=parent-token\n", encoding="utf-8")
+    assert resolve_env_file(start=nested) == env.resolve()
+    local = nested / ".env"
+    local.write_text("JUNO_API_TOKEN=local-token\n", encoding="utf-8")
+    assert resolve_env_file(start=nested) == local.resolve()
 
 
 def test_loopback_host_helpers():

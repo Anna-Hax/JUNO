@@ -29,6 +29,7 @@ uv sync --extra dev
 uv sync --extra dev --extra embeddings
 copy ..\..\.env.example ..\..\.env   # from repo root: copy .env.example .env
 # Edit .env: TELEGRAM_BOT_TOKEN, ALLOWED_TELEGRAM_USER_IDS, JUNO_API_TOKEN
+# `juno serve` finds that repo-root `.env` even when the cwd is apps/core.
 uv run juno db-init
 uv run juno serve
 ```
