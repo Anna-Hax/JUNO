@@ -29,6 +29,7 @@ Living notes for what was implemented, how GitHub is set up, and what to do next
 | [21-session-browser-timestamp.md](21-session-browser-timestamp.md) | **#46** — URL + title + timestamp |
 | [22-session-engagement-metrics.md](22-session-engagement-metrics.md) | **#47** — Engagement metrics |
 | [23-session-highlights.md](23-session-highlights.md) | **#48** — Highlights / selections |
+| [24-session-domain-excludes.md](24-session-domain-excludes.md) | **#49** — Domain excludes + pause |
 | [v1.0-release-gate.md](../v1.0-release-gate.md) | M1 checklist (all P0 closed) |
 
 Architecture decisions live in [`../adr/`](../adr/). Product requirements: [`../../personal-knowledge-graph-prd.md](../../personal-knowledge-graph-prd.md).

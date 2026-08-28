@@ -19,6 +19,13 @@
         box-sizing: border-box;
         margin-top: 4px;
       }
+      textarea {
+        width: 100%;
+        box-sizing: border-box;
+        margin-top: 4px;
+        min-height: 72px;
+        font-family: inherit;
+      }
       button {
         margin-top: 12px;
       }
@@ -40,8 +47,13 @@
       API token (JUNO_API_TOKEN)
       <input id="apiToken" type="password" autocomplete="off" />
     </label>
+    <label>
+      Excluded domains (one per line)
+      <textarea id="excludedDomains" placeholder="chase.com"></textarea>
+    </label>
     <button type="button" id="save">Save</button>
     <p id="status"></p>
+    <script src="lib/excludes.js"></script>
     <script src="lib/config.js"></script>
     <script src="options.js"></script>
   </body>

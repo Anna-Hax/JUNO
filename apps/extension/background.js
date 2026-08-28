@@ -1,16 +1,27 @@
-importScripts("lib/config.js", "lib/api.js", "lib/capture.js", "lib/tabs.js");
+importScripts("lib/excludes.js", "lib/config.js", "lib/api.js", "lib/capture.js", "lib/tabs.js");
+
+/** When true, API returned 423 — stop ingesting until /status says running. */
+let remoteCapturePaused = false;
 
 /**
  * POST page visit with optional engagement metrics.
  * @param {chrome.tabs.Tab} tab
  * @param {object | null} metrics
+ * @param {object[] | null} highlights
  */
 async function captureTab(tab, metrics, highlights) {
   const url = tab.url || "";
   if (!url.startsWith("http://") && !url.startsWith("https://")) {
     return;
   }
-  const { apiBaseUrl, apiToken } = await JunoConfig.load();
+  if (remoteCapturePaused) {
+    return;
+  }
+  const { apiBaseUrl, apiToken, excludedDomains } = await JunoConfig.load();
+  if (JunoExcludes.isExcluded(url, excludedDomains)) {
+    console.log("Juno: skipped excluded domain", url);
+    return;
+  }
   if (!apiToken) {
     console.warn("Juno: set JUNO API token in extension options");
     return;
@@ -18,12 +29,36 @@ async function captureTab(tab, metrics, highlights) {
 
   const payload = JunoCapture.buildPayload(tab, metrics, highlights);
   const { ok, status, body } = await JunoApi.postIngest(apiBaseUrl, apiToken, payload);
+  if (status === 423) {
+    remoteCapturePaused = true;
+    console.warn("Juno: capture paused via API");
+    return;
+  }
   if (!ok) {
     console.warn("Juno ingest failed", status, body);
     return;
   }
+  remoteCapturePaused = false;
   console.log("Juno capture committed", body.capture_id, payload.title, metrics || {});
 }
+
+async function syncPauseFromStatus() {
+  const { apiBaseUrl, apiToken } = await JunoConfig.load();
+  if (!apiToken) {
+    return;
+  }
+  try {
+    const { ok, body } = await JunoApi.getStatus(apiBaseUrl, apiToken);
+    if (ok) {
+      remoteCapturePaused = Boolean(body.capture_paused);
+    }
+  } catch {
+    /* serve may be down */
+  }
+}
+
+void syncPauseFromStatus();
+setInterval(() => void syncPauseFromStatus(), 60_000);
 
 /** @param {number} tabId */
 async function finalizeTab(tabId) {
