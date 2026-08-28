@@ -73,7 +73,7 @@ Milestone: [M2: v1.1 Browser Capture](https://github.com/Anna-Hax/JUNO/milestone
 | Order | Issue | Title |
 | ----- | ----- | ----- |
 | 1 | [#44](https://github.com/Anna-Hax/JUNO/issues/44) | Spike S2 — POST /ingest smoke |
-| 2 | [#45](https://github.com/Anna-Hax/JUNO/issues/45) | MV3 scaffold |
+| 2 | [#45](https://github.com/Anna-Hax/JUNO/issues/45) | MV3 scaffold — ✅ [session 20](sessions/20-session-mv3-scaffold.md) |
 | 3 | [#46](https://github.com/Anna-Hax/JUNO/issues/46) | URL + title + timestamp |
 | 4 | [#47](https://github.com/Anna-Hax/JUNO/issues/47) | Engagement metrics |
 | 5 | [#48](https://github.com/Anna-Hax/JUNO/issues/48) | Highlights / selections |
@@ -98,7 +98,7 @@ Prefer one issue ≈ one PR. Order is dependency-aware.
 | Order | Proposed work                                                                                                                                | Notes / acceptance sketch                                                                                  |
 | ----- | -------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | 1     | **Spike S2** ([#44](https://github.com/Anna-Hax/JUNO/issues/44)) — custom MV3 extension; prove one capture reaches `POST /ingest` with Bearer token             | [ADR-05](adr/005-browser-extension-client.md) + [session 19](sessions/19-session-spike-s2.md) |
-| 2     | **MV3 scaffold** ([#45](https://github.com/Anna-Hax/JUNO/issues/45)) — real permissions, options/popup for `JUNO_API_TOKEN` + API base URL, service worker structure, bump CI extension checks   | Load unpacked extension; token stored locally; CI still validates manifest                                 |
+| 2     | **MV3 scaffold** ([#45](https://github.com/Anna-Hax/JUNO/issues/45)) — ✅ [session 20](sessions/20-session-mv3-scaffold.md)   | Load unpacked extension; token stored locally; CI validates manifest + lib |
 | 3     | **Capture URL + title + timestamp** ([#46](https://github.com/Anna-Hax/JUNO/issues/46)) (`source_type=browser`) via `/ingest`                                                                    | Row in `captures`; shows up in `/search` / bot query                                                       |
 | 4     | **Engagement metrics** ([#47](https://github.com/Anna-Hax/JUNO/issues/47)) — active time on page, scroll depth (and any other cheap signals)                                                     | Stored on capture (`raw_json` and/or new columns via **new Alembic revision**, not edit of `0001`)         |
 | 5     | **Highlights / selections** ([#48](https://github.com/Anna-Hax/JUNO/issues/48))                                                                                                                  | Highlight text attached to the page capture; retrievable                                                   |
