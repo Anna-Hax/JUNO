@@ -21,3 +21,5 @@ jobs:
         run: python -m json.tool apps/extension/manifest.json > /dev/null
       - name: Require background script
         run: test -f apps/extension/background.js
+      - name: Require options UI (Spike S2+)
+        run: test -f apps/extension/options.html && test -f apps/extension/options.js
