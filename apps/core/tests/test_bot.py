@@ -393,3 +393,32 @@ async def test_text_query_uses_rag_engine_when_llm_healthy(allowed_settings, db)
     assert "Rust notes" in body
     assert "Confidence:" in body
     assert chat.complete_calls == 1
+
+
+@pytest.mark.asyncio
+async def test_related_upload_captures_finds_upload_for_browser_hit(db):
+    from juno.bot.services import related_upload_captures
+    from juno.ingest.pipeline import IngestPipeline
+    from juno.rag.engine import SourcedHit
+
+    pipeline = IngestPipeline(db)
+    await pipeline.ingest_text(
+        "Saved Rust ownership notes from inbox.",
+        source_type="upload",
+        title="Rust ownership notes",
+    )
+    hits = [
+        SourcedHit(
+            chroma_id="c2-n0",
+            text="Rust book",
+            score=0.9,
+            capture_id=2,
+            title="Rust ownership guide",
+            uri="https://example.com/rust",
+            source_type="browser",
+        )
+    ]
+    related = await related_upload_captures(db, browser_hits=hits)
+    assert len(related) == 1
+    assert related[0].source_type == "upload"
+    assert "Rust" in (related[0].title or "")

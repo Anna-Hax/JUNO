@@ -79,7 +79,7 @@ Milestone: [M2: v1.1 Browser Capture](https://github.com/Anna-Hax/JUNO/milestone
 | 5 | [#48](https://github.com/Anna-Hax/JUNO/issues/48) | Highlights — ✅ [session 23](sessions/23-session-highlights.md) |
 | 6 | [#49](https://github.com/Anna-Hax/JUNO/issues/49) | Domain excludes + pause — ✅ [session 24](sessions/24-session-domain-excludes.md) |
 | 7 | [#50](https://github.com/Anna-Hax/JUNO/issues/50) | Module health — ✅ [session 25](sessions/25-session-module-health.md) |
-| 8 | [#51](https://github.com/Anna-Hax/JUNO/issues/51) | Cross-reference browser vs inbox |
+| 8 | [#51](https://github.com/Anna-Hax/JUNO/issues/51) | Cross-reference — ✅ [session 26](sessions/26-session-cross-reference.md) |
 | 9 | [#52](https://github.com/Anna-Hax/JUNO/issues/52) | Digest enrichment |
 | 10 | [#53](https://github.com/Anna-Hax/JUNO/issues/53) | Extension tests + M2 gate |
 
