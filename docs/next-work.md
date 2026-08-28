@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-08-29  
 **Track issues on:** [https://github.com/Anna-Hax/JUNO/issues](https://github.com/Anna-Hax/JUNO/issues)  
-**Package:** `1.0.0` (M1 foundation complete — [`docs/v1.0-release-gate.md`](v1.0-release-gate.md))
+**Package:** `1.1.0` (M2 browser capture complete — [`docs/v1.1-release-gate.md`](v1.1-release-gate.md))
 
 Prefer one open issue ≈ one PR (`Closes #N`). This file is kept as-is across branch merges (`merge=ours`).
 
@@ -81,9 +81,17 @@ Milestone: [M2: v1.1 Browser Capture](https://github.com/Anna-Hax/JUNO/milestone
 | 7 | [#50](https://github.com/Anna-Hax/JUNO/issues/50) | Module health — ✅ [session 25](sessions/25-session-module-health.md) |
 | 8 | [#51](https://github.com/Anna-Hax/JUNO/issues/51) | Cross-reference — ✅ [session 26](sessions/26-session-cross-reference.md) |
 | 9 | [#52](https://github.com/Anna-Hax/JUNO/issues/52) | Digest enrichment — ✅ [session 27](sessions/27-session-digest-enrichment.md) |
-| 10 | [#53](https://github.com/Anna-Hax/JUNO/issues/53) | Extension tests + M2 gate |
+| 10 | [#53](https://github.com/Anna-Hax/JUNO/issues/53) | Extension tests + M2 gate — ✅ [session 28](sessions/28-session-m2-gate.md) |
 
 Stub today: `apps/extension/` (MV3 manifest + service worker + options). Extension must talk **HTTP to the loopback API** — no second Chroma/SQLite client ([ADR-04](adr/004-chroma-collections.md), [ADR-05](adr/005-browser-extension-client.md)).
+
+---
+
+## M2 — **complete** (2026-08-29)
+
+Epic [#25](https://github.com/Anna-Hax/JUNO/issues/25) closed; milestone [M2: v1.1 Browser Capture](https://github.com/Anna-Hax/JUNO/milestone/8) complete. Gate: [`docs/v1.1-release-gate.md`](v1.1-release-gate.md).
+
+**Next:** epic [#26](https://github.com/Anna-Hax/JUNO/issues/26) — M3 IDE / Cursor capture.
 
 ---
 
@@ -106,7 +114,7 @@ Prefer one issue ≈ one PR. Order is dependency-aware.
 | 7     | **Module health** ([#50](https://github.com/Anna-Hax/JUNO/issues/50)) — ✅ [session 25](sessions/25-session-module-health.md) | `extension` row in `module_health`; `GET /status.modules` + Telegram `/status`                         |
 | 8     | **Cross-reference** ([#51](https://github.com/Anna-Hax/JUNO/issues/51)) — ✅ [session 26](sessions/26-session-cross-reference.md) browser captures vs upload/inbox content in retrieve / digest text                                                       | “You also uploaded notes on X” style citations or digest lines                                             |
 | 9     | **Digest enrichment** ([#52](https://github.com/Anna-Hax/JUNO/issues/52)) — ✅ [session 27](sessions/27-session-digest-enrichment.md) — `/digest today|week` groups browser reading vs uploads/other                              | Scheduled *push* digests stay M4 unless explicitly pulled forward                                          |
-| 10    | **Extension tests + docs** ([#53](https://github.com/Anna-Hax/JUNO/issues/53)) — unit/integration where feasible; README load steps; session log; M2 gate checklist                              | CI green on `apps/extension/`**                                                                            |
+| 10    | **Extension tests + docs** ([#53](https://github.com/Anna-Hax/JUNO/issues/53)) — ✅ [session 28](sessions/28-session-m2-gate.md) — `validate-extension.py`; v1.1 gate                              | CI green on `apps/extension/`                                                                            |
 
 
 

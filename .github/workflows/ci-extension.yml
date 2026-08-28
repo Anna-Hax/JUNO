@@ -5,11 +5,13 @@ on:
     branches: [main]
     paths:
       - "apps/extension/**"
+      - "scripts/validate-extension.py"
       - ".github/workflows/ci-extension.yml"
   pull_request:
     branches: [main]
     paths:
       - "apps/extension/**"
+      - "scripts/validate-extension.py"
       - ".github/workflows/ci-extension.yml"
 
 jobs:
@@ -17,20 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Validate manifest JSON
-        run: python -m json.tool apps/extension/manifest.json > /dev/null
-      - name: Require background script
-        run: test -f apps/extension/background.js
-      - name: Require options UI (Spike S2+)
-        run: test -f apps/extension/options.html && test -f apps/extension/options.js
-      - name: Require popup and shared lib
-        run: |
-          test -f apps/extension/popup.html
-          test -f apps/extension/popup.js
-          test -f apps/extension/lib/config.js
-          test -f apps/extension/lib/api.js
-          test -f apps/extension/lib/capture.js
-          test -f apps/extension/lib/tabs.js
-          test -f apps/extension/lib/excludes.js
-      - name: Require extension README
-        run: test -f apps/extension/README.md
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate extension (manifest, files, JS syntax)
+        run: python scripts/validate-extension.py
