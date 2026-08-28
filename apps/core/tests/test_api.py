@@ -123,7 +123,10 @@ def test_default_example_token_never_authorizes(settings):
 def test_status_ok_with_good_token(settings):
     resp = _client(settings).get("/status", headers=AUTH)
     assert resp.status_code == 200
-    assert "capture_paused" in resp.json()
+    body = resp.json()
+    assert "capture_paused" in body
+    assert "modules" in body
+    assert isinstance(body["modules"], list)
 
 
 def test_ingest_without_pipeline_is_503_not_stub_success(settings):

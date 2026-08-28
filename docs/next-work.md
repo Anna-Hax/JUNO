@@ -78,7 +78,7 @@ Milestone: [M2: v1.1 Browser Capture](https://github.com/Anna-Hax/JUNO/milestone
 | 4 | [#47](https://github.com/Anna-Hax/JUNO/issues/47) | Engagement metrics — ✅ [session 22](sessions/22-session-engagement-metrics.md) |
 | 5 | [#48](https://github.com/Anna-Hax/JUNO/issues/48) | Highlights — ✅ [session 23](sessions/23-session-highlights.md) |
 | 6 | [#49](https://github.com/Anna-Hax/JUNO/issues/49) | Domain excludes + pause — ✅ [session 24](sessions/24-session-domain-excludes.md) |
-| 7 | [#50](https://github.com/Anna-Hax/JUNO/issues/50) | Module health |
+| 7 | [#50](https://github.com/Anna-Hax/JUNO/issues/50) | Module health — ✅ [session 25](sessions/25-session-module-health.md) |
 | 8 | [#51](https://github.com/Anna-Hax/JUNO/issues/51) | Cross-reference browser vs inbox |
 | 9 | [#52](https://github.com/Anna-Hax/JUNO/issues/52) | Digest enrichment |
 | 10 | [#53](https://github.com/Anna-Hax/JUNO/issues/53) | Extension tests + M2 gate |
@@ -103,7 +103,7 @@ Prefer one issue ≈ one PR. Order is dependency-aware.
 | 4     | **Engagement metrics** ([#47](https://github.com/Anna-Hax/JUNO/issues/47)) — ✅ [session 22](sessions/22-session-engagement-metrics.md)                                                     | `raw_json.metrics`: active_time_ms, scroll_depth                                                         |
 | 5     | **Highlights / selections** ([#48](https://github.com/Anna-Hax/JUNO/issues/48)) — ✅ [session 23](sessions/23-session-highlights.md)                                                                                                                  | Highlight text in `raw_json.highlights` + ingest text for search                                                   |
 | 6     | **Domain / URL excludes** ([#49](https://github.com/Anna-Hax/JUNO/issues/49)) — ✅ [session 24](sessions/24-session-domain-excludes.md)                                                                                          | Options excludes; API 423 backs extension off; respects `/pause`                            |
-| 7     | **Module health** ([#50](https://github.com/Anna-Hax/JUNO/issues/50)) — extension last-success / last-error in `module_health`; Telegram `/status` and `GET /status` show browser sync freshness | Silent breakage is visible within a day of testing                                                         |
+| 7     | **Module health** ([#50](https://github.com/Anna-Hax/JUNO/issues/50)) — ✅ [session 25](sessions/25-session-module-health.md) | `extension` row in `module_health`; `GET /status.modules` + Telegram `/status`                         |
 | 8     | **Cross-reference** ([#51](https://github.com/Anna-Hax/JUNO/issues/51)) browser captures vs upload/inbox content in retrieve / digest text                                                       | “You also uploaded notes on X” style citations or digest lines                                             |
 | 9     | **Digest enrichment** ([#52](https://github.com/Anna-Hax/JUNO/issues/52)) — `/digest today|week` includes browser reading (on-demand already exists; deepen for M2)                              | Scheduled *push* digests stay M4 unless explicitly pulled forward                                          |
 | 10    | **Extension tests + docs** ([#53](https://github.com/Anna-Hax/JUNO/issues/53)) — unit/integration where feasible; README load steps; session log; M2 gate checklist                              | CI green on `apps/extension/`**                                                                            |

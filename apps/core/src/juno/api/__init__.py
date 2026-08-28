@@ -94,6 +94,23 @@ def create_app(
             llm_healthy = await chat.healthy(timeout=1.5)
             app.state.llm_healthy = llm_healthy
 
+        modules: list[dict[str, Any]] = []
+        db = app.state.db
+        if db is not None:
+            from juno.bot.services import all_module_health
+
+            for row in await all_module_health(db):
+                modules.append(
+                    {
+                        "module": row.module,
+                        "last_success_at": row.last_success_at.isoformat()
+                        if row.last_success_at
+                        else None,
+                        "last_error": row.last_error,
+                        "detail": row.detail,
+                    }
+                )
+
         actual_backend = (
             getattr(embedder, "backend", settings.embedding_backend)
             if embedder is not None
@@ -114,6 +131,7 @@ def create_app(
             "chroma_count": chroma_count,
             "api_host": settings.juno_api_host,
             "api_port": settings.juno_api_port,
+            "modules": modules,
         }
 
     @app.post("/ingest", dependencies=[Depends(require_token)])
