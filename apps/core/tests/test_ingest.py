@@ -335,3 +335,24 @@ async def test_browser_payload_stores_highlights(db, pipeline):
         return row
 
     await db.read(read)
+
+
+@pytest.mark.asyncio
+async def test_browser_ingest_updates_extension_module_health(db, pipeline):
+    await pipeline.ingest_payload(
+        {
+            "source_type": "browser",
+            "uri": "https://example.com",
+            "title": "Example",
+            "text": "Example",
+        }
+    )
+
+    async def read(session):
+        row = await session.get(ModuleHealth, "extension")
+        assert row is not None
+        assert row.last_success_at is not None
+        assert row.last_error is None
+        return row
+
+    await db.read(read)

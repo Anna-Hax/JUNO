@@ -208,6 +208,8 @@ class IngestPipeline:
                 )
                 stored.append((chroma_id, piece))
             await _touch_health(session, ok=True)
+            if source_type == "browser":
+                await _touch_health(session, ok=True, module="extension")
             return capture.id, stored
 
         capture_id, stored = await self.db.write(write)
@@ -242,6 +244,8 @@ class IngestPipeline:
             session.add(capture)
             await session.flush()
             await _touch_health(session, ok=False, error=reason)
+            if source_type == "browser":
+                await _touch_health(session, ok=False, error=reason, module="extension")
             return capture.id
 
         capture_id = await self.db.write(write)
@@ -277,10 +281,16 @@ class IngestPipeline:
             logger.exception("vector upsert failed for capture %s", capture_id)
 
 
-async def _touch_health(session: AsyncSession, *, ok: bool, error: str | None = None) -> None:
-    row = await session.get(ModuleHealth, "ingest")
+async def _touch_health(
+    session: AsyncSession,
+    *,
+    ok: bool,
+    error: str | None = None,
+    module: str = "ingest",
+) -> None:
+    row = await session.get(ModuleHealth, module)
     if row is None:
-        row = ModuleHealth(module="ingest")
+        row = ModuleHealth(module=module)
         session.add(row)
     now = datetime.now(UTC)
     if ok:
