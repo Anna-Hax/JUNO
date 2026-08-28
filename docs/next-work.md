@@ -75,7 +75,7 @@ Milestone: [M2: v1.1 Browser Capture](https://github.com/Anna-Hax/JUNO/milestone
 | 1 | [#44](https://github.com/Anna-Hax/JUNO/issues/44) | Spike S2 — POST /ingest smoke |
 | 2 | [#45](https://github.com/Anna-Hax/JUNO/issues/45) | MV3 scaffold — ✅ [session 20](sessions/20-session-mv3-scaffold.md) |
 | 3 | [#46](https://github.com/Anna-Hax/JUNO/issues/46) | URL + title + timestamp — ✅ [session 21](sessions/21-session-browser-timestamp.md) |
-| 4 | [#47](https://github.com/Anna-Hax/JUNO/issues/47) | Engagement metrics |
+| 4 | [#47](https://github.com/Anna-Hax/JUNO/issues/47) | Engagement metrics — ✅ [session 22](sessions/22-session-engagement-metrics.md) |
 | 5 | [#48](https://github.com/Anna-Hax/JUNO/issues/48) | Highlights / selections |
 | 6 | [#49](https://github.com/Anna-Hax/JUNO/issues/49) | Domain excludes + /pause |
 | 7 | [#50](https://github.com/Anna-Hax/JUNO/issues/50) | Module health |
@@ -100,7 +100,7 @@ Prefer one issue ≈ one PR. Order is dependency-aware.
 | 1     | **Spike S2** ([#44](https://github.com/Anna-Hax/JUNO/issues/44)) — custom MV3 extension; prove one capture reaches `POST /ingest` with Bearer token             | [ADR-05](adr/005-browser-extension-client.md) + [session 19](sessions/19-session-spike-s2.md) |
 | 2     | **MV3 scaffold** ([#45](https://github.com/Anna-Hax/JUNO/issues/45)) — ✅ [session 20](sessions/20-session-mv3-scaffold.md)   | Load unpacked extension; token stored locally; CI validates manifest + lib |
 | 3     | **Capture URL + title + timestamp** ([#46](https://github.com/Anna-Hax/JUNO/issues/46)) — ✅ [session 21](sessions/21-session-browser-timestamp.md)                                                                    | Row in `captures`; shows up in `/search` / bot query                                                       |
-| 4     | **Engagement metrics** ([#47](https://github.com/Anna-Hax/JUNO/issues/47)) — active time on page, scroll depth (and any other cheap signals)                                                     | Stored on capture (`raw_json` and/or new columns via **new Alembic revision**, not edit of `0001`)         |
+| 4     | **Engagement metrics** ([#47](https://github.com/Anna-Hax/JUNO/issues/47)) — ✅ [session 22](sessions/22-session-engagement-metrics.md)                                                     | `raw_json.metrics`: active_time_ms, scroll_depth                                                         |
 | 5     | **Highlights / selections** ([#48](https://github.com/Anna-Hax/JUNO/issues/48))                                                                                                                  | Highlight text attached to the page capture; retrievable                                                   |
 | 6     | **Domain / URL excludes** ([#49](https://github.com/Anna-Hax/JUNO/issues/49)) + respect global `/pause`                                                                                          | Banking etc. never ingested; pause returns 423 from API and extension backs off                            |
 | 7     | **Module health** ([#50](https://github.com/Anna-Hax/JUNO/issues/50)) — extension last-success / last-error in `module_health`; Telegram `/status` and `GET /status` show browser sync freshness | Silent breakage is visible within a day of testing                                                         |

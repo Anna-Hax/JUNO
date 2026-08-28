@@ -286,3 +286,28 @@ async def test_browser_payload_stores_visited_at_and_raw_json(db, pipeline):
         return row
 
     await db.read(read)
+
+
+@pytest.mark.asyncio
+async def test_browser_payload_stores_engagement_metrics(db, pipeline):
+    when = datetime(2026, 8, 29, 14, 0, tzinfo=UTC)
+    metrics = {"active_time_ms": 42000, "scroll_depth": 0.75}
+    result = await pipeline.ingest_payload(
+        {
+            "source_type": "browser",
+            "uri": "https://example.com/article",
+            "title": "Article",
+            "text": "Article",
+            "visited_at": when.isoformat(),
+            "raw_json": {"metrics": metrics},
+        }
+    )
+    assert result.status == "committed"
+
+    async def read(session):
+        row = await session.get(Capture, result.capture_id)
+        assert row.raw_json is not None
+        assert row.raw_json.get("metrics") == metrics
+        return row
+
+    await db.read(read)
