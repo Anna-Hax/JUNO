@@ -4,7 +4,14 @@
   "version": "0.1.0",
   "description": "Browser reading capture for Juno (loopback client — ADR-01).",
   "permissions": ["storage", "tabs"],
-  "host_permissions": ["http://127.0.0.1:8787/*"],
+  "host_permissions": ["http://127.0.0.1:8787/*", "http://*/*", "https://*/*"],
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
   "background": {
     "service_worker": "background.js"
   },
