@@ -311,3 +311,27 @@ async def test_browser_payload_stores_engagement_metrics(db, pipeline):
         return row
 
     await db.read(read)
+
+
+@pytest.mark.asyncio
+async def test_browser_payload_stores_highlights(db, pipeline):
+    highlights = [{"text": "Important quote", "at": "2026-08-29T14:00:00+00:00"}]
+    result = await pipeline.ingest_payload(
+        {
+            "source_type": "browser",
+            "uri": "https://example.com/article",
+            "title": "Article",
+            "text": "Article\n\nImportant quote",
+            "raw_json": {"highlights": highlights},
+        }
+    )
+    assert result.status == "committed"
+
+    async def read(session):
+        row = await session.get(Capture, result.capture_id)
+        assert row.raw_json is not None
+        assert row.raw_json.get("highlights") == highlights
+        assert "Important quote" in (row.text or "")
+        return row
+
+    await db.read(read)

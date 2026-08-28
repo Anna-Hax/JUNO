@@ -76,7 +76,7 @@ Milestone: [M2: v1.1 Browser Capture](https://github.com/Anna-Hax/JUNO/milestone
 | 2 | [#45](https://github.com/Anna-Hax/JUNO/issues/45) | MV3 scaffold — ✅ [session 20](sessions/20-session-mv3-scaffold.md) |
 | 3 | [#46](https://github.com/Anna-Hax/JUNO/issues/46) | URL + title + timestamp — ✅ [session 21](sessions/21-session-browser-timestamp.md) |
 | 4 | [#47](https://github.com/Anna-Hax/JUNO/issues/47) | Engagement metrics — ✅ [session 22](sessions/22-session-engagement-metrics.md) |
-| 5 | [#48](https://github.com/Anna-Hax/JUNO/issues/48) | Highlights / selections |
+| 5 | [#48](https://github.com/Anna-Hax/JUNO/issues/48) | Highlights — ✅ [session 23](sessions/23-session-highlights.md) |
 | 6 | [#49](https://github.com/Anna-Hax/JUNO/issues/49) | Domain excludes + /pause |
 | 7 | [#50](https://github.com/Anna-Hax/JUNO/issues/50) | Module health |
 | 8 | [#51](https://github.com/Anna-Hax/JUNO/issues/51) | Cross-reference browser vs inbox |
@@ -101,7 +101,7 @@ Prefer one issue ≈ one PR. Order is dependency-aware.
 | 2     | **MV3 scaffold** ([#45](https://github.com/Anna-Hax/JUNO/issues/45)) — ✅ [session 20](sessions/20-session-mv3-scaffold.md)   | Load unpacked extension; token stored locally; CI validates manifest + lib |
 | 3     | **Capture URL + title + timestamp** ([#46](https://github.com/Anna-Hax/JUNO/issues/46)) — ✅ [session 21](sessions/21-session-browser-timestamp.md)                                                                    | Row in `captures`; shows up in `/search` / bot query                                                       |
 | 4     | **Engagement metrics** ([#47](https://github.com/Anna-Hax/JUNO/issues/47)) — ✅ [session 22](sessions/22-session-engagement-metrics.md)                                                     | `raw_json.metrics`: active_time_ms, scroll_depth                                                         |
-| 5     | **Highlights / selections** ([#48](https://github.com/Anna-Hax/JUNO/issues/48))                                                                                                                  | Highlight text attached to the page capture; retrievable                                                   |
+| 5     | **Highlights / selections** ([#48](https://github.com/Anna-Hax/JUNO/issues/48)) — ✅ [session 23](sessions/23-session-highlights.md)                                                                                                                  | Highlight text in `raw_json.highlights` + ingest text for search                                                   |
 | 6     | **Domain / URL excludes** ([#49](https://github.com/Anna-Hax/JUNO/issues/49)) + respect global `/pause`                                                                                          | Banking etc. never ingested; pause returns 423 from API and extension backs off                            |
 | 7     | **Module health** ([#50](https://github.com/Anna-Hax/JUNO/issues/50)) — extension last-success / last-error in `module_health`; Telegram `/status` and `GET /status` show browser sync freshness | Silent breakage is visible within a day of testing                                                         |
 | 8     | **Cross-reference** ([#51](https://github.com/Anna-Hax/JUNO/issues/51)) browser captures vs upload/inbox content in retrieve / digest text                                                       | “You also uploaded notes on X” style citations or digest lines                                             |
