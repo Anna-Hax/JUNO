@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from pathlib import Path
 
 import httpx
@@ -256,3 +257,32 @@ async def test_ingest_api_persists_text(settings, db, pipeline):
     assert body["status"] == "committed"
     assert body["chunk_count"] == 1
     assert blocked.status_code == 423
+
+
+@pytest.mark.asyncio
+async def test_browser_payload_stores_visited_at_and_raw_json(db, pipeline):
+    when = datetime(2026, 8, 29, 12, 0, tzinfo=UTC)
+    result = await pipeline.ingest_payload(
+        {
+            "source_type": "browser",
+            "uri": "https://example.com/page",
+            "title": "Example page",
+            "text": "Example page",
+            "visited_at": when.isoformat(),
+        }
+    )
+    assert result.status == "committed"
+    assert result.capture_id is not None
+
+    async def read(session):
+        row = await session.get(Capture, result.capture_id)
+        assert row is not None
+        assert row.source_type == "browser"
+        assert row.uri == "https://example.com/page"
+        assert row.title == "Example page"
+        assert row.captured_at.replace(tzinfo=UTC) == when
+        assert row.raw_json is not None
+        assert row.raw_json.get("visited_at") == when.isoformat()
+        return row
+
+    await db.read(read)
