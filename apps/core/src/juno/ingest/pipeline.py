@@ -19,6 +19,24 @@ from juno.models import Capture, Chunk, ModuleHealth
 logger = logging.getLogger("juno.ingest.pipeline")
 
 
+def _parse_visited_at(value: Any) -> datetime | None:
+    """Parse extension/client ISO timestamp for captured_at."""
+    if value is None:
+        return None
+    text = str(value).strip()
+    if not text:
+        return None
+    if text.endswith("Z"):
+        text = text[:-1] + "+00:00"
+    try:
+        parsed = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=UTC)
+    return parsed.astimezone(UTC)
+
+
 class VectorSink(Protocol):
     """Subset of VectorStore used by ingest (ADR-04). Optional until #13 lands."""
 
@@ -105,6 +123,7 @@ class IngestPipeline:
         uri: str | None = None,
         title: str | None = None,
         raw: dict[str, Any] | None = None,
+        captured_at: datetime | None = None,
     ) -> IngestResult:
         extracted = Extracted(
             text=text or "",
@@ -113,7 +132,7 @@ class IngestPipeline:
             source_type=source_type,
             raw=raw or {"extractor": "inline"},
         )
-        return await self._commit(extracted, source_type=source_type)
+        return await self._commit(extracted, source_type=source_type, captured_at=captured_at)
 
     async def ingest_payload(self, payload: dict[str, Any]) -> IngestResult:
         source_type = str(payload.get("source_type") or "api")
@@ -121,20 +140,42 @@ class IngestPipeline:
         uri = payload.get("uri")
         text = payload.get("text")
         title = payload.get("title")
+        raw = payload.get("raw_json")
+        if not isinstance(raw, dict):
+            raw = None
+        visited_at = _parse_visited_at(payload.get("visited_at"))
+        if visited_at is None and raw is not None:
+            visited_at = _parse_visited_at(raw.get("visited_at"))
 
         if path_val:
             return await self.ingest_path(Path(str(path_val)), source_type=source_type)
         if isinstance(uri, str) and uri.startswith(("http://", "https://")) and not text:
             kind = source_type if source_type not in {"api", ""} else "url"
             return await self.ingest_url(uri, source_type=kind)
+        browser_raw = raw or {}
+        if source_type == "browser":
+            browser_raw = {
+                **browser_raw,
+                "visited_at": (visited_at or datetime.now(UTC)).isoformat(),
+                "uri": uri,
+                "title": title,
+            }
         return await self.ingest_text(
             text=str(text) if text is not None else "",
             source_type=source_type,
             uri=str(uri) if uri else None,
             title=str(title) if title else None,
+            raw=browser_raw if source_type == "browser" else raw,
+            captured_at=visited_at,
         )
 
-    async def _commit(self, extracted: Extracted, *, source_type: str) -> IngestResult:
+    async def _commit(
+        self,
+        extracted: Extracted,
+        *,
+        source_type: str,
+        captured_at: datetime | None = None,
+    ) -> IngestResult:
         pieces = chunk_text(extracted.text or "")
 
         async def write(session: AsyncSession) -> tuple[int, list[tuple[str, str]]]:
@@ -146,6 +187,8 @@ class IngestPipeline:
                 raw_json=extracted.raw or None,
                 status="committed",
             )
+            if captured_at is not None:
+                capture.captured_at = captured_at
             session.add(capture)
             await session.flush()
             stored: list[tuple[str, str]] = []

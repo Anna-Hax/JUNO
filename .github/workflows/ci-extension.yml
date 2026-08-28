@@ -29,5 +29,6 @@ jobs:
           test -f apps/extension/popup.js
           test -f apps/extension/lib/config.js
           test -f apps/extension/lib/api.js
+          test -f apps/extension/lib/capture.js
       - name: Require extension README
         run: test -f apps/extension/README.md

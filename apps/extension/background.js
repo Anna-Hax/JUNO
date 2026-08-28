@@ -1,7 +1,7 @@
-importScripts("lib/config.js", "lib/api.js");
+importScripts("lib/config.js", "lib/api.js", "lib/capture.js");
 
 /**
- * Spike S2+: POST page visit to loopback /ingest (Bearer token).
+ * POST page visit to loopback /ingest (Bearer token).
  * @param {chrome.tabs.Tab} tab
  */
 async function captureTab(tab) {
@@ -15,20 +15,13 @@ async function captureTab(tab) {
     return;
   }
 
-  const title = tab.title || url;
-  const payload = {
-    source_type: "browser",
-    uri: url,
-    title,
-    text: title,
-  };
-
+  const payload = JunoCapture.buildPayload(tab);
   const { ok, status, body } = await JunoApi.postIngest(apiBaseUrl, apiToken, payload);
   if (!ok) {
     console.warn("Juno ingest failed", status, body);
     return;
   }
-  console.log("Juno capture committed", body.capture_id, title);
+  console.log("Juno capture committed", body.capture_id, payload.title);
 }
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
