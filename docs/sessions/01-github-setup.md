@@ -81,4 +81,10 @@ PR template: `.github/PULL_REQUEST_TEMPLATE.md`
 
 ## Branch protection
 
-Not enabled yet. Recommended after board exists: require PR + `CI Python` + `PR Checks` before merge to `main`.
+**Enabled** on `main` (2026-08-29): require PR + `lint-test (ubuntu-latest)`, `lint-test (windows-latest)`, `pr-hygiene`.
+
+Re-apply from repo root:
+
+```powershell
+gh api repos/Anna-Hax/JUNO/branches/main/protection -X PUT --input scripts/branch-protection-main.json
+```
