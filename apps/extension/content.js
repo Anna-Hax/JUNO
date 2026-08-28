@@ -55,4 +55,21 @@
   window.addEventListener("pagehide", () => report(true));
 
   setInterval(() => report(false), 5000);
+
+  document.addEventListener("mouseup", () => {
+    const selection = window.getSelection();
+    const text = selection?.toString().trim();
+    if (!text || text.length < 3) {
+      return;
+    }
+    chrome.runtime
+      .sendMessage({
+        type: "juno-highlight",
+        highlight: {
+          text: text.slice(0, 2000),
+          at: new Date().toISOString(),
+        },
+      })
+      .catch(() => {});
+  });
 })();

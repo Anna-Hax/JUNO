@@ -1,6 +1,6 @@
 /** Tab session state for deferred browser capture with metrics. */
 const JunoTabs = {
-  /** @type {Map<number, { tab: chrome.tabs.Tab; metrics: object | null }>} */
+  /** @type {Map<number, { tab: chrome.tabs.Tab; metrics: object | null; highlights: object[] }>} */
   sessions: new Map(),
 
   /** @param {chrome.tabs.Tab} tab */
@@ -8,7 +8,7 @@ const JunoTabs = {
     if (!tab.id || !tab.url?.startsWith("http")) {
       return;
     }
-    this.sessions.set(tab.id, { tab, metrics: null });
+    this.sessions.set(tab.id, { tab, metrics: null, highlights: [] });
   },
 
   /** @param {number} tabId @param {object} metrics */
@@ -16,6 +16,14 @@ const JunoTabs = {
     const row = this.sessions.get(tabId);
     if (row) {
       row.metrics = metrics;
+    }
+  },
+
+  /** @param {number} tabId @param {object} highlight */
+  addHighlight(tabId, highlight) {
+    const row = this.sessions.get(tabId);
+    if (row && highlight?.text) {
+      row.highlights.push(highlight);
     }
   },
 

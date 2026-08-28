@@ -162,6 +162,8 @@ class IngestPipeline:
             }
             if raw and isinstance(raw.get("metrics"), dict):
                 browser_raw["metrics"] = raw["metrics"]
+            if raw and isinstance(raw.get("highlights"), list):
+                browser_raw["highlights"] = raw["highlights"]
         return await self.ingest_text(
             text=str(text) if text is not None else "",
             source_type=source_type,

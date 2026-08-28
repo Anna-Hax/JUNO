@@ -5,7 +5,7 @@ importScripts("lib/config.js", "lib/api.js", "lib/capture.js", "lib/tabs.js");
  * @param {chrome.tabs.Tab} tab
  * @param {object | null} metrics
  */
-async function captureTab(tab, metrics) {
+async function captureTab(tab, metrics, highlights) {
   const url = tab.url || "";
   if (!url.startsWith("http://") && !url.startsWith("https://")) {
     return;
@@ -16,7 +16,7 @@ async function captureTab(tab, metrics) {
     return;
   }
 
-  const payload = JunoCapture.buildPayload(tab, metrics);
+  const payload = JunoCapture.buildPayload(tab, metrics, highlights);
   const { ok, status, body } = await JunoApi.postIngest(apiBaseUrl, apiToken, payload);
   if (!ok) {
     console.warn("Juno ingest failed", status, body);
@@ -31,7 +31,7 @@ async function finalizeTab(tabId) {
   if (!row) {
     return;
   }
-  await captureTab(row.tab, row.metrics);
+  await captureTab(row.tab, row.metrics, row.highlights);
 }
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
@@ -59,6 +59,10 @@ chrome.runtime.onMessage.addListener((message, sender) => {
   }
   if (message.type === "juno-metrics" && message.metrics) {
     JunoTabs.setMetrics(tabId, message.metrics);
+    return;
+  }
+  if (message.type === "juno-highlight" && message.highlight) {
+    JunoTabs.addHighlight(tabId, message.highlight);
     return;
   }
   if (message.type === "juno-page-done") {
