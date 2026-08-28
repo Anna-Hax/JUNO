@@ -21,6 +21,7 @@ from juno.bot.handlers import (
 from juno.bot.services import (
     BOT_DATA_KEY,
     BotServices,
+    format_digest,
     format_retrieve_reply,
     load_capture_paused,
     persist_capture_paused,
@@ -31,7 +32,7 @@ from juno.config import Settings
 from juno.graph.db import Database
 from juno.graph.vectors import VectorHit
 from juno.ingest.pipeline import IngestPipeline, IngestResult
-from juno.models import AppSetting
+from juno.models import AppSetting, Capture
 from juno.runtime import build_telegram_application
 
 ALLOWED_ID = 42
@@ -162,6 +163,30 @@ def test_single_http_url():
 def test_format_retrieve_reply_empty():
     text = format_retrieve_reply("rust", [])
     assert "Nothing in the graph" in text
+
+
+def test_format_digest_groups_browser_reading():
+    from datetime import UTC, datetime
+
+    now = datetime.now(UTC)
+    browser = Capture(
+        id=1,
+        source_type="browser",
+        title="Rust book",
+        status="committed",
+        captured_at=now,
+    )
+    upload = Capture(
+        id=2,
+        source_type="upload",
+        title="Notes",
+        status="committed",
+        captured_at=now,
+    )
+    text = format_digest([upload, browser], "today")
+    assert "Browser reading (1):" in text
+    assert "Uploads / other (1):" in text
+    assert "Rust book" in text
 
 
 def test_format_retrieve_reply_hits():
