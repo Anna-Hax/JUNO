@@ -53,16 +53,16 @@ Epics: #25 M2 · #26 M3 · #27 M4 · #28 M5
 
 ## Progress board (Projects v2)
 
-**Status:** not created yet (token missing `project` / `read:project`).
+**Status:** **live** — [JUNO Roadmap](https://github.com/users/Anna-Hax/projects/1) (project **#1**).
 
 ```powershell
 gh auth refresh -h github.com -s project,read:project
-.\scripts\bootstrap-project.ps1
+.\scripts\bootstrap-project.ps1   # idempotent — reuses project #1
 ```
 
-Intended board columns: Backlog → Ready → In Progress → In Review → Blocked → Done.
+Status columns today: **Todo → In Progress → Done** (customize in the UI for Ready / Blocked / In Review if desired).
 
-Optional CI secrets for auto-add: `PROJECT_PAT`, `PROJECT_NUMBER` (see `.github/workflows/project-automation.yml`).
+CI secrets for auto-add: `PROJECT_PAT`, `PROJECT_NUMBER=1` (see `.github/workflows/project-automation.yml`).
 
 ---
 
@@ -73,7 +73,7 @@ Optional CI secrets for auto-add: `PROJECT_PAT`, `PROJECT_NUMBER` (see `.github/
 | CI Python | push/PR to `main` | **Green** on first scaffold push |
 | CI Extension | path `apps/extension/**` | JSON + file presence |
 | PR Checks | PR open/edit | title format + Closes/Refs |
-| Project Automation | issue/PR open | no-ops until secrets set |
+| Project Automation | issue/PR open | uses `PROJECT_PAT` + `PROJECT_NUMBER=1` |
 
 PR template: `.github/PULL_REQUEST_TEMPLATE.md`
 

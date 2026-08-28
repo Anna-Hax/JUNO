@@ -22,6 +22,7 @@ Living notes for what was implemented, how GitHub is set up, and what to do next
 | [14-session-export-wipe.md](14-session-export-wipe.md) | **M1 #23** — `juno export` + `juno wipe` |
 | [15-session-v1-release-gate.md](15-session-v1-release-gate.md) | **M1 #24** — v1.0 release gate |
 | [16-session-spike-s1-live.md](16-session-spike-s1-live.md) | **#4** — Live Spike S1 (shared-loop smoke) |
+| [17-session-projects-board.md](17-session-projects-board.md) | **#9** — Projects v2 board + auto-add |
 | [v1.0-release-gate.md](../v1.0-release-gate.md) | M1 checklist (all P0 closed) |
 
 Architecture decisions live in [`../adr/`](../adr/). Product requirements: [`../../personal-knowledge-graph-prd.md](../../personal-knowledge-graph-prd.md).
