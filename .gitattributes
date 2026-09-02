@@ -1,3 +1,3 @@
 # Living next-work tracker: on merge, keep the current branch copy.
-# Agents/humans should also pass `-c merge.ours.driver=true` (see .cursor/rules).
+# Agents/humans should also pass `-c merge.ours.driver=true`.
 docs/next-work.md merge=ours
