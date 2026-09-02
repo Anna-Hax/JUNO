@@ -189,6 +189,41 @@ def test_format_digest_groups_browser_reading():
     assert "Rust book" in text
 
 
+def test_format_digest_groups_ide_chats_and_errors():
+    from datetime import UTC, datetime
+
+    now = datetime.now(UTC)
+    chat = Capture(
+        id=3,
+        source_type="ide",
+        title="Fix sqlite lock",
+        status="committed",
+        captured_at=now,
+        raw_json={"kind": "cursor_chat"},
+    )
+    err = Capture(
+        id=4,
+        source_type="ide",
+        title="database is locked",
+        status="committed",
+        captured_at=now,
+        raw_json={"kind": "cursor_error"},
+    )
+    upload = Capture(
+        id=2,
+        source_type="upload",
+        title="Notes",
+        status="committed",
+        captured_at=now,
+    )
+    text = format_digest([upload, chat, err], "week")
+    assert "IDE chats (1):" in text
+    assert "IDE errors (1):" in text
+    assert "Uploads / other (1):" in text
+    assert "Fix sqlite lock" in text
+    assert "database is locked" in text
+
+
 def test_format_retrieve_reply_hits():
     hit = VectorHit(
         id="c1-n0",

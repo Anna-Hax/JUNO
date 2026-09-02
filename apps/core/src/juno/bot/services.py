@@ -195,18 +195,35 @@ def format_capture_ack(result: IngestResult) -> str:
     )
 
 
+def _ide_kind(row: Capture) -> str:
+    raw = row.raw_json if isinstance(row.raw_json, dict) else {}
+    kind = str(raw.get("kind") or "")
+    if kind == "cursor_error":
+        return "error"
+    return "chat"
+
+
 def format_digest(captures: list[Capture], window: str) -> str:
     label = "today" if window == "today" else "this week"
     if not captures:
         return f"No captures {label}."
     browser = [row for row in captures if row.source_type == "browser"]
-    other = [row for row in captures if row.source_type != "browser"]
+    ide = [row for row in captures if row.source_type == "ide"]
+    other = [row for row in captures if row.source_type not in {"browser", "ide"}]
+    ide_chat = [row for row in ide if _ide_kind(row) == "chat"]
+    ide_err = [row for row in ide if _ide_kind(row) == "error"]
     lines = [f"Digest {label} ({len(captures)}):"]
     if browser:
         lines.append(f"Browser reading ({len(browser)}):")
         lines.extend(_digest_lines(browser))
+    if ide_chat:
+        lines.append(f"IDE chats ({len(ide_chat)}):")
+        lines.extend(_digest_lines(ide_chat))
+    if ide_err:
+        lines.append(f"IDE errors ({len(ide_err)}):")
+        lines.extend(_digest_lines(ide_err))
     if other:
-        if browser:
+        if browser or ide:
             lines.append(f"Uploads / other ({len(other)}):")
         lines.extend(_digest_lines(other))
     return clip("\n".join(lines))
