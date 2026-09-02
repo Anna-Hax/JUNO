@@ -42,6 +42,7 @@ Living notes for what was implemented, how GitHub is set up, and what to do next
 | [34-session-error-match.md](34-session-error-match.md) | **#69** — Error-matching retrieval |
 | [35-session-ide-crossref.md](35-session-ide-crossref.md) | **#70** — Cross-reference IDE vs browser + inbox |
 | [36-session-ide-digest.md](36-session-ide-digest.md) | **#71** — Digest enrichment for IDE |
+| [37-session-ide-health.md](37-session-ide-health.md) | **#72** — IDE module health |
 | [v1.0-release-gate.md](../v1.0-release-gate.md) | M1 checklist (all P0 closed) |
 | [v1.1-release-gate.md](../v1.1-release-gate.md) | M2 checklist (browser capture) |
 
