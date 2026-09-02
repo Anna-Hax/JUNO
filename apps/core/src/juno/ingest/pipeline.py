@@ -9,6 +9,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Protocol
 
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from juno.graph.db import Database
@@ -164,12 +165,24 @@ class IngestPipeline:
                 browser_raw["metrics"] = raw["metrics"]
             if raw and isinstance(raw.get("highlights"), list):
                 browser_raw["highlights"] = raw["highlights"]
+        ide_raw = raw
+        if source_type == "ide":
+            ide_raw = {
+                **(raw or {}),
+                "kind": (raw or {}).get("kind") or "cursor_chat",
+                "visited_at": (visited_at or datetime.now(UTC)).isoformat(),
+                "uri": uri,
+                "title": title,
+            }
+            if raw and isinstance(raw.get("bubbles"), list):
+                ide_raw["bubbles"] = raw["bubbles"]
+        stored_raw = browser_raw if source_type == "browser" else ide_raw
         return await self.ingest_text(
             text=str(text) if text is not None else "",
             source_type=source_type,
             uri=str(uri) if uri else None,
             title=str(title) if title else None,
-            raw=browser_raw if source_type == "browser" else raw,
+            raw=stored_raw,
             captured_at=visited_at,
         )
 
@@ -182,19 +195,52 @@ class IngestPipeline:
     ) -> IngestResult:
         pieces = chunk_text(extracted.text or "")
 
-        async def write(session: AsyncSession) -> tuple[int, list[tuple[str, str]]]:
-            capture = Capture(
-                source_type=source_type,
-                uri=extracted.uri,
-                title=extracted.title,
-                text=extracted.text or None,
-                raw_json=extracted.raw or None,
-                status="committed",
-            )
-            if captured_at is not None:
-                capture.captured_at = captured_at
-            session.add(capture)
-            await session.flush()
+        async def write(
+            session: AsyncSession,
+        ) -> tuple[int, list[tuple[str, str]], list[str]]:
+            stale: list[str] = []
+            capture: Capture | None = None
+            if source_type == "ide" and extracted.uri:
+                found = await session.execute(
+                    select(Capture).where(
+                        Capture.source_type == "ide",
+                        Capture.uri == extracted.uri,
+                    )
+                )
+                capture = found.scalar_one_or_none()
+                if capture is not None and _ide_unchanged(capture, extracted):
+                    existing = await session.execute(
+                        select(Chunk).where(Chunk.capture_id == capture.id)
+                    )
+                    stored = [
+                        (row.chroma_id, row.text) for row in existing.scalars() if row.chroma_id
+                    ]
+                    await _touch_health(session, ok=True)
+                    return capture.id, stored, []
+                if capture is not None:
+                    old = await session.execute(select(Chunk).where(Chunk.capture_id == capture.id))
+                    stale = [row.chroma_id for row in old.scalars() if row.chroma_id]
+                    await session.execute(delete(Chunk).where(Chunk.capture_id == capture.id))
+                    capture.title = extracted.title
+                    capture.text = extracted.text or None
+                    capture.raw_json = extracted.raw or None
+                    capture.status = "committed"
+                    capture.error_reason = None
+                    if captured_at is not None:
+                        capture.captured_at = captured_at
+            if capture is None:
+                capture = Capture(
+                    source_type=source_type,
+                    uri=extracted.uri,
+                    title=extracted.title,
+                    text=extracted.text or None,
+                    raw_json=extracted.raw or None,
+                    status="committed",
+                )
+                if captured_at is not None:
+                    capture.captured_at = captured_at
+                session.add(capture)
+                await session.flush()
             stored: list[tuple[str, str]] = []
             for ordinal, piece in enumerate(pieces):
                 chroma_id = f"c{capture.id}-n{ordinal}"
@@ -207,12 +253,15 @@ class IngestPipeline:
                     )
                 )
                 stored.append((chroma_id, piece))
+            reused = {item[0] for item in stored}
+            stale = [cid for cid in stale if cid not in reused]
             await _touch_health(session, ok=True)
             if source_type == "browser":
                 await _touch_health(session, ok=True, module="extension")
-            return capture.id, stored
+            return capture.id, stored, stale
 
-        capture_id, stored = await self.db.write(write)
+        capture_id, stored, stale = await self.db.write(write)
+        await self._delete_vectors(stale)
         await self._upsert_vectors(capture_id, source_type, stored)
         return IngestResult(
             accepted=True,
@@ -279,6 +328,34 @@ class IngestPipeline:
             )
         except Exception:  # noqa: BLE001
             logger.exception("vector upsert failed for capture %s", capture_id)
+
+    async def _delete_vectors(self, ids: Sequence[str]) -> None:
+        if self.vectors is None or not ids:
+            return
+        deleter = getattr(self.vectors, "delete_async", None)
+        if deleter is None:
+            deleter = getattr(self.vectors, "delete", None)
+            if deleter is None:
+                return
+            try:
+                deleter(ids)
+            except Exception:  # noqa: BLE001
+                logger.exception("vector delete failed")
+            return
+        try:
+            await deleter(ids)
+        except Exception:  # noqa: BLE001
+            logger.exception("vector delete failed")
+
+
+def _ide_unchanged(capture: Capture, extracted: Extracted) -> bool:
+    old = capture.raw_json if isinstance(capture.raw_json, dict) else {}
+    new = extracted.raw if isinstance(extracted.raw, dict) else {}
+    if (capture.text or "") != (extracted.text or ""):
+        return False
+    if old.get("updated_at") and new.get("updated_at"):
+        return old.get("updated_at") == new.get("updated_at")
+    return old.get("composer_id") == new.get("composer_id") and bool(old.get("composer_id"))
 
 
 async def _touch_health(

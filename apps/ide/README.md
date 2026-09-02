@@ -41,7 +41,7 @@ python apps/ide/sync.py --once
 python apps/ide/sync.py --watch
 ```
 
-`--watch` polls until Ctrl+C. Global `/pause` returns 423; the adapter backs off that pass. Duplicate capture rows on re-sync are handled in #66.
+`--watch` polls until Ctrl+C. Global `/pause` returns 423; the adapter backs off that pass. Re-posting the same `cursor://composer/{id}` updates one capture (no duplicate storms).
 
 ## CI
 

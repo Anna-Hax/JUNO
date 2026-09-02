@@ -36,6 +36,7 @@ Living notes for what was implemented, how GitHub is set up, and what to do next
 | [28-session-m2-gate.md](28-session-m2-gate.md) | **#53** — M2 gate + extension validation |
 | [29-session-spike-s3.md](29-session-spike-s3.md) | **#64** — Spike S3 Cursor vscdb → /ingest |
 | [30-session-ide-scaffold.md](30-session-ide-scaffold.md) | **#65** — IDE adapter scaffold |
+| [31-session-ide-chat.md](31-session-ide-chat.md) | **#66** — Chat/composer ingest |
 | [v1.0-release-gate.md](../v1.0-release-gate.md) | M1 checklist (all P0 closed) |
 | [v1.1-release-gate.md](../v1.1-release-gate.md) | M2 checklist (browser capture) |
 

@@ -11,11 +11,12 @@ from pathlib import Path
 
 import httpx
 import pytest
+from sqlalchemy import func, select
 
 from juno.api import create_app
 from juno.graph.db import Database
 from juno.ingest.pipeline import IngestPipeline
-from juno.models import Capture
+from juno.models import Capture, Chunk
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 _IDE_MOD = REPO_ROOT / "apps" / "ide" / "cursor_vscdb.py"
@@ -177,6 +178,9 @@ async def test_ide_payload_commits_via_pipeline(db, pipeline: IngestPipeline, vs
         assert row.uri == payload["uri"]
         assert row.raw_json is not None
         assert row.raw_json.get("composer_id") == COMPOSER_ID
+        assert row.raw_json.get("kind") == "cursor_chat"
+        assert isinstance(row.raw_json.get("bubbles"), list)
+        assert row.raw_json["bubbles"][0]["role"] == "user"
         return row
 
     await db.read(read)
@@ -202,6 +206,84 @@ async def test_ide_ingest_http_roundtrip(db, pipeline: IngestPipeline, settings)
     assert body["accepted"] is True
     assert body["source_type"] == "ide"
     assert body["status"] == "committed"
+
+
+@pytest.mark.asyncio
+async def test_ide_ingest_is_idempotent_on_replay(db, pipeline: IngestPipeline):
+    payload = {
+        "source_type": "ide",
+        "uri": "cursor://composer/replay",
+        "title": "Replay chat",
+        "text": "user:\nhello\n\nassistant:\nworld\n",
+        "visited_at": "2026-09-02T12:00:00+00:00",
+        "raw_json": {
+            "kind": "cursor_chat",
+            "composer_id": "replay",
+            "updated_at": "2026-09-02T12:00:00+00:00",
+            "bubbles": [
+                {"bubble_id": "u1", "role": "user", "text": "hello"},
+                {"bubble_id": "a1", "role": "assistant", "text": "world"},
+            ],
+        },
+    }
+    first = await pipeline.ingest_payload(payload)
+    second = await pipeline.ingest_payload(payload)
+    assert first.capture_id == second.capture_id
+
+    async def count(session):
+        n = await session.scalar(
+            select(func.count()).select_from(Capture).where(Capture.uri == payload["uri"])
+        )
+        return int(n or 0)
+
+    assert await db.read(count) == 1
+
+
+@pytest.mark.asyncio
+async def test_ide_ingest_updates_same_uri_when_chat_grows(db, pipeline: IngestPipeline):
+    uri = "cursor://composer/grow"
+    first = await pipeline.ingest_payload(
+        {
+            "source_type": "ide",
+            "uri": uri,
+            "title": "Growing chat",
+            "text": "user:\nlock\n",
+            "raw_json": {
+                "composer_id": "grow",
+                "updated_at": "2026-09-02T12:00:00+00:00",
+                "bubbles": [{"bubble_id": "u1", "role": "user", "text": "lock"}],
+            },
+        }
+    )
+    second = await pipeline.ingest_payload(
+        {
+            "source_type": "ide",
+            "uri": uri,
+            "title": "Growing chat",
+            "text": "user:\nlock\n\nassistant:\nuse WAL\n",
+            "raw_json": {
+                "composer_id": "grow",
+                "updated_at": "2026-09-02T13:00:00+00:00",
+                "bubbles": [
+                    {"bubble_id": "u1", "role": "user", "text": "lock"},
+                    {"bubble_id": "a1", "role": "assistant", "text": "use WAL"},
+                ],
+            },
+        }
+    )
+    assert first.capture_id == second.capture_id
+
+    async def read(session):
+        row = await session.get(Capture, second.capture_id)
+        assert row is not None
+        assert "use WAL" in (row.text or "")
+        chunks = list(
+            (await session.execute(select(Chunk).where(Chunk.capture_id == row.id))).scalars()
+        )
+        assert chunks
+        return row
+
+    await db.read(read)
 
 
 def test_format_session_text_includes_workspace(vscdb: Path):
