@@ -34,6 +34,7 @@ Living notes for what was implemented, how GitHub is set up, and what to do next
 | [26-session-cross-reference.md](26-session-cross-reference.md) | **#51** — Cross-reference browser vs inbox |
 | [27-session-digest-enrichment.md](27-session-digest-enrichment.md) | **#52** — Digest enrichment (browser vs uploads) |
 | [28-session-m2-gate.md](28-session-m2-gate.md) | **#53** — M2 gate + extension validation |
+| [29-session-spike-s3.md](29-session-spike-s3.md) | **#64** — Spike S3 Cursor vscdb → /ingest |
 | [v1.0-release-gate.md](../v1.0-release-gate.md) | M1 checklist (all P0 closed) |
 | [v1.1-release-gate.md](../v1.1-release-gate.md) | M2 checklist (browser capture) |
 

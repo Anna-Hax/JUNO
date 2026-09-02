@@ -10,6 +10,7 @@ Personal knowledge-graph agent: passively (and manually) capture what you read, 
 - **SQLite + write queue** for the graph ([ADR-02](docs/adr/002-sqlite-write-queue.md)); **Alembic** for schema changes ([ADR-03](docs/adr/003-alembic.md))
 - **Chroma** for vectors — persistent client, one collection per embedding model ([ADR-04](docs/adr/004-chroma-collections.md)); **stub embedder** in CI
 - **Browser extension** (`apps/extension`): MV3 loopback client ([ADR-05](docs/adr/005-browser-extension-client.md)); Spike S2 captures tabs → `POST /ingest`
+- **IDE adapter** (`apps/ide`): read-only Cursor `state.vscdb` client ([ADR-06](docs/adr/006-ide-adapter-client.md)); Spike S3 posts chats → `POST /ingest`
 - **Inbox** (`inbox/`): drop `.txt` / `.md` / `.pdf` / `.url` (or a one-line http(s) text file). `juno serve` watches the folder; good files move to `inbox/.processed/`, unreadable PDFs to `inbox/.failed/`.
 - **HITL** (`/review`): inline Approve / Reject / Skip for pending graph merges
 

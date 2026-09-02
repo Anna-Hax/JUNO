@@ -1,8 +1,8 @@
 # Next work
 
-**Last updated:** 2026-08-29  
+**Last updated:** 2026-09-02  
 **Track issues on:** [https://github.com/Anna-Hax/JUNO/issues](https://github.com/Anna-Hax/JUNO/issues)  
-**Package:** `1.1.0` (M2 browser capture complete — [`docs/v1.1-release-gate.md`](v1.1-release-gate.md))
+**Package:** `1.1.0` (M2 complete — M3 IDE capture expanded; [`docs/v1.1-release-gate.md`](v1.1-release-gate.md))
 
 Prefer one open issue ≈ one PR (`Closes #N`). This file is kept as-is across branch merges (`merge=ours`).
 
@@ -91,7 +91,45 @@ Stub today: `apps/extension/` (MV3 manifest + service worker + options). Extensi
 
 Epic [#25](https://github.com/Anna-Hax/JUNO/issues/25) closed; milestone [M2: v1.1 Browser Capture](https://github.com/Anna-Hax/JUNO/milestone/8) complete. Gate: [`docs/v1.1-release-gate.md`](v1.1-release-gate.md).
 
-**Next:** epic [#26](https://github.com/Anna-Hax/JUNO/issues/26) — M3 IDE / Cursor capture.
+---
+
+## Unlock M3 (planning)
+
+Epic: [#26](https://github.com/Anna-Hax/JUNO/issues/26) — *Epic: M3 IDE / Cursor capture (v1.2)*.  
+Milestone: [M3: v1.2 IDE Capture](https://github.com/Anna-Hax/JUNO/milestone/9).
+
+**Child issues expanded 2026-09-02** (#64–#73). Prefer one issue ≈ one PR.
+
+| Order | Issue | Title |
+| ----- | ----- | ----- |
+| 1 | [#64](https://github.com/Anna-Hax/JUNO/issues/64) | Spike S3 — Cursor state.vscdb / exporter POST /ingest smoke — ✅ [session 29](sessions/29-session-spike-s3.md) |
+| 2 | [#65](https://github.com/Anna-Hax/JUNO/issues/65) | IDE adapter scaffold — wrap exporter, config paths, CI |
+| 3 | [#66](https://github.com/Anna-Hax/JUNO/issues/66) | Chat/composer bubbles — ingest Cursor sessions via /ingest |
+| 4 | [#67](https://github.com/Anna-Hax/JUNO/issues/67) | Terminal error capture from IDE sessions |
+| 5 | [#68](https://github.com/Anna-Hax/JUNO/issues/68) | HITL — confirm IDE error-match / review sensitive chat batches |
+| 6 | [#69](https://github.com/Anna-Hax/JUNO/issues/69) | Error-matching retrieval — have I seen this error before? |
+| 7 | [#70](https://github.com/Anna-Hax/JUNO/issues/70) | Cross-reference IDE captures vs browser + inbox |
+| 8 | [#71](https://github.com/Anna-Hax/JUNO/issues/71) | Digest enrichment — IDE chats/errors in /digest today\|week |
+| 9 | [#72](https://github.com/Anna-Hax/JUNO/issues/72) | Module health — ide sync freshness in /status + respect /pause |
+| 10 | [#73](https://github.com/Anna-Hax/JUNO/issues/73) | M3 gate — IDE tests, ADR, README, v1.2 release gate |
+
+**First coding task:** Spike S3 ([#64](https://github.com/Anna-Hax/JUNO/issues/64)) — ✅ done 2026-09-02 ([session 29](sessions/29-session-spike-s3.md)). Next: [#65](https://github.com/Anna-Hax/JUNO/issues/65) IDE adapter scaffold.
+
+### M3 design constraints (do not violate)
+
+1. One process, one loop ([ADR-01](adr/001-shared-event-loop.md)) — IDE adapter is a **client**, not a second daemon.
+2. All DB writes through `Database.write()` ([ADR-02](adr/002-sqlite-write-queue.md)).
+3. Schema changes = new Alembic revision ([ADR-03](adr/003-alembic.md)).
+4. Vectors only via the serve-process `VectorStore` after ingest ([ADR-04](adr/004-chroma-collections.md)).
+5. Loopback + token auth only ([#21](https://github.com/Anna-Hax/JUNO/issues/21)) — never bind `0.0.0.0` for the adapter.
+6. HITL: error-match reuse and sensitive chat batches stay reviewable ([#68](https://github.com/Anna-Hax/JUNO/issues/68), [#20](https://github.com/Anna-Hax/JUNO/issues/20) patterns).
+
+### Explicitly **not** M3 (keep in later epics)
+
+| Epic | Milestone | Scope |
+| ---- | --------- | ----- |
+| [#27](https://github.com/Anna-Hax/JUNO/issues/27) | M4 Proactive + mobile | APScheduler push digests, voice, temporal |
+| [#28](https://github.com/Anna-Hax/JUNO/issues/28) | M5 v2 polish | Flashcards, drafts, trust dial, Slack |
 
 ---
 

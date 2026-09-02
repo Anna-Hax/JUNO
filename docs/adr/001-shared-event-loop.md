@@ -95,3 +95,4 @@ Operator may still tap `/start`, a short query, and `/status` in Telegram for fu
 
 - Wire **APScheduler** (already in `pyproject.toml`) as an asyncio-friendly scheduler on this loop for digests / resurfacing (M4 / epic [#27](https://github.com/Anna-Hax/JUNO/issues/27)).
 - Keep documenting “no `run_polling()`” next to any new entrypoint so this ADR is not rediscovered the hard way.
+- IDE / Cursor capture is a **loopback HTTP client** ([ADR-06](006-ide-adapter-client.md)), not a second process or event loop.
