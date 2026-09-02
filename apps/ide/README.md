@@ -41,7 +41,7 @@ python apps/ide/sync.py --once
 python apps/ide/sync.py --watch
 ```
 
-`--watch` polls until Ctrl+C. Global `/pause` returns 423; the adapter backs off that pass. Re-posting the same `cursor://composer/{id}` updates one capture (no duplicate storms).
+`--watch` polls until Ctrl+C. Global `/pause` returns 423; the adapter backs off that pass. Re-posting the same `cursor://composer/{id}` or `cursor://error/{id}/{bubble}` updates one capture (no duplicate storms). Terminal command failures (`run_terminal_command_v2` / error-like output) ingest as `raw_json.kind=cursor_error`.
 
 ## CI
 

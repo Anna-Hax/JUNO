@@ -27,9 +27,11 @@ sys.modules["cursor_vscdb"] = _cursor
 _SPEC.loader.exec_module(_cursor)
 
 connect_readonly = _cursor.connect_readonly
+extract_errors = _cursor.extract_errors
 format_session_text = _cursor.format_session_text
 list_sessions = _cursor.list_sessions
 load_session = _cursor.load_session
+to_error_ingest_payload = _cursor.to_error_ingest_payload
 to_ingest_payload = _cursor.to_ingest_payload
 
 COMPOSER_ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
@@ -69,7 +71,20 @@ def _write_fixture(path: Path) -> None:
         ],
     }
     user_bubble = {"bubbleId": BID_USER, "type": 1, "text": "database is locked on ingest"}
-    tool_bubble = {"bubbleId": BID_TOOL, "type": 2, "text": ""}
+    tool_bubble = {
+        "bubbleId": BID_TOOL,
+        "type": 2,
+        "text": "",
+        "createdAt": "2026-09-02T00:00:30Z",
+        "toolFormerData": {
+            "name": "run_terminal_command_v2",
+            "status": "error",
+            "params": {"command": "uv run pytest", "cwd": r"D:\proj\demo"},
+            "result": {
+                "output": "database is locked\nTraceback (most recent call last):\n  File ingest.py"
+            },
+        },
+    }
     asst_bubble = {
         "bubbleId": BID_ASST,
         "type": 2,
@@ -297,3 +312,49 @@ def test_format_session_text_includes_workspace(vscdb: Path):
     assert "Workspace:" in text
     assert "demo" in text
     assert "database is locked" in text
+
+
+def test_extract_terminal_errors_from_tool_bubbles(vscdb: Path):
+    conn = connect_readonly(vscdb)
+    try:
+        errors = extract_errors(conn, COMPOSER_ID, workspace_path=r"D:\proj\demo")
+        loaded = load_session(conn, COMPOSER_ID)
+    finally:
+        conn.close()
+    assert len(errors) == 1
+    err = errors[0]
+    assert err.uri == f"cursor://error/{COMPOSER_ID}/{BID_TOOL}"
+    assert err.command == "uv run pytest"
+    assert "database is locked" in err.message
+    assert "Traceback" in err.stack
+    payload = to_error_ingest_payload(err)
+    assert payload["source_type"] == "ide"
+    assert payload["raw_json"]["kind"] == "cursor_error"
+    assert loaded is not None
+    assert len(loaded.bubbles) == 2
+
+
+@pytest.mark.asyncio
+async def test_ide_error_ingest_commits_and_is_idempotent(
+    db, pipeline: IngestPipeline, vscdb: Path
+):
+    conn = connect_readonly(vscdb)
+    try:
+        errors = extract_errors(conn, COMPOSER_ID, workspace_path=r"D:\proj\demo")
+        payload = to_error_ingest_payload(errors[0])
+    finally:
+        conn.close()
+    first = await pipeline.ingest_payload(payload)
+    second = await pipeline.ingest_payload(payload)
+    assert first.capture_id == second.capture_id
+
+    async def read(session):
+        row = await session.get(Capture, first.capture_id)
+        assert row is not None
+        assert row.source_type == "ide"
+        assert row.raw_json is not None
+        assert row.raw_json.get("kind") == "cursor_error"
+        assert "Traceback" in (row.text or "")
+        return row
+
+    await db.read(read)
