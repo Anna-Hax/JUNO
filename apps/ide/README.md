@@ -1,34 +1,50 @@
-# Juno IDE adapter (Spike S3)
+# Juno IDE adapter
 
-Loopback **HTTP client** for Cursor chat history. Reads `state.vscdb` **read-only** and posts to `juno serve` `POST /ingest`. It is not a second daemon and does not open Juno's SQLite or Chroma ([ADR-01](../../docs/adr/001-shared-event-loop.md), [ADR-06](../../docs/adr/006-ide-adapter-client.md)).
+Loopback **HTTP client** for Cursor chat history ([ADR-06](../../docs/adr/006-ide-adapter-client.md)). Reads `state.vscdb` **read-only** and posts to `juno serve`. Not a second daemon; no Juno SQLite/Chroma handles.
+
+## Layout
+
+| File | Role |
+|------|------|
+| `config.py` | Paths + token from env / `.env` |
+| `cursor_vscdb.py` | Read-only exporter (`composerHeaders` / `bubbleId:`) |
+| `api.py` | `GET /status`, `POST /ingest` |
+| `smoke.py` | Discover / export one session |
+| `sync.py` | Poll watermarked sessions (`--once` or `--watch`) |
+
+## Config
+
+Set in repo-root `.env` (same file as `juno serve`):
+
+| Variable | Default |
+|----------|---------|
+| `JUNO_API_HOST` / `JUNO_API_PORT` | `127.0.0.1` / `8787` |
+| `JUNO_API_TOKEN` | required for POST |
+| `JUNO_CURSOR_VSCDB` | platform Cursor global `state.vscdb` |
+| `JUNO_CURSOR_WORKSPACE_STORAGE` | sibling `workspaceStorage/` |
+| `JUNO_CURSOR_WORKSPACE` | optional path substring filter |
+| `JUNO_IDE_POLL_SECONDS` | `60` (`--watch`) |
+| `JUNO_IDE_STATE` | `{JUNO_DATA_DIR}/ide-adapter.json` watermark |
 
 ## Smoke
-
-With `juno serve` running and `JUNO_API_TOKEN` in the environment:
 
 ```powershell
 python apps/ide/smoke.py discover
 python apps/ide/smoke.py export --latest --post
 ```
 
-Override the DB path or token:
+## Poll / watch
 
 ```powershell
-python apps/ide/smoke.py export --latest --post --db $env:APPDATA\Cursor\User\globalStorage\state.vscdb --token $env:JUNO_API_TOKEN
+python apps/ide/sync.py --once --dry-run
+python apps/ide/sync.py --once
+python apps/ide/sync.py --watch
 ```
 
-Confirm: `GET /search?q=<session title>` with Bearer returns the capture (`source_type=ide`).
+`--watch` polls until Ctrl+C. Global `/pause` returns 423; the adapter backs off that pass. Duplicate capture rows on re-sync are handled in #66.
 
-## Storage we wrap
+## CI
 
-Cursor (3.x on this machine) stores chats in `%APPDATA%\Cursor\User\globalStorage\state.vscdb`:
-
-| Location | Role |
-|----------|------|
-| `composerHeaders` | Central session index (id, workspace, timestamps) |
-| `cursorDiskKV` `composerData:{id}` | Session envelope + bubble header list |
-| `cursorDiskKV` `bubbleId:{id}:{bubbleId}` | Message text |
-
-Empty tool-only bubbles are skipped. Schema is unofficial — if Cursor changes keys, discover will return 0 rows or missing text; see ADR-06 breakage notes.
-
-Watch/poll, config settings, and CI layout land in later M3 issues (#65+).
+```powershell
+python scripts/validate-ide.py
+```

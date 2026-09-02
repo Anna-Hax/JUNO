@@ -52,7 +52,7 @@ Cursor's storage is unofficial and has already migrated once (per-workspace `com
 - Guard missing fields; skip empty tool bubbles; do not assume `conversationMap` still holds text.
 - Mitigation: keep a fixture `state.vscdb` in tests; bump the reader when a live discover fails; record the Cursor version in the session log.
 
-Watch/poll, config paths, idempotent re-sync, terminal errors, HITL, and module health stay in later M3 issues (#65–#72).
+Watch/poll, config paths, and CI layout: [#65](https://github.com/Anna-Hax/JUNO/issues/65). Idempotent re-sync, terminal errors, HITL, and module health stay in later M3 issues (#66–#72).
 
 ## Consequences
 
