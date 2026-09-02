@@ -1,6 +1,6 @@
 # Codebase map (as of M0 / early M1)
 
-**Last updated:** 2026-08-26
+**Last updated:** 2026-09-02
 
 ---
 
@@ -9,7 +9,8 @@
 ```
 JUNO/
   apps/core/          # Python agent (source of truth for v1)
-  apps/extension/     # Browser capture stub (Phase 2)
+  apps/extension/     # Browser capture (M2 / ADR-05)
+  apps/ide/           # Cursor vscdb HTTP client (M3 / ADR-06)
   inbox/              # Manual upload drop zone (watched by juno serve)
   data/               # Runtime DB/vectors (gitignored)
   docs/adr/           # Architecture decisions
@@ -55,10 +56,14 @@ Optional: `--extra embeddings` for sentence-transformers; `--extra dev` for pyte
 
 ---
 
-## Extension stub
+## Extension (M2)
 
-- `apps/extension/manifest.json` — MV3, host permission for `127.0.0.1`
-- `apps/extension/background.js` — log-only placeholder
+- `apps/extension/` — MV3 loopback client ([ADR-05](../adr/005-browser-extension-client.md))
+
+## IDE adapter (M3 / Spike S3)
+
+- `apps/ide/cursor_vscdb.py` — read-only Cursor `state.vscdb` wrapper
+- `apps/ide/smoke.py` — discover / export / `POST /ingest` ([ADR-06](../adr/006-ide-adapter-client.md))
 
 ---
 
