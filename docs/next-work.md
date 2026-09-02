@@ -103,7 +103,7 @@ Milestone: [M3: v1.2 IDE Capture](https://github.com/Anna-Hax/JUNO/milestone/9).
 | Order | Issue | Title |
 | ----- | ----- | ----- |
 | 1 | [#64](https://github.com/Anna-Hax/JUNO/issues/64) | Spike S3 — Cursor state.vscdb / exporter POST /ingest smoke — ✅ [session 29](sessions/29-session-spike-s3.md) |
-| 2 | [#65](https://github.com/Anna-Hax/JUNO/issues/65) | IDE adapter scaffold — wrap exporter, config paths, CI |
+| 2 | [#65](https://github.com/Anna-Hax/JUNO/issues/65) | IDE adapter scaffold — wrap exporter, config paths, CI — ✅ [session 30](sessions/30-session-ide-scaffold.md) |
 | 3 | [#66](https://github.com/Anna-Hax/JUNO/issues/66) | Chat/composer bubbles — ingest Cursor sessions via /ingest |
 | 4 | [#67](https://github.com/Anna-Hax/JUNO/issues/67) | Terminal error capture from IDE sessions |
 | 5 | [#68](https://github.com/Anna-Hax/JUNO/issues/68) | HITL — confirm IDE error-match / review sensitive chat batches |
@@ -113,7 +113,7 @@ Milestone: [M3: v1.2 IDE Capture](https://github.com/Anna-Hax/JUNO/milestone/9).
 | 9 | [#72](https://github.com/Anna-Hax/JUNO/issues/72) | Module health — ide sync freshness in /status + respect /pause |
 | 10 | [#73](https://github.com/Anna-Hax/JUNO/issues/73) | M3 gate — IDE tests, ADR, README, v1.2 release gate |
 
-**First coding task:** Spike S3 ([#64](https://github.com/Anna-Hax/JUNO/issues/64)) — ✅ done 2026-09-02 ([session 29](sessions/29-session-spike-s3.md)). Next: [#65](https://github.com/Anna-Hax/JUNO/issues/65) IDE adapter scaffold.
+**First coding task:** Spike S3 ([#64](https://github.com/Anna-Hax/JUNO/issues/64)) — ✅ done 2026-09-02 ([session 29](sessions/29-session-spike-s3.md)). Adapter scaffold ([#65](https://github.com/Anna-Hax/JUNO/issues/65)) — ✅ [session 30](sessions/30-session-ide-scaffold.md). Next: [#66](https://github.com/Anna-Hax/JUNO/issues/66) chat/composer ingest.
 
 ### M3 design constraints (do not violate)
 

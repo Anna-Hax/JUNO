@@ -63,7 +63,7 @@ Optional: `--extra embeddings` for sentence-transformers; `--extra dev` for pyte
 ## IDE adapter (M3 / Spike S3)
 
 - `apps/ide/cursor_vscdb.py` — read-only Cursor `state.vscdb` wrapper
-- `apps/ide/smoke.py` — discover / export / `POST /ingest` ([ADR-06](../adr/006-ide-adapter-client.md))
+- `apps/ide/config.py` / `api.py` / `sync.py` — env paths, loopback HTTP, poll/watch ([ADR-06](../adr/006-ide-adapter-client.md))
 
 ---
 
