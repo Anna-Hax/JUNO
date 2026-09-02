@@ -38,6 +38,7 @@ Living notes for what was implemented, how GitHub is set up, and what to do next
 | [30-session-ide-scaffold.md](30-session-ide-scaffold.md) | **#65** — IDE adapter scaffold |
 | [31-session-ide-chat.md](31-session-ide-chat.md) | **#66** — Chat/composer ingest |
 | [32-session-ide-errors.md](32-session-ide-errors.md) | **#67** — Terminal error capture |
+| [33-session-ide-hitl.md](33-session-ide-hitl.md) | **#68** — HITL IDE error-match / batches |
 | [v1.0-release-gate.md](../v1.0-release-gate.md) | M1 checklist (all P0 closed) |
 | [v1.1-release-gate.md](../v1.1-release-gate.md) | M2 checklist (browser capture) |
 

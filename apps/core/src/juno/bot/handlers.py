@@ -36,7 +36,7 @@ HELP_TEXT = (
     "/pause — stop all ingest\n"
     "/resume — resume ingest (processes inbox backlog)\n"
     "/status — capture + module health\n"
-    "/review — HITL queue (Approve / Reject / Skip)\n"
+    "/review — HITL queue (Approve / Reject / Skip: merges, IDE error-match, chat batches)\n"
     "Ask a question to search the graph.\n"
     "Forward a message, send a link, or attach a doc to capture."
 )

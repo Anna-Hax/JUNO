@@ -130,3 +130,49 @@ async def test_generic_enqueue_has_no_graph_side_effect(queue):
     result = await queue.decide(card.id, "approve")
     assert result.applied is False
     assert await _committed_edge_count(queue.db) == 0
+
+
+@pytest.mark.asyncio
+async def test_error_match_stays_unconfirmed_until_approve(queue):
+    card = await queue.propose_error_match(
+        new_title="database is locked",
+        past_title="sqlite lock on ingest",
+        confidence=0.82,
+        new_capture_id=10,
+        past_capture_id=3,
+        reason="similar stack only until you confirm",
+    )
+    assert card.kind == "error_match"
+    assert card.status == "pending"
+    assert card.payload.get("confirmed") is False
+    assert "same root cause" in card.summary()
+
+    rejected = await queue.decide(card.id, "reject")
+    assert rejected.applied is False
+    assert rejected.card.payload.get("confirmed") is False
+
+    other = await queue.propose_error_match(
+        new_title="WAL busy",
+        past_title="database is locked",
+        confidence=0.9,
+        new_capture_id=11,
+        past_capture_id=10,
+    )
+    approved = await queue.decide(other.id, "approve")
+    assert approved.applied is True
+    assert approved.card.payload.get("confirmed") is True
+
+
+@pytest.mark.asyncio
+async def test_ide_batch_review_confirms_on_approve(queue):
+    card = await queue.propose_ide_batch(
+        title="Cursor chats 2026-09-02",
+        capture_ids=[1, 2, 3],
+        reason="bulk sync of composer sessions",
+    )
+    assert card.kind == "ide_batch"
+    assert "bulk IDE sync" in card.summary()
+    result = await queue.decide(card.id, "approve")
+    assert result.applied is True
+    assert result.card.payload.get("confirmed") is True
+    assert result.card.payload.get("capture_ids") == [1, 2, 3]

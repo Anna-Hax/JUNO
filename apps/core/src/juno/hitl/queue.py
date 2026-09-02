@@ -15,6 +15,8 @@ from juno.models import Edge, Node, ReviewItem
 Decision = Literal["approve", "reject", "skip"]
 
 KIND_MERGE = "merge"
+KIND_ERROR_MATCH = "error_match"
+KIND_IDE_BATCH = "ide_batch"
 STATUS_PENDING = "pending"
 STATUS_SKIPPED = "skipped"
 STATUS_DECIDED = "decided"
@@ -47,6 +49,23 @@ class ReviewCard:
             if reason:
                 lines.append(str(reason))
             lines.append("This merge stays pending until you Approve.")
+        elif self.kind == KIND_ERROR_MATCH:
+            new_title = str(self.payload.get("new_title") or "new error")
+            past_title = str(self.payload.get("past_title") or "past error")
+            lines.append(f'Is this the same root cause?\nNew: "{new_title}"\nPast: "{past_title}"')
+            reason = self.payload.get("reason")
+            if reason:
+                lines.append(str(reason))
+            lines.append("Approve only if it is the same root cause, not just a similar stack.")
+        elif self.kind == KIND_IDE_BATCH:
+            n = self.payload.get("capture_ids") or []
+            count = len(n) if isinstance(n, list) else 0
+            title = str(self.payload.get("title") or "IDE chat batch")
+            lines.append(f"Review sensitive/bulk IDE sync: {title} ({count} capture(s)).")
+            reason = self.payload.get("reason")
+            if reason:
+                lines.append(str(reason))
+            lines.append("Approve to keep this batch in the graph; Reject to leave it unconfirmed.")
         else:
             preview = str(self.payload)[:500]
             if preview:
@@ -133,6 +152,50 @@ class ReviewQueue:
             return _card(item)
 
         return await self.db.write(write)
+
+    async def propose_error_match(
+        self,
+        *,
+        new_title: str,
+        past_title: str,
+        confidence: float,
+        new_capture_id: int | None = None,
+        past_capture_id: int | None = None,
+        reason: str | None = None,
+    ) -> ReviewCard:
+        """Queue HITL before treating a past IDE error as the same root cause (#68)."""
+        return await self.enqueue(
+            kind=KIND_ERROR_MATCH,
+            confidence=confidence,
+            payload={
+                "new_title": new_title,
+                "past_title": past_title,
+                "new_capture_id": new_capture_id,
+                "past_capture_id": past_capture_id,
+                "reason": reason,
+                "confirmed": False,
+            },
+        )
+
+    async def propose_ide_batch(
+        self,
+        *,
+        title: str,
+        capture_ids: list[int],
+        confidence: float = 0.5,
+        reason: str | None = None,
+    ) -> ReviewCard:
+        """Queue HITL for sensitive or bulk IDE chat sync batches (#68)."""
+        return await self.enqueue(
+            kind=KIND_IDE_BATCH,
+            confidence=confidence,
+            payload={
+                "title": title,
+                "capture_ids": list(capture_ids),
+                "reason": reason,
+                "confirmed": False,
+            },
+        )
 
     async def next_open(self) -> ReviewCard | None:
         async def load(session: AsyncSession) -> ReviewCard | None:
@@ -266,6 +329,11 @@ async def _pending_edge(
 
 
 async def _apply(session: AsyncSession, row: ReviewItem) -> bool:
+    if row.kind in {KIND_ERROR_MATCH, KIND_IDE_BATCH}:
+        payload = dict(row.payload or {})
+        payload["confirmed"] = True
+        row.payload = payload
+        return True
     if row.kind != KIND_MERGE:
         return False
     edge_id = (row.payload or {}).get("edge_id")
@@ -279,6 +347,11 @@ async def _apply(session: AsyncSession, row: ReviewItem) -> bool:
 
 
 async def _reject(session: AsyncSession, row: ReviewItem) -> None:
+    if row.kind in {KIND_ERROR_MATCH, KIND_IDE_BATCH}:
+        payload = dict(row.payload or {})
+        payload["confirmed"] = False
+        row.payload = payload
+        return
     if row.kind != KIND_MERGE:
         return
     edge_id = (row.payload or {}).get("edge_id")
