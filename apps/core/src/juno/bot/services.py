@@ -158,15 +158,28 @@ async def answer_user_query(svc: BotServices, text: str) -> str:
     browser_hits = [
         hit for hit in outcome.results if getattr(hit, "source_type", None) == "browser"
     ]
-    if not browser_hits:
+    ide_hits = [hit for hit in outcome.results if getattr(hit, "source_type", None) == "ide"]
+    extra: list[str] = []
+    if ide_hits:
+        related = await related_captures(
+            svc.db, hits=ide_hits, source_types=("browser", "upload"), limit=3
+        )
+        if related:
+            extra.append("")
+            extra.append("You also read or uploaded notes on:")
+            for row in related:
+                label = row.title or row.uri or f"capture #{row.id}"
+                extra.append(f"• #{row.id} [{row.source_type}] {label}")
+    if browser_hits:
+        related = await related_upload_captures(svc.db, browser_hits=browser_hits)
+        if related:
+            extra.append("")
+            extra.append("You also uploaded notes on:")
+            for row in related:
+                label = row.title or row.uri or f"capture #{row.id}"
+                extra.append(f"• #{row.id} {label}")
+    if not extra:
         return reply
-    related = await related_upload_captures(svc.db, browser_hits=browser_hits)
-    if not related:
-        return reply
-    extra = ["", "You also uploaded notes on:"]
-    for row in related:
-        label = row.title or row.uri or f"capture #{row.id}"
-        extra.append(f"• #{row.id} {label}")
     return clip(reply + "\n".join(extra))
 
 
@@ -296,19 +309,23 @@ async def recent_captures(db: Database, *, since: datetime, limit: int = 20) -> 
     return await db.read(fn)
 
 
-async def related_upload_captures(
+async def related_captures(
     db: Database,
     *,
-    browser_hits: list[Any],
+    hits: list[Any],
+    source_types: tuple[str, ...],
     limit: int = 3,
 ) -> list[Capture]:
-    """Cross-reference browser hits with upload/inbox captures (#51)."""
+    """Find committed captures of the given source types matching hit titles/text."""
     titles: set[str] = set()
     hosts: set[str] = set()
-    for hit in browser_hits:
+    for hit in hits:
         title = (getattr(hit, "title", None) or "").strip()
         if title:
             titles.add(title[:80])
+        text = (getattr(hit, "text", None) or "").strip()
+        if text:
+            titles.add(text[:80])
         uri = getattr(hit, "uri", None) or ""
         if uri:
             host = urlparse(uri).netloc.lower()
@@ -319,16 +336,17 @@ async def related_upload_captures(
 
     async def fn(session: AsyncSession) -> list[Capture]:
         clauses = []
-        for title in list(titles)[:3]:
-            for word in re.findall(r"[A-Za-z]{4,}", title):
+        for title in list(titles)[:4]:
+            for word in re.findall(r"[A-Za-z]{4,}", title)[:6]:
                 clauses.append(Capture.title.ilike(f"%{word}%"))
+                clauses.append(Capture.text.ilike(f"%{word}%"))
         for host in list(hosts)[:3]:
             clauses.append(Capture.uri.ilike(f"%{host}%"))
         if not clauses:
             return []
         result = await session.execute(
             select(Capture)
-            .where(Capture.source_type != "browser")
+            .where(Capture.source_type.in_(source_types))
             .where(Capture.status == "committed")
             .where(or_(*clauses))
             .order_by(Capture.captured_at.desc())
@@ -337,6 +355,21 @@ async def related_upload_captures(
         return list(result.scalars())
 
     return await db.read(fn)
+
+
+async def related_upload_captures(
+    db: Database,
+    *,
+    browser_hits: list[Any],
+    limit: int = 3,
+) -> list[Capture]:
+    """Cross-reference browser hits with upload/inbox captures (#51)."""
+    return await related_captures(
+        db,
+        hits=browser_hits,
+        source_types=("upload", "telegram", "url", "api"),
+        limit=limit,
+    )
 
 
 async def all_module_health(db: Database) -> list[ModuleHealth]:
