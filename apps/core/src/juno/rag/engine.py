@@ -20,6 +20,16 @@ logger = logging.getLogger("juno.rag")
 DEFAULT_K = 8
 MAX_SOURCE_CHARS = 1200
 _CITE_RE = re.compile(r"\[(\d+)\]")
+ERROR_QUERY_HINTS = (
+    "error",
+    "traceback",
+    "exception",
+    "failed",
+    "panic:",
+    "cannot use",
+    "database is locked",
+    "have i seen this",
+)
 
 RAG_SYSTEM = (
     "You are Juno, a personal knowledge assistant. Answer using ONLY the numbered "
@@ -281,4 +291,58 @@ async def search(
         confidence=rag_confidence,
         answer=answer,
         citations=citations,
+    )
+
+
+def looks_like_error_query(query: str) -> bool:
+    q = (query or "").casefold()
+    return any(hint in q for hint in ERROR_QUERY_HINTS)
+
+
+async def match_past_errors(
+    query: str,
+    *,
+    vectors: Any,
+    db: Database | None,
+    chat: Any = None,
+    review: Any = None,
+    n_results: int = DEFAULT_K,
+) -> SearchOutcome:
+    """Semantic 'have I seen this error before?' over IDE chats/errors (#69).
+
+    Uses retrieve-only when the LLM is unhealthy (same as ``search``).
+    High-scoring IDE hits are queued for HITL before reuse as canonical (#68).
+    """
+    outcome = await search(
+        query,
+        vectors=vectors,
+        db=db,
+        chat=chat,
+        n_results=n_results,
+        mode="auto",
+    )
+    ide = [hit for hit in outcome.results if hit.source_type == "ide"]
+    others = [hit for hit in outcome.results if hit.source_type != "ide"]
+    ordered = ide + others
+    confidence = _confidence(ordered if ordered else outcome.results)
+    if review is not None and ide:
+        top = ide[0]
+        if top.score >= 0.45:
+            try:
+                await review.propose_error_match(
+                    new_title=(query or "")[:120],
+                    past_title=top.title or top.uri or "past IDE capture",
+                    confidence=float(top.score),
+                    past_capture_id=top.capture_id,
+                    reason="Similar IDE error/chat — confirm same root cause before reuse.",
+                )
+            except Exception:  # noqa: BLE001
+                logger.exception("failed to enqueue error_match review")
+    return SearchOutcome(
+        query=outcome.query,
+        mode=outcome.mode,
+        results=ordered or list(outcome.results),
+        confidence=confidence,
+        answer=outcome.answer,
+        citations=ordered or list(outcome.citations or outcome.results),
     )

@@ -227,3 +227,53 @@ async def test_offline_provider_stays_retrieve_only(settings, db, vectors, pipel
     assert body["mode"] == "retrieve"
     assert body["answer"] is None
     assert body["citations"][0]["title"] == "Rust notes"
+
+
+ERROR_NOTE = (
+    "Juno ide error marker sqlite-locked-zzz. database is locked Traceback "
+    "in ingest.py when two writers collide."
+)
+
+
+def test_looks_like_error_query():
+    from juno.rag.engine import looks_like_error_query
+
+    assert looks_like_error_query("database is locked Traceback")
+    assert looks_like_error_query("Have I seen this error before?")
+    assert not looks_like_error_query("what did I read about tomatoes")
+
+
+@pytest.mark.asyncio
+async def test_match_past_errors_prefers_ide_when_llm_unhealthy(settings, db, vectors, pipeline):
+    from juno.hitl.queue import ReviewQueue
+    from juno.rag.engine import match_past_errors
+
+    await pipeline.ingest_payload(
+        {
+            "source_type": "ide",
+            "uri": "cursor://error/abc/bubble",
+            "title": "database is locked",
+            "text": ERROR_NOTE,
+            "raw_json": {"kind": "cursor_error", "message": "database is locked"},
+        }
+    )
+    await pipeline.ingest_text(NOTE_B, source_type="upload", title="Garden")
+    review = ReviewQueue(db)
+    chat = FakeChat(healthy=False, answer="should not be used")
+    outcome = await match_past_errors(
+        ERROR_NOTE,
+        vectors=vectors,
+        db=db,
+        chat=chat,
+        review=review,
+    )
+    assert outcome.mode == "retrieve"
+    assert outcome.answer is None
+    assert outcome.results
+    assert outcome.results[0].source_type == "ide"
+    assert outcome.confidence > 0
+    assert "sqlite-locked-zzz" in (outcome.results[0].text or "")
+    card = await review.next_open()
+    assert card is not None
+    assert card.kind == "error_match"
+    assert card.payload.get("confirmed") is False

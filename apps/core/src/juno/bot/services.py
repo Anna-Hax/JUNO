@@ -15,6 +15,7 @@ from juno.config import Settings
 from juno.graph.db import Database
 from juno.ingest.pipeline import IngestResult
 from juno.models import AppSetting, Capture, ModuleHealth
+from juno.rag.engine import looks_like_error_query, match_past_errors
 from juno.rag.engine import search as rag_search
 
 BOT_DATA_KEY = "juno"
@@ -129,14 +130,28 @@ async def answer_user_query(svc: BotServices, text: str) -> str:
     if svc.vectors is None:
         return f"Received ({len(text)} chars). Search is not attached in this runtime."
     chat = getattr(svc.app.state, "chat", None) if svc.app is not None else None
-    outcome = await rag_search(
-        text,
-        vectors=svc.vectors,
-        db=svc.db,
-        chat=chat,
-        n_results=5,
-        mode="auto",
-    )
+    review = None
+    if svc.db is not None and looks_like_error_query(text):
+        from juno.hitl.queue import ReviewQueue
+
+        review = ReviewQueue(svc.db)
+        outcome = await match_past_errors(
+            text,
+            vectors=svc.vectors,
+            db=svc.db,
+            chat=chat,
+            review=review,
+            n_results=5,
+        )
+    else:
+        outcome = await rag_search(
+            text,
+            vectors=svc.vectors,
+            db=svc.db,
+            chat=chat,
+            n_results=5,
+            mode="auto",
+        )
     reply = format_search_outcome(outcome)
     if svc.db is None:
         return reply
