@@ -52,7 +52,7 @@ Cursor's storage is unofficial and has already migrated once (per-workspace `com
 - Guard missing fields; skip empty tool bubbles; do not assume `conversationMap` still holds text.
 - Mitigation: keep a fixture `state.vscdb` in tests; bump the reader when a live discover fails; record the Cursor version in the session log.
 
-Watch/poll, config paths, and CI layout: [#65](https://github.com/Anna-Hax/JUNO/issues/65). Idempotent re-sync, terminal errors, HITL, and module health stay in later M3 issues (#66–#72).
+M3 landed on this client (#65–#72): poll/watch + config/CI, idempotent chat + terminal-error ingest, HITL `error_match` / `ide_batch`, retrieve-even-if-LLM-down, cross-ref vs browser/inbox, grouped `/digest`, and `module_health.ide`. See [`docs/v1.2-release-gate.md`](../v1.2-release-gate.md).
 
 ## Consequences
 
@@ -70,3 +70,5 @@ Watch/poll, config paths, and CI layout: [#65](https://github.com/Anna-Hax/JUNO/
 ## Spike S3 proof
 
 Issue [#64](https://github.com/Anna-Hax/JUNO/issues/64): fixture + live `state.vscdb` export → `POST /ingest` with Bearer token (see [session 29](../sessions/29-session-spike-s3.md)).
+
+Operator runbook: [`apps/ide/README.md`](../../apps/ide/README.md).
