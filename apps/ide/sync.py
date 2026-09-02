@@ -21,8 +21,10 @@ from config import IdeConfig, load_config  # noqa: E402
 from cursor_vscdb import (  # noqa: E402
     CursorSession,
     connect_readonly,
+    extract_errors,
     list_sessions,
     load_session,
+    to_error_ingest_payload,
     to_ingest_payload,
 )
 
@@ -109,28 +111,55 @@ def sync_once(cfg: IdeConfig, *, limit: int, dry_run: bool) -> tuple[int, int]:
         latest = watermark
         for meta in due:
             loaded = load_session(conn, meta.composer_id)
-            if loaded is None or not loaded.bubbles:
+            if loaded is None:
                 continue
-            payload = to_ingest_payload(loaded)
-            if dry_run:
-                print(f"dry-run {payload['uri']} {payload['title']!r}")
+            errors = extract_errors(
+                conn, loaded.composer_id, workspace_path=loaded.workspace_path
+            )
+            if not loaded.bubbles and not errors:
+                continue
+            if loaded.bubbles:
+                payload = to_ingest_payload(loaded)
+                if dry_run:
+                    print(f"dry-run {payload['uri']} {payload['title']!r}")
+                    posted += 1
+                else:
+                    if not cfg.token_is_usable():
+                        raise SystemExit("Set JUNO_API_TOKEN (not change-me)")
+                    result = post_ingest(cfg.api_base_url, cfg.api_token, payload)
+                    if result.paused:
+                        print("capture paused (423) — backing off")
+                        blocked += 1
+                        break
+                    if not result.ok:
+                        print(f"ingest failed {result.status}: {result.body}")
+                        blocked += 1
+                    else:
+                        print(f"committed {result.body.get('capture_id')} {payload['uri']}")
+                        posted += 1
+            stop = False
+            for err in errors:
+                err_payload = to_error_ingest_payload(err)
+                if dry_run:
+                    print(f"dry-run {err_payload['uri']} {err_payload['title']!r}")
+                    posted += 1
+                    continue
+                if not cfg.token_is_usable():
+                    raise SystemExit("Set JUNO_API_TOKEN (not change-me)")
+                err_result = post_ingest(cfg.api_base_url, cfg.api_token, err_payload)
+                if err_result.paused:
+                    print("capture paused (423) — backing off")
+                    blocked += 1
+                    stop = True
+                    break
+                if not err_result.ok:
+                    print(f"ingest failed {err_result.status}: {err_result.body}")
+                    blocked += 1
+                    continue
+                print(f"committed {err_result.body.get('capture_id')} {err_payload['uri']}")
                 posted += 1
-                if loaded.updated_at and (latest is None or loaded.updated_at > latest):
-                    latest = loaded.updated_at
-                continue
-            if not cfg.token_is_usable():
-                raise SystemExit("Set JUNO_API_TOKEN (not change-me)")
-            result = post_ingest(cfg.api_base_url, cfg.api_token, payload)
-            if result.paused:
-                print("capture paused (423) — backing off")
-                blocked += 1
+            if stop:
                 break
-            if not result.ok:
-                print(f"ingest failed {result.status}: {result.body}")
-                blocked += 1
-                continue
-            print(f"committed {result.body.get('capture_id')} {payload['uri']}")
-            posted += 1
             if loaded.updated_at and (latest is None or loaded.updated_at > latest):
                 latest = loaded.updated_at
         if not dry_run and latest is not None and posted:

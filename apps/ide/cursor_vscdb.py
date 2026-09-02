@@ -21,6 +21,17 @@ from pathlib import Path
 from typing import Any
 
 ROLE_BY_TYPE = {1: "user", 2: "assistant"}
+TERMINAL_TOOLS = frozenset({"run_terminal_command", "run_terminal_command_v2"})
+ERROR_MARKERS = (
+    "Traceback",
+    "Error:",
+    "error:",
+    "FAILED",
+    "panic:",
+    "cannot use",
+    "Exception",
+    "error NG",
+)
 
 
 @dataclass(frozen=True)
@@ -45,6 +56,22 @@ class CursorSession:
     @property
     def uri(self) -> str:
         return f"cursor://composer/{self.composer_id}"
+
+
+@dataclass(frozen=True)
+class IdeError:
+    composer_id: str
+    bubble_id: str
+    message: str
+    stack: str
+    command: str | None = None
+    workspace_path: str | None = None
+    created_at: datetime | None = None
+    tool_name: str | None = None
+
+    @property
+    def uri(self) -> str:
+        return f"cursor://error/{self.composer_id}/{self.bubble_id}"
 
 
 def default_global_vscdb() -> Path:
@@ -336,6 +363,116 @@ def load_session(conn: sqlite3.Connection, composer_id: str) -> CursorSession | 
         mode=str(payload.get("unifiedMode") or payload.get("forceMode") or "") or None,
         bubbles=tuple(bubbles),
     )
+
+
+def _tool_output(tf: dict[str, Any]) -> str:
+    result = tf.get("result")
+    if isinstance(result, dict):
+        return str(result.get("output") or result.get("stderr") or result.get("error") or "")
+    if isinstance(result, str):
+        parsed = _parse_json(result)
+        if parsed:
+            return str(parsed.get("output") or parsed.get("stderr") or parsed.get("error") or result)
+        return result
+    return ""
+
+
+def _tool_command(tf: dict[str, Any]) -> str | None:
+    params = tf.get("params")
+    if isinstance(params, str):
+        params = _parse_json(params)
+    if isinstance(params, dict):
+        cmd = params.get("command")
+        if cmd:
+            return str(cmd)
+    raw_args = tf.get("rawArgs")
+    if isinstance(raw_args, str):
+        parsed = _parse_json(raw_args)
+        cmd = parsed.get("command") if parsed else None
+        if cmd:
+            return str(cmd)
+    return None
+
+
+def _looks_like_error(text: str) -> bool:
+    return any(marker in text for marker in ERROR_MARKERS)
+
+
+def extract_errors(
+    conn: sqlite3.Connection,
+    composer_id: str,
+    *,
+    workspace_path: str | None = None,
+) -> list[IdeError]:
+    """Terminal / tool failures from a composer session (empty tool bubbles included)."""
+    data = _kv_get(conn, f"composerData:{composer_id}")
+    headers = data.get("fullConversationHeadersOnly") or []
+    errors: list[IdeError] = []
+    for header in headers:
+        if not isinstance(header, dict):
+            continue
+        bubble_id = str(header.get("bubbleId") or header.get("id") or "")
+        if not bubble_id:
+            continue
+        raw = _kv_get(conn, f"bubbleId:{composer_id}:{bubble_id}")
+        tf = raw.get("toolFormerData")
+        if not isinstance(tf, dict):
+            continue
+        name = str(tf.get("name") or "")
+        status = str(tf.get("status") or "").lower()
+        output = _tool_output(tf).strip()
+        is_terminal = name in TERMINAL_TOOLS
+        if status == "error" and (is_terminal or output):
+            pass
+        elif is_terminal and _looks_like_error(output):
+            pass
+        else:
+            continue
+        if not output:
+            output = f"{name} failed ({status or 'error'})"
+        first = next((line.strip() for line in output.splitlines() if line.strip()), output)
+        created = _ms_or_iso(raw.get("createdAt") or header.get("createdAt"))
+        errors.append(
+            IdeError(
+                composer_id=composer_id,
+                bubble_id=bubble_id,
+                message=first[:240],
+                stack=output[:4000],
+                command=_tool_command(tf),
+                workspace_path=workspace_path,
+                created_at=created,
+                tool_name=name or None,
+            )
+        )
+    return errors
+
+
+def to_error_ingest_payload(error: IdeError) -> dict[str, Any]:
+    lines = [error.message]
+    if error.workspace_path:
+        lines.append(f"Workspace: {error.workspace_path}")
+    if error.command:
+        lines.append(f"$ {error.command}")
+    if error.stack and error.stack != error.message:
+        lines.append(error.stack)
+    visited = _iso(error.created_at) or datetime.now(UTC).isoformat()
+    return {
+        "source_type": "ide",
+        "uri": error.uri,
+        "title": error.message,
+        "text": "\n".join(lines),
+        "visited_at": visited,
+        "raw_json": {
+            "kind": "cursor_error",
+            "composer_id": error.composer_id,
+            "bubble_id": error.bubble_id,
+            "workspace_path": error.workspace_path,
+            "command": error.command,
+            "tool_name": error.tool_name,
+            "message": error.message,
+            "stack": error.stack,
+        },
+    }
 
 
 def format_session_text(session: CursorSession) -> str:

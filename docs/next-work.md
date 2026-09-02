@@ -105,7 +105,7 @@ Milestone: [M3: v1.2 IDE Capture](https://github.com/Anna-Hax/JUNO/milestone/9).
 | 1 | [#64](https://github.com/Anna-Hax/JUNO/issues/64) | Spike S3 — Cursor state.vscdb / exporter POST /ingest smoke — ✅ [session 29](sessions/29-session-spike-s3.md) |
 | 2 | [#65](https://github.com/Anna-Hax/JUNO/issues/65) | IDE adapter scaffold — wrap exporter, config paths, CI — ✅ [session 30](sessions/30-session-ide-scaffold.md) |
 | 3 | [#66](https://github.com/Anna-Hax/JUNO/issues/66) | Chat/composer bubbles — ingest Cursor sessions via /ingest — ✅ [session 31](sessions/31-session-ide-chat.md) |
-| 4 | [#67](https://github.com/Anna-Hax/JUNO/issues/67) | Terminal error capture from IDE sessions |
+| 4 | [#67](https://github.com/Anna-Hax/JUNO/issues/67) | Terminal error capture from IDE sessions — ✅ [session 32](sessions/32-session-ide-errors.md) |
 | 5 | [#68](https://github.com/Anna-Hax/JUNO/issues/68) | HITL — confirm IDE error-match / review sensitive chat batches |
 | 6 | [#69](https://github.com/Anna-Hax/JUNO/issues/69) | Error-matching retrieval — have I seen this error before? |
 | 7 | [#70](https://github.com/Anna-Hax/JUNO/issues/70) | Cross-reference IDE captures vs browser + inbox |
@@ -113,7 +113,7 @@ Milestone: [M3: v1.2 IDE Capture](https://github.com/Anna-Hax/JUNO/milestone/9).
 | 9 | [#72](https://github.com/Anna-Hax/JUNO/issues/72) | Module health — ide sync freshness in /status + respect /pause |
 | 10 | [#73](https://github.com/Anna-Hax/JUNO/issues/73) | M3 gate — IDE tests, ADR, README, v1.2 release gate |
 
-**First coding task:** Spike S3 ([#64](https://github.com/Anna-Hax/JUNO/issues/64)) — ✅. Adapter scaffold ([#65](https://github.com/Anna-Hax/JUNO/issues/65)) — ✅. Chat ingest ([#66](https://github.com/Anna-Hax/JUNO/issues/66)) — ✅ [session 31](sessions/31-session-ide-chat.md). Next: [#67](https://github.com/Anna-Hax/JUNO/issues/67) terminal errors.
+**First coding task:** Spike S3–chat ingest (#64–#66) ✅. Terminal errors ([#67](https://github.com/Anna-Hax/JUNO/issues/67)) — ✅ [session 32](sessions/32-session-ide-errors.md). Next: [#68](https://github.com/Anna-Hax/JUNO/issues/68) HITL.
 
 ### M3 design constraints (do not violate)
 
