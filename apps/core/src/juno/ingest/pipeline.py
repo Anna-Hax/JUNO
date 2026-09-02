@@ -216,6 +216,8 @@ class IngestPipeline:
                         (row.chroma_id, row.text) for row in existing.scalars() if row.chroma_id
                     ]
                     await _touch_health(session, ok=True)
+                    if source_type == "ide":
+                        await _touch_health(session, ok=True, module="ide")
                     return capture.id, stored, []
                 if capture is not None:
                     old = await session.execute(select(Chunk).where(Chunk.capture_id == capture.id))
@@ -258,6 +260,8 @@ class IngestPipeline:
             await _touch_health(session, ok=True)
             if source_type == "browser":
                 await _touch_health(session, ok=True, module="extension")
+            if source_type == "ide":
+                await _touch_health(session, ok=True, module="ide")
             return capture.id, stored, stale
 
         capture_id, stored, stale = await self.db.write(write)
@@ -295,6 +299,8 @@ class IngestPipeline:
             await _touch_health(session, ok=False, error=reason)
             if source_type == "browser":
                 await _touch_health(session, ok=False, error=reason, module="extension")
+            if source_type == "ide":
+                await _touch_health(session, ok=False, error=reason, module="ide")
             return capture.id
 
         capture_id = await self.db.write(write)

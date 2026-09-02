@@ -356,3 +356,24 @@ async def test_browser_ingest_updates_extension_module_health(db, pipeline):
         return row
 
     await db.read(read)
+
+
+@pytest.mark.asyncio
+async def test_ide_ingest_updates_ide_module_health(db, pipeline):
+    await pipeline.ingest_payload(
+        {
+            "source_type": "ide",
+            "uri": "cursor://composer/health",
+            "title": "Health chat",
+            "text": "user:\nhi\n",
+        }
+    )
+
+    async def read(session):
+        row = await session.get(ModuleHealth, "ide")
+        assert row is not None
+        assert row.last_success_at is not None
+        assert row.last_error is None
+        return row
+
+    await db.read(read)
