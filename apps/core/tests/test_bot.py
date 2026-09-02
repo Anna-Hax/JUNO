@@ -447,3 +447,35 @@ async def test_related_upload_captures_finds_upload_for_browser_hit(db):
     assert len(related) == 1
     assert related[0].source_type == "upload"
     assert "Rust" in (related[0].title or "")
+
+
+@pytest.mark.asyncio
+async def test_related_captures_links_ide_error_to_browser(db):
+    from juno.bot.services import related_captures
+    from juno.ingest.pipeline import IngestPipeline
+    from juno.rag.engine import SourcedHit
+
+    pipeline = IngestPipeline(db)
+    await pipeline.ingest_payload(
+        {
+            "source_type": "browser",
+            "uri": "https://github.com/example/sqlite-lock",
+            "title": "database is locked GitHub issue",
+            "text": "sqlite database is locked",
+        }
+    )
+    hits = [
+        SourcedHit(
+            chroma_id="c9-n0",
+            text="database is locked Traceback ingest.py",
+            score=0.9,
+            capture_id=9,
+            title="database is locked",
+            uri="cursor://error/abc/1",
+            source_type="ide",
+        )
+    ]
+    related = await related_captures(db, hits=hits, source_types=("browser", "upload"))
+    assert related
+    assert related[0].source_type == "browser"
+    assert "locked" in (related[0].title or "").lower()
