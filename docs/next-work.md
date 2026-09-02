@@ -106,14 +106,14 @@ Milestone: [M3: v1.2 IDE Capture](https://github.com/Anna-Hax/JUNO/milestone/9).
 | 2 | [#65](https://github.com/Anna-Hax/JUNO/issues/65) | IDE adapter scaffold — wrap exporter, config paths, CI — ✅ [session 30](sessions/30-session-ide-scaffold.md) |
 | 3 | [#66](https://github.com/Anna-Hax/JUNO/issues/66) | Chat/composer bubbles — ingest Cursor sessions via /ingest — ✅ [session 31](sessions/31-session-ide-chat.md) |
 | 4 | [#67](https://github.com/Anna-Hax/JUNO/issues/67) | Terminal error capture from IDE sessions — ✅ [session 32](sessions/32-session-ide-errors.md) |
-| 5 | [#68](https://github.com/Anna-Hax/JUNO/issues/68) | HITL — confirm IDE error-match / review sensitive chat batches |
+| 5 | [#68](https://github.com/Anna-Hax/JUNO/issues/68) | HITL — confirm IDE error-match / review sensitive chat batches — ✅ [session 33](sessions/33-session-ide-hitl.md) |
 | 6 | [#69](https://github.com/Anna-Hax/JUNO/issues/69) | Error-matching retrieval — have I seen this error before? |
 | 7 | [#70](https://github.com/Anna-Hax/JUNO/issues/70) | Cross-reference IDE captures vs browser + inbox |
 | 8 | [#71](https://github.com/Anna-Hax/JUNO/issues/71) | Digest enrichment — IDE chats/errors in /digest today\|week |
 | 9 | [#72](https://github.com/Anna-Hax/JUNO/issues/72) | Module health — ide sync freshness in /status + respect /pause |
 | 10 | [#73](https://github.com/Anna-Hax/JUNO/issues/73) | M3 gate — IDE tests, ADR, README, v1.2 release gate |
 
-**First coding task:** Spike S3–chat ingest (#64–#66) ✅. Terminal errors ([#67](https://github.com/Anna-Hax/JUNO/issues/67)) — ✅ [session 32](sessions/32-session-ide-errors.md). Next: [#68](https://github.com/Anna-Hax/JUNO/issues/68) HITL.
+**First coding task:** #64–#67 ✅. HITL ([#68](https://github.com/Anna-Hax/JUNO/issues/68)) — ✅ [session 33](sessions/33-session-ide-hitl.md). Next: [#69](https://github.com/Anna-Hax/JUNO/issues/69) error-matching retrieval.
 
 ### M3 design constraints (do not violate)
 
