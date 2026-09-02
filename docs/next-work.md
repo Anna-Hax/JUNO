@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-09-02  
 **Track issues on:** [https://github.com/Anna-Hax/JUNO/issues](https://github.com/Anna-Hax/JUNO/issues)  
-**Package:** `1.1.0` (M2 complete — M3 IDE capture expanded; [`docs/v1.1-release-gate.md`](v1.1-release-gate.md))
+**Package:** `1.2.0` (M3 complete — [`docs/v1.2-release-gate.md`](v1.2-release-gate.md))
 
 Prefer one open issue ≈ one PR (`Closes #N`). This file is kept as-is across branch merges (`merge=ours`).
 
@@ -111,9 +111,9 @@ Milestone: [M3: v1.2 IDE Capture](https://github.com/Anna-Hax/JUNO/milestone/9).
 | 7 | [#70](https://github.com/Anna-Hax/JUNO/issues/70) | Cross-reference IDE captures vs browser + inbox — ✅ [session 35](sessions/35-session-ide-crossref.md) |
 | 8 | [#71](https://github.com/Anna-Hax/JUNO/issues/71) | Digest enrichment — IDE chats/errors in /digest today\|week — ✅ [session 36](sessions/36-session-ide-digest.md) |
 | 9 | [#72](https://github.com/Anna-Hax/JUNO/issues/72) | Module health — ide sync freshness in /status + respect /pause — ✅ [session 37](sessions/37-session-ide-health.md) |
-| 10 | [#73](https://github.com/Anna-Hax/JUNO/issues/73) | M3 gate — IDE tests, ADR, README, v1.2 release gate |
+| 10 | [#73](https://github.com/Anna-Hax/JUNO/issues/73) | M3 gate — IDE tests, ADR, README, v1.2 release gate — ✅ [session 38](sessions/38-session-m3-gate.md) |
 
-**First coding task:** #64–#71 ✅. Module health ([#72](https://github.com/Anna-Hax/JUNO/issues/72)) — ✅ [session 37](sessions/37-session-ide-health.md). Next: [#73](https://github.com/Anna-Hax/JUNO/issues/73) M3 gate.
+**First coding task:** #64–#72 ✅. M3 gate ([#73](https://github.com/Anna-Hax/JUNO/issues/73)) — ✅ [session 38](sessions/38-session-m3-gate.md).
 
 ### M3 design constraints (do not violate)
 
@@ -124,7 +124,20 @@ Milestone: [M3: v1.2 IDE Capture](https://github.com/Anna-Hax/JUNO/milestone/9).
 5. Loopback + token auth only ([#21](https://github.com/Anna-Hax/JUNO/issues/21)) — never bind `0.0.0.0` for the adapter.
 6. HITL: error-match reuse and sensitive chat batches stay reviewable ([#68](https://github.com/Anna-Hax/JUNO/issues/68), [#20](https://github.com/Anna-Hax/JUNO/issues/20) patterns).
 
-### Explicitly **not** M3 (keep in later epics)
+---
+
+## M3 — **complete** (2026-09-02)
+
+Epic [#26](https://github.com/Anna-Hax/JUNO/issues/26) closed; milestone [M3: v1.2 IDE Capture](https://github.com/Anna-Hax/JUNO/milestone/9) complete. Gate: [`docs/v1.2-release-gate.md`](v1.2-release-gate.md).
+
+---
+
+## Unlock M4 (planning)
+
+Epic: [#27](https://github.com/Anna-Hax/JUNO/issues/27) — *Epic: M4 Proactive + mobile (v1.3)*.  
+Do **not** start M4 coding until this epic is expanded into child issues.
+
+### Explicitly **not** M3 / still later
 
 | Epic | Milestone | Scope |
 | ---- | --------- | ----- |

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Poll Cursor state.vscdb and POST new/updated chats to loopback /ingest.
+"""Poll Cursor state.vscdb and POST new/updated chats + errors to loopback /ingest.
 
 HTTP client only (ADR-06). Watermark is a local JSON file, not Juno SQLite/Chroma.
-Idempotent capture rows land in #66; this scaffold posts sessions newer than the watermark.
+Core upserts by URI so re-posts update one capture.
 """
 
 from __future__ import annotations

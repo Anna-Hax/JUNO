@@ -2,7 +2,7 @@
 
 Personal knowledge-graph agent: passively (and manually) capture what you read, code, and discuss — query it from **Telegram**. Local-first on your PC.
 
-**Status:** **v1.1 browser capture** (M2 complete) — v1.0 foundation plus MV3 extension → loopback ingest, metrics, highlights, grouped digests. IDE capture (M3) is next.
+**Status:** **v1.2 IDE capture** (M3 complete) — v1.1 browser capture plus a read-only Cursor adapter → loopback ingest of chats and terminal errors, error-match retrieval, grouped digests. Proactive push (M4) is next.
 
 ## Architecture (v1)
 
@@ -10,7 +10,7 @@ Personal knowledge-graph agent: passively (and manually) capture what you read, 
 - **SQLite + write queue** for the graph ([ADR-02](docs/adr/002-sqlite-write-queue.md)); **Alembic** for schema changes ([ADR-03](docs/adr/003-alembic.md))
 - **Chroma** for vectors — persistent client, one collection per embedding model ([ADR-04](docs/adr/004-chroma-collections.md)); **stub embedder** in CI
 - **Browser extension** (`apps/extension`): MV3 loopback client ([ADR-05](docs/adr/005-browser-extension-client.md)); Spike S2 captures tabs → `POST /ingest`
-- **IDE adapter** (`apps/ide`): read-only Cursor `state.vscdb` client ([ADR-06](docs/adr/006-ide-adapter-client.md)); Spike S3 posts chats → `POST /ingest`
+- **IDE adapter** (`apps/ide`): read-only Cursor `state.vscdb` client ([ADR-06](docs/adr/006-ide-adapter-client.md)); poll/watch posts chats + terminal errors → `POST /ingest` (runbook in [`apps/ide/README.md`](apps/ide/README.md))
 - **Inbox** (`inbox/`): drop `.txt` / `.md` / `.pdf` / `.url` (or a one-line http(s) text file). `juno serve` watches the folder; good files move to `inbox/.processed/`, unreadable PDFs to `inbox/.failed/`.
 - **HITL** (`/review`): inline Approve / Reject / Skip for pending graph merges
 
