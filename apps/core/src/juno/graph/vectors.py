@@ -190,3 +190,6 @@ class VectorStore:
 
     async def query_async(self, text: str, *, n_results: int = 8) -> list[VectorHit]:
         return await asyncio.to_thread(self.query, text, n_results=n_results)
+
+    async def delete_async(self, ids: Sequence[str]) -> None:
+        await asyncio.to_thread(self.delete, ids)
