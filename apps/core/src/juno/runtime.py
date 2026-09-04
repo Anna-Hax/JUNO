@@ -44,7 +44,7 @@ from juno.hitl.queue import ReviewQueue
 from juno.ingest.pipeline import IngestPipeline
 from juno.ingest.watcher import InboxWatcher
 from juno.jobs import load_job_enabled_overrides, start_jobs, stop_jobs
-from juno.jobs.health import record_jobs_health
+from juno.jobs.health import record_jobs_health, record_polish_health
 from juno.llm.chat import ChatProvider, create_chat_provider
 from juno.llm.embedder import Embedder, create_embedder
 from juno.llm.transcribe import create_transcriber
@@ -203,6 +203,7 @@ def attach_lifespan(fastapi_app: FastAPI) -> FastAPI:
             await record_jobs_health(db, detail="scheduler started", ok=True)
         else:
             await record_jobs_health(db, detail="scheduler disabled", ok=True)
+        await record_polish_health(db, detail="polish waiting for first tick", ok=True)
         await maybe_enqueue_smoke_draft(app)
 
         yield

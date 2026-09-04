@@ -31,7 +31,7 @@ JUNO/
 | Config | `config.py` | pydantic-settings from `.env` |
 | CLI | `cli.py` | `juno serve` / `db-init` / `export` / `prune` / `wipe` / `version` |
 | Runtime | `runtime.py` | Shared asyncio: uvicorn + PTB + inbox watcher + jobs scheduler lifespan |
-| Jobs | `jobs/scheduler.py`, `jobs/registry.py`, `jobs/handlers.py`, `jobs/health.py`, `jobs/resurface.py` | AsyncIOScheduler + named cron registry (ADR-07) |
+| Jobs | `jobs/scheduler.py`, `jobs/registry.py`, `jobs/handlers.py`, `jobs/health.py`, `jobs/resurface.py` | AsyncIOScheduler + named cron registry (ADR-07); `module_health.polish` for flashcard/draft ticks ([#114](https://github.com/Anna-Hax/JUNO/issues/114)) |
 | Drafts | `drafts/generate.py`, `drafts/kinds.py`, `drafts/flashcards.py`, `drafts/journal.py` | HITL journal/flashcard/doc; SRS after flashcard approve; IDE journal/README via `/drafts` (ADR-09) |
 | API | `api/__init__.py` | FastAPI routes + token + loopback middleware |
 | Bot | `bot/handlers.py`, `bot/services.py`, `bot/review.py` | Telegram allowlist, query, capture, pause/digest/status ([#18](https://github.com/Anna-Hax/JUNO/issues/18) / [#19](https://github.com/Anna-Hax/JUNO/issues/19)); HITL `/review` ([#20](https://github.com/Anna-Hax/JUNO/issues/20)); opt-in Slack.com links ([ADR-11](../adr/011-slack-forward.md)) |

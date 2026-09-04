@@ -12,6 +12,7 @@ from juno.config import Settings
 from juno.jobs import (
     DIGEST_DAILY_JOB_ID,
     DIGEST_WEEKLY_JOB_ID,
+    POLISH_JOB_ID,
     RESURFACING_JOB_ID,
     SMOKE_JOB_ID,
     builtin_job_specs,
@@ -117,11 +118,12 @@ async def test_start_jobs_smoke_registers_one_shot(settings: Settings):
 def test_builtin_registry_defaults_without_telegram(settings: Settings):
     specs = builtin_job_specs(settings)
     ids = [spec.id for spec in specs]
-    assert ids == [DIGEST_DAILY_JOB_ID, DIGEST_WEEKLY_JOB_ID, RESURFACING_JOB_ID]
+    assert ids == [DIGEST_DAILY_JOB_ID, DIGEST_WEEKLY_JOB_ID, RESURFACING_JOB_ID, POLISH_JOB_ID]
     assert enabled_job_ids(specs) == [
         DIGEST_DAILY_JOB_ID,
         DIGEST_WEEKLY_JOB_ID,
         RESURFACING_JOB_ID,
+        POLISH_JOB_ID,
     ]
     daily = next(spec for spec in specs if spec.id == DIGEST_DAILY_JOB_ID)
     assert daily.crontab == "0 7 * * *"
@@ -132,6 +134,7 @@ def test_disabled_job_is_not_added_to_scheduler(settings: Settings):
     settings.juno_jobs_digest_daily = False
     settings.juno_jobs_digest_weekly = False
     settings.juno_jobs_resurfacing = False
+    settings.juno_jobs_polish = False
     scheduler = create_scheduler("UTC")
     added = register_job_specs(scheduler, builtin_job_specs(settings), app=None)
     assert added == []
@@ -145,6 +148,7 @@ def test_register_job_specs_without_starting_or_telegram(settings: Settings):
     assert DIGEST_DAILY_JOB_ID in added
     assert DIGEST_WEEKLY_JOB_ID in added
     assert RESURFACING_JOB_ID in added
+    assert POLISH_JOB_ID in added
     assert scheduler.get_job(DIGEST_DAILY_JOB_ID) is not None
     assert scheduler.running is False
 
@@ -161,12 +165,14 @@ async def test_start_jobs_registers_enabled_cron_jobs(settings: Settings):
     settings.juno_jobs_smoke = False
     settings.juno_jobs_digest_weekly = False
     settings.juno_jobs_resurfacing = False
+    settings.juno_jobs_polish = False
     app = SimpleNamespace(state=SimpleNamespace(settings=settings, ptb=None, capture_paused=False))
     scheduler = start_jobs(app)
     try:
         assert scheduler.get_job(DIGEST_DAILY_JOB_ID) is not None
         assert scheduler.get_job(DIGEST_WEEKLY_JOB_ID) is None
         assert scheduler.get_job(RESURFACING_JOB_ID) is None
+        assert scheduler.get_job(POLISH_JOB_ID) is None
     finally:
         stop_jobs(app)
 
@@ -243,12 +249,54 @@ async def test_digest_pause_records_jobs_module_health(settings: Settings):
         await db.dispose()
 
 
+@pytest.mark.asyncio
+async def test_polish_pause_skips_generation_and_records_health(settings: Settings):
+    from fastapi.testclient import TestClient
+
+    from juno.api import create_app
+    from juno.graph.db import Database
+    from juno.jobs.handlers import polish
+    from juno.models import ModuleHealth
+
+    db = Database(settings)
+    await db.migrate()
+    bot = AsyncMock()
+    app = create_app(settings, db=db)
+    app.state.ptb = SimpleNamespace(bot=bot)
+    app.state.capture_paused = True
+    try:
+        await polish(app)
+
+        async def polish_row(session):
+            return await session.get(ModuleHealth, "polish")
+
+        health = await db.read(polish_row)
+        assert health is not None
+        assert health.last_success_at is not None
+        assert health.last_error is None
+        assert "paused" in (health.detail or "")
+
+        client = TestClient(app)
+        resp = client.get("/status", headers={"Authorization": "Bearer test-token"})
+        assert resp.status_code == 200
+        modules = {row["module"]: row for row in resp.json()["modules"]}
+        assert "polish" in modules
+        assert "paused" in (modules["polish"]["detail"] or "")
+        bot.send_message.assert_not_awaited()
+    finally:
+        await db.dispose()
+
+
 def test_apply_enabled_overrides(settings: Settings):
     from juno.jobs import apply_enabled_overrides
 
     specs = builtin_job_specs(settings)
     patched = apply_enabled_overrides(specs, {DIGEST_DAILY_JOB_ID: False})
-    assert enabled_job_ids(patched) == [DIGEST_WEEKLY_JOB_ID, RESURFACING_JOB_ID]
+    assert enabled_job_ids(patched) == [
+        DIGEST_WEEKLY_JOB_ID,
+        RESURFACING_JOB_ID,
+        POLISH_JOB_ID,
+    ]
 
 
 @pytest.mark.asyncio

@@ -42,10 +42,10 @@ Concrete rules (`juno.jobs.scheduler`):
    - `JUNO_JOBS_ENABLED` (default `true`) — start the scheduler at all
    - `JUNO_JOBS_TIMEZONE` (default `UTC`) — cron/date interpretation
    - `JUNO_JOBS_SMOKE` (default `false`) — Spike S4 one-shot Telegram line ~2s after start
-   - Per-job enable + 5-field crontab: `JUNO_JOBS_DIGEST_DAILY` / `_CRON` (default `true`, `0 7 * * *`), `JUNO_JOBS_DIGEST_WEEKLY` / `_CRON` (default `true`, `0 7 * * mon`), `JUNO_JOBS_RESURFACING` / `_CRON` (default `true`, `0 * * * *`)
+   - Per-job enable + 5-field crontab: `JUNO_JOBS_DIGEST_DAILY` / `_CRON` (default `true`, `0 7 * * *`), `JUNO_JOBS_DIGEST_WEEKLY` / `_CRON` (default `true`, `0 7 * * mon`), `JUNO_JOBS_RESURFACING` / `_CRON` (default `true`, `0 * * * *`), `JUNO_JOBS_POLISH` / `_CRON` (default `true`, `0 8 * * *`)
 6. Tests and CI must not require live Telegram: `builtin_job_specs` / `register_job_specs` import and register without a bot; keep `JUNO_JOBS_SMOKE` off unless an operator is proving the loop.
 
-Named jobs live in `juno.jobs.registry` (`digest_daily`, `digest_weekly`, `resurfacing`). Invalid crontab fails at serve start (`CronTrigger.from_crontab`). Digest push bodies land in [#88](https://github.com/Anna-Hax/JUNO/issues/88). Resurfacing ([#89](https://github.com/Anna-Hax/JUNO/issues/89)) pushes high-confidence “this came up again” notes and queues low-confidence suggestions as HITL `resurface`. `module_health.jobs` records scheduler freshness ([#94](https://github.com/Anna-Hax/JUNO/issues/94)).
+Named jobs live in `juno.jobs.registry` (`digest_daily`, `digest_weekly`, `resurfacing`, `polish`). Invalid crontab fails at serve start (`CronTrigger.from_crontab`). Digest push bodies land in [#88](https://github.com/Anna-Hax/JUNO/issues/88). Resurfacing ([#89](https://github.com/Anna-Hax/JUNO/issues/89)) pushes high-confidence “this came up again” notes and queues low-confidence suggestions as HITL `resurface`. `module_health.jobs` records digest/resurface freshness ([#94](https://github.com/Anna-Hax/JUNO/issues/94)). `module_health.polish` records flashcard/draft generation ticks ([#114](https://github.com/Anna-Hax/JUNO/issues/114)); `/pause` skips generation and does not push draft text.
 
 ## Consequences
 
@@ -72,6 +72,10 @@ Issue [#87](https://github.com/Anna-Hax/JUNO/issues/87): `builtin_job_specs` + `
 ## Module health (#94)
 
 Issue [#94](https://github.com/Anna-Hax/JUNO/issues/94): `module_health.jobs` is written through `Database.write()` on scheduler start and after each digest/resurfacing tick (including `/pause` skips). Last success/error shows on Telegram `/status` and `GET /status.modules`.
+
+## Polish jobs (#114)
+
+Issue [#114](https://github.com/Anna-Hax/JUNO/issues/114): named cron `polish` queues HITL flashcard drafts (and a journal draft if none is pending). It does **not** auto-publish or Telegram-push draft bodies. `/pause` records `module_health.polish` as skipped and generates nothing.
 
 ## What landed (M4)
 
