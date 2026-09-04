@@ -116,6 +116,18 @@ def format_search_outcome(outcome: Any) -> str:
         lines.append("Sources:")
         for i, hit in enumerate(citations, start=1):
             lines.append(_format_sourced_hit(i, hit))
+    elif mode == "temporal":
+        q = " ".join(str(getattr(outcome, "query", "") or "").split())
+        if len(q) > 80:
+            q = q[:79].rstrip() + "…"
+        lines.append(f"How this evolved ({len(results)} source{'s' if len(results) != 1 else ''}):")
+        if q:
+            lines.append(f'Query: "{q}"')
+        for i, hit in enumerate(results, start=1):
+            lines.append(_format_sourced_hit(i, hit, with_date=True))
+            snippet = _snippet(getattr(hit, "text", None))
+            if snippet:
+                lines.append(f"   {snippet}")
     else:
         lines.append(f"Retrieve-only (confidence {confidence:.0%}):")
         for i, hit in enumerate(results, start=1):
@@ -427,13 +439,15 @@ def _format_vector_hit(i: int, hit: Any) -> str:
     return f"{i}. {label} ({_similarity(getattr(hit, 'distance', None))})"
 
 
-def _format_sourced_hit(i: int, hit: Any) -> str:
+def _format_sourced_hit(i: int, hit: Any, *, with_date: bool = False) -> str:
     source = getattr(hit, "source_type", None) or "capture"
     capture_id = getattr(hit, "capture_id", None)
     title = getattr(hit, "title", None) or getattr(hit, "uri", None) or ""
     label = f"{source} #{capture_id}" if capture_id is not None else str(source)
     if title:
         label = f"{label} — {title}"
+    if with_date:
+        label = f"{_fmt_dt(getattr(hit, 'captured_at', None))} · {label}"
     score = getattr(hit, "score", None)
     if score is not None:
         score_s = f"{float(score):.0%}"

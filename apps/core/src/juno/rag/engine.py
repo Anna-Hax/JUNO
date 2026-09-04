@@ -6,6 +6,7 @@ import logging
 import re
 from collections.abc import Sequence
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy import select
@@ -30,6 +31,15 @@ ERROR_QUERY_HINTS = (
     "database is locked",
     "have i seen this",
 )
+TEMPORAL_QUERY_HINTS = (
+    "evolved",
+    "over time",
+    "how has my",
+    "timeline",
+    "used to think",
+    "changed my",
+    "history of",
+)
 
 RAG_SYSTEM = (
     "You are Juno, a personal knowledge assistant. Answer using ONLY the numbered "
@@ -49,8 +59,12 @@ class SourcedHit:
     title: str | None = None
     uri: str | None = None
     source_type: str | None = None
+    captured_at: datetime | None = None
 
     def to_dict(self) -> dict[str, Any]:
+        captured = None
+        if self.captured_at is not None:
+            captured = self.captured_at.isoformat()
         return {
             "chroma_id": self.chroma_id,
             "capture_id": self.capture_id,
@@ -59,6 +73,7 @@ class SourcedHit:
             "title": self.title,
             "uri": self.uri,
             "source_type": self.source_type,
+            "captured_at": captured,
             "text": self.text,
             "score": round(self.score, 4),
         }
@@ -144,6 +159,7 @@ async def retrieve(
                     if capture is not None
                     else (str(meta["source_type"]) if meta.get("source_type") else None)
                 ),
+                captured_at=capture.captured_at if capture is not None else None,
             )
         )
     return sourced
@@ -224,9 +240,24 @@ async def search(
 ) -> SearchOutcome:
     """Retrieve hits; generate a sourced answer when an LLM is healthy."""
     q = (query or "").strip()
-    hits = await retrieve(q, vectors=vectors, db=db, n_results=n_results)
-    retrieve_confidence = _confidence(hits)
     requested = (mode or "auto").strip().lower()
+    n = n_results
+    if requested in {"auto", "temporal"} and looks_like_temporal_query(q):
+        n = max(n_results, 12)
+    hits = await retrieve(q, vectors=vectors, db=db, n_results=n)
+    retrieve_confidence = _confidence(hits)
+
+    if requested == "temporal" or (requested == "auto" and looks_like_temporal_query(q) and hits):
+        ordered = _sorted_by_captured_at(hits)
+        return SearchOutcome(
+            query=q,
+            mode="temporal",
+            results=ordered,
+            confidence=retrieve_confidence,
+            answer=None,
+            citations=ordered,
+        )
+
     want_rag = requested in {"auto", "rag"} and bool(hits)
 
     if requested == "retrieve" or not want_rag:
@@ -297,6 +328,23 @@ async def search(
 def looks_like_error_query(query: str) -> bool:
     q = (query or "").casefold()
     return any(hint in q for hint in ERROR_QUERY_HINTS)
+
+
+def looks_like_temporal_query(query: str) -> bool:
+    q = (query or "").casefold()
+    return any(hint in q for hint in TEMPORAL_QUERY_HINTS)
+
+
+def _sorted_by_captured_at(hits: Sequence[SourcedHit]) -> list[SourcedHit]:
+    def key(hit: SourcedHit) -> datetime:
+        when = hit.captured_at
+        if when is None:
+            return datetime.min.replace(tzinfo=UTC)
+        if when.tzinfo is None:
+            return when.replace(tzinfo=UTC)
+        return when
+
+    return sorted(hits, key=key)
 
 
 async def match_past_errors(

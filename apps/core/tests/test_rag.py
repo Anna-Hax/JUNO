@@ -277,3 +277,59 @@ async def test_match_past_errors_prefers_ide_when_llm_unhealthy(settings, db, ve
     assert card is not None
     assert card.kind == "error_match"
     assert card.payload.get("confirmed") is False
+
+
+def test_looks_like_temporal_query():
+    from juno.rag.engine import looks_like_temporal_query
+
+    assert looks_like_temporal_query("How has my understanding of rust evolved?")
+    assert looks_like_temporal_query("show the timeline for ownership")
+    assert not looks_like_temporal_query("what is rust ownership")
+
+
+@pytest.mark.asyncio
+async def test_temporal_search_orders_hits_by_captured_at(settings, db, vectors, pipeline):
+    from datetime import UTC, datetime, timedelta
+
+    from juno.models import Capture
+    from juno.rag.engine import search as rag_search
+
+    early = await pipeline.ingest_text(
+        "Ownership in Rust means each value has a single owner rust-ownership-xyz.",
+        source_type="upload",
+        title="first rust take",
+    )
+    later = await pipeline.ingest_text(
+        "Ownership in Rust also covers borrowing rust-ownership-xyz.",
+        source_type="upload",
+        title="later rust take",
+    )
+
+    async def backdate(session):
+        row = await session.get(Capture, early.capture_id)
+        row.captured_at = datetime.now(UTC) - timedelta(days=14)
+
+    await db.write(backdate)
+    outcome = await rag_search(
+        "How has my understanding of rust evolved?",
+        vectors=vectors,
+        db=db,
+        n_results=5,
+        mode="auto",
+    )
+    assert outcome.mode == "temporal"
+    ids = [hit.capture_id for hit in outcome.results]
+    assert early.capture_id in ids and later.capture_id in ids
+    assert ids.index(early.capture_id) < ids.index(later.capture_id)
+    assert outcome.results[0].captured_at is not None
+    client, _ = await _client(settings, db=db, vectors=vectors, pipeline=pipeline)
+    async with client:
+        resp = await client.get(
+            "/search",
+            params={"q": "how has my rust notes evolved", "mode": "temporal"},
+            headers={"Authorization": "Bearer test-token"},
+        )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["mode"] == "temporal"
+    assert body["results"][0]["captured_at"]
