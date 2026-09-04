@@ -10,13 +10,20 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from juno.config import Settings
 from juno.jobs import (
+    DIGEST_DAILY_JOB_ID,
+    DIGEST_WEEKLY_JOB_ID,
+    RESURFACING_JOB_ID,
     SMOKE_JOB_ID,
+    builtin_job_specs,
     create_scheduler,
+    enabled_job_ids,
+    register_job_specs,
     register_smoke_job,
     send_allowlisted_push,
     start_jobs,
     stop_jobs,
 )
+from juno.jobs.registry import JobSpec
 
 
 def test_create_scheduler_is_asyncio_scheduler():
@@ -77,6 +84,7 @@ async def test_start_jobs_disabled_does_not_start_scheduler(settings: Settings):
     app = SimpleNamespace(state=SimpleNamespace(settings=settings, ptb=None, capture_paused=False))
     assert start_jobs(app) is None
     assert app.state.scheduler is None
+    assert app.state.job_specs == ()
     stop_jobs(app)
 
 
@@ -104,3 +112,55 @@ async def test_start_jobs_smoke_registers_one_shot(settings: Settings):
     finally:
         stop_jobs(app)
     assert app.state.scheduler is None
+
+
+def test_builtin_registry_defaults_without_telegram(settings: Settings):
+    specs = builtin_job_specs(settings)
+    ids = [spec.id for spec in specs]
+    assert ids == [DIGEST_DAILY_JOB_ID, DIGEST_WEEKLY_JOB_ID, RESURFACING_JOB_ID]
+    assert enabled_job_ids(specs) == [DIGEST_DAILY_JOB_ID, DIGEST_WEEKLY_JOB_ID]
+    daily = next(spec for spec in specs if spec.id == DIGEST_DAILY_JOB_ID)
+    assert daily.crontab == "0 7 * * *"
+    assert daily.trigger() is not None
+
+
+def test_disabled_job_is_not_added_to_scheduler(settings: Settings):
+    settings.juno_jobs_digest_daily = False
+    settings.juno_jobs_digest_weekly = False
+    settings.juno_jobs_resurfacing = False
+    scheduler = create_scheduler("UTC")
+    added = register_job_specs(scheduler, builtin_job_specs(settings), app=None)
+    assert added == []
+    assert scheduler.get_job(DIGEST_DAILY_JOB_ID) is None
+
+
+def test_register_job_specs_without_starting_or_telegram(settings: Settings):
+    settings.juno_jobs_resurfacing = True
+    scheduler = create_scheduler("UTC")
+    added = register_job_specs(scheduler, builtin_job_specs(settings), app=None)
+    assert DIGEST_DAILY_JOB_ID in added
+    assert DIGEST_WEEKLY_JOB_ID in added
+    assert RESURFACING_JOB_ID in added
+    assert scheduler.get_job(DIGEST_DAILY_JOB_ID) is not None
+    assert scheduler.running is False
+
+
+def test_invalid_crontab_raises(settings: Settings):
+    spec = JobSpec(id="bad", crontab="not-a-cron", enabled=True, timezone="UTC")
+    with pytest.raises(ValueError):
+        spec.trigger()
+
+
+@pytest.mark.asyncio
+async def test_start_jobs_registers_enabled_cron_jobs(settings: Settings):
+    settings.juno_jobs_enabled = True
+    settings.juno_jobs_smoke = False
+    settings.juno_jobs_digest_weekly = False
+    app = SimpleNamespace(state=SimpleNamespace(settings=settings, ptb=None, capture_paused=False))
+    scheduler = start_jobs(app)
+    try:
+        assert scheduler.get_job(DIGEST_DAILY_JOB_ID) is not None
+        assert scheduler.get_job(DIGEST_WEEKLY_JOB_ID) is None
+        assert scheduler.get_job(RESURFACING_JOB_ID) is None
+    finally:
+        stop_jobs(app)
