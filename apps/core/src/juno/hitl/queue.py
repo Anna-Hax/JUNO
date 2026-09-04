@@ -19,6 +19,7 @@ KIND_ERROR_MATCH = "error_match"
 KIND_IDE_BATCH = "ide_batch"
 KIND_MOBILE_BATCH = "mobile_batch"
 KIND_RESURFACE = "resurface"
+KIND_DRAFT = "draft"
 STATUS_PENDING = "pending"
 STATUS_SKIPPED = "skipped"
 STATUS_DECIDED = "decided"
@@ -87,6 +88,17 @@ class ReviewCard:
             if reason:
                 lines.append(str(reason))
             lines.append("Approve if it is the same topic; Reject to ignore this suggestion.")
+        elif self.kind == KIND_DRAFT:
+            title = str(self.payload.get("title") or "draft")
+            draft_kind = str(self.payload.get("draft_kind") or "artifact")
+            lines.append(f"Draft {draft_kind}: {title}")
+            body = str(self.payload.get("body") or "").strip()
+            if body:
+                lines.append(body[:500])
+            reason = self.payload.get("reason")
+            if reason:
+                lines.append(str(reason))
+            lines.append("This draft is not published. Approve to keep it; Reject to discard.")
         else:
             preview = str(self.payload)[:500]
             if preview:
@@ -238,6 +250,34 @@ class ReviewQueue:
             },
         )
 
+    async def propose_draft(
+        self,
+        *,
+        draft_kind: str,
+        title: str,
+        body: str,
+        source_capture_ids: list[int] | None = None,
+        generator: str = "template",
+        confidence: float = 0.5,
+        reason: str | None = None,
+    ) -> ReviewCard:
+        """Queue an auto-generated artifact. Approve confirms; never publishes (#106)."""
+        return await self.enqueue(
+            kind=KIND_DRAFT,
+            confidence=confidence,
+            payload={
+                "draft_kind": draft_kind,
+                "title": title,
+                "body": body,
+                "source_capture_ids": list(source_capture_ids or []),
+                "generator": generator,
+                "reason": reason,
+                "confirmed": False,
+                "published": False,
+                "discarded": False,
+            },
+        )
+
     async def next_open(self) -> ReviewCard | None:
         async def load(session: AsyncSession) -> ReviewCard | None:
             row = await _next_row(session)
@@ -375,6 +415,13 @@ async def _apply(session: AsyncSession, row: ReviewItem) -> bool:
         payload["confirmed"] = True
         row.payload = payload
         return True
+    if row.kind == KIND_DRAFT:
+        payload = dict(row.payload or {})
+        payload["confirmed"] = True
+        payload["discarded"] = False
+        payload["published"] = False
+        row.payload = payload
+        return True
     if row.kind != KIND_MERGE:
         return False
     edge_id = (row.payload or {}).get("edge_id")
@@ -391,6 +438,13 @@ async def _reject(session: AsyncSession, row: ReviewItem) -> None:
     if row.kind in {KIND_ERROR_MATCH, KIND_IDE_BATCH}:
         payload = dict(row.payload or {})
         payload["confirmed"] = False
+        row.payload = payload
+        return
+    if row.kind == KIND_DRAFT:
+        payload = dict(row.payload or {})
+        payload["confirmed"] = False
+        payload["discarded"] = True
+        payload["published"] = False
         row.payload = payload
         return
     if row.kind != KIND_MERGE:

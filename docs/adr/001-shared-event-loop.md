@@ -7,7 +7,7 @@ Accepted (v1)
 ## Date
 
 2026-08-20 (M0 scaffold)  
-**Last reviewed:** 2026-09-04 (M4 Spike S4 / ADR-07)
+**Last reviewed:** 2026-09-05 (M5 Spike S5 / ADR-09)
 
 ## Context
 
@@ -51,6 +51,7 @@ Concrete rules (implemented in `apps/core/src/juno/runtime.py`):
 5. **All background work** on this process must be asyncio tasks, lifespan-managed objects, or async-compatible schedulers on **this same loop** — not a second “main” loop in another thread. That includes:
    - The inbox watcher (`InboxWatcher`, landed in M1 / #16)
    - APScheduler proactive jobs on this loop ([ADR-07](007-proactive-jobs-shared-loop.md); Spike S4 / #86)
+   - Draft smoke enqueue on serve start ([ADR-09](009-draft-artifacts-hitl.md); Spike S5 / #106)
    - Chroma I/O via `VectorStore` async helpers ([ADR-04](004-chroma-collections.md))
 6. If `TELEGRAM_BOT_TOKEN` is empty, the API (and inbox watcher) still run and the bot is simply disabled — same process model either way.
 7. Before listen, `validate_serve_settings()` refuses a non-loopback bind and the example API token ([#21](https://github.com/Anna-Hax/JUNO/issues/21)).

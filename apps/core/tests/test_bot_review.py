@@ -99,6 +99,41 @@ async def test_review_cmd_shows_pending_merge(allowed_settings, queue):
 
 
 @pytest.mark.asyncio
+async def test_review_cmd_shows_pending_draft(allowed_settings, queue):
+    card = await queue.propose_draft(
+        draft_kind="journal",
+        title="Journal snippet 2026-09-05",
+        body="Recently captured HITL notes.",
+        generator="template",
+    )
+    update = _message_update(42)
+    await review_cmd(update, _context(allowed_settings, queue))
+    text = update.message.reply_text.await_args.args[0]
+    assert f"Review #{card.id}" in text
+    assert "Draft journal" in text
+    assert "not published" in text
+
+
+@pytest.mark.asyncio
+async def test_approve_callback_confirms_draft_without_publish(allowed_settings, queue):
+    card = await queue.propose_draft(
+        draft_kind="journal",
+        title="Journal snippet 2026-09-05",
+        body="Recently captured HITL notes.",
+        generator="template",
+    )
+    update = _callback_update(42, f"rev:{card.id}:approve")
+    await review_callback(update, _context(allowed_settings, queue))
+    edited = update.callback_query.edit_message_text.await_args.args[0]
+    assert "Approved" in edited
+    assert "not published" in edited
+    loaded = await queue.get(card.id)
+    assert loaded is not None
+    assert loaded.payload["confirmed"] is True
+    assert loaded.payload["published"] is False
+
+
+@pytest.mark.asyncio
 async def test_approve_callback_commits_merge(allowed_settings, queue):
     card = await queue.propose_merge(from_name="Src", to_name="Dst", confidence=0.7)
     edge_id = int(card.payload["edge_id"])
