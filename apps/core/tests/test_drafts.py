@@ -7,15 +7,19 @@ import pytest
 from sqlalchemy import func, select
 
 from juno.drafts import (
+    DRAFT_KIND_DOC,
+    DRAFT_KIND_FLASHCARD,
     DRAFT_KIND_JOURNAL,
     GENERATOR_TEMPLATE,
+    enqueue_doc_draft,
+    enqueue_flashcard_draft,
     enqueue_journal_draft,
     format_journal_snippet,
     maybe_enqueue_smoke_draft,
 )
 from juno.graph.db import Database
 from juno.hitl.queue import KIND_DRAFT, ReviewQueue
-from juno.models import Capture
+from juno.models import Capture, DraftArtifact
 
 
 @pytest.fixture
@@ -45,6 +49,13 @@ async def _capture_count(db: Database) -> int:
     async def load(session):
         result = await session.execute(select(func.count()).select_from(Capture))
         return int(result.scalar_one())
+
+    return await db.read(load)
+
+
+async def _artifact(db: Database, artifact_id: int) -> DraftArtifact | None:
+    async def load(session):
+        return await session.get(DraftArtifact, artifact_id)
 
     return await db.read(load)
 
@@ -89,6 +100,11 @@ async def test_journal_draft_stays_unpublished_after_approve(db):
     assert result.card.payload["published"] is False
     assert result.card.payload["discarded"] is False
     assert await _capture_count(db) == before
+    art = await _artifact(db, int(card.payload["artifact_id"]))
+    assert art is not None
+    assert art.status == "confirmed"
+    assert art.published == "false"
+    assert art.kind == DRAFT_KIND_JOURNAL
 
 
 @pytest.mark.asyncio
@@ -100,6 +116,10 @@ async def test_journal_draft_reject_discards_without_publish(db):
     assert result.card.payload["discarded"] is True
     assert result.card.payload["published"] is False
     assert await _capture_count(db) == 0
+    art = await _artifact(db, int(card.payload["artifact_id"]))
+    assert art is not None
+    assert art.status == "discarded"
+    assert art.published == "false"
 
 
 @pytest.mark.asyncio
@@ -138,3 +158,42 @@ async def test_smoke_skips_when_paused_or_off(settings, db):
     settings.juno_drafts_smoke = False
     off = SimpleNamespace(state=SimpleNamespace(settings=settings, db=db, capture_paused=False))
     assert await maybe_enqueue_smoke_draft(off) is None
+
+
+@pytest.mark.asyncio
+async def test_flashcard_and_doc_kinds_never_publish(db):
+    cap = await _add_capture(db, title="Ownership notes", text="Rc vs Arc")
+    card = await enqueue_flashcard_draft(
+        db,
+        front=cap.title or "front",
+        back=cap.text or "back",
+        source_capture_ids=[cap.id],
+    )
+    assert card.payload["draft_kind"] == DRAFT_KIND_FLASHCARD
+    assert card.payload["extra"]["front"] == "Ownership notes"
+    assert "Q:" in card.payload["body"]
+    approved = await ReviewQueue(db).decide(card.id, "approve")
+    art = await _artifact(db, int(approved.card.payload["artifact_id"]))
+    assert art is not None
+    assert art.kind == DRAFT_KIND_FLASHCARD
+    assert art.status == "confirmed"
+    assert art.published == "false"
+
+    doc = await enqueue_doc_draft(db, captures=[cap])
+    assert doc.payload["draft_kind"] == DRAFT_KIND_DOC
+    assert "Draft README" in doc.payload["body"]
+    rejected = await ReviewQueue(db).decide(doc.id, "reject")
+    discarded = await _artifact(db, int(rejected.card.payload["artifact_id"]))
+    assert discarded is not None
+    assert discarded.status == "discarded"
+    assert discarded.published == "false"
+
+
+@pytest.mark.asyncio
+async def test_unknown_draft_kind_rejected(db):
+    with pytest.raises(ValueError, match="unknown draft kind"):
+        await ReviewQueue(db).propose_draft(
+            draft_kind="tweet",
+            title="nope",
+            body="nope",
+        )

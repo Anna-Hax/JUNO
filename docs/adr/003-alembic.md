@@ -7,7 +7,7 @@ Accepted (v1)
 ## Date
 
 2026-08-20 (M0 scaffold)  
-**Last reviewed:** 2026-08-26 (after M1 / issue #11; schema still at revision `0001`)
+**Last reviewed:** 2026-09-05 (M5 / #107; schema head is revision `0002`)
 
 ## Context
 
@@ -16,6 +16,7 @@ The knowledge-graph schema lives in SQLAlchemy models under `apps/core/src/juno/
 - `captures`, `chunks`, `nodes`, `edges`
 - `review_items` (HITL)
 - `module_health`, `settings`
+- `draft_artifacts` (M5 HITL drafts; [ADR-09](009-draft-artifacts-hitl.md))
 
 That schema will keep evolving past v1.0 (browser metadata in M2, IDE fields in M3, prune / trust dials in M5, and so on). Shipping only `Base.metadata.create_all` at first boot works for empty databases, but it **cannot** safely alter an existing user’s `data/juno.db` when columns or tables change.
 
@@ -38,7 +39,7 @@ Use **Alembic** for all schema evolution, starting with the first revision.
 
 Concrete rules:
 
-1. Migrations live under `apps/core/alembic/` with `alembic.ini` in `apps/core/`. Current head: revision **`0001`** (`0001_initial_schema.py`) matching the ORM tables above.
+1. Migrations live under `apps/core/alembic/` with `alembic.ini` in `apps/core/`. Current head: revision **`0002`** (`0002_draft_artifacts.py`) following **`0001`** (`0001_initial_schema.py`).
 2. **`juno db-init`** and **`juno serve`** (via `Database.migrate()`) apply `alembic upgrade head`.
 3. The upgrade runs on a **sync** SQLite URL (`sqlite:///…`) inside **`asyncio.to_thread`**, so the asyncio loop is never nested (ADR-01). After upgrade, the async engine re-asserts `PRAGMA journal_mode=WAL` ([ADR-02](002-sqlite-write-queue.md)).
 4. Databases that were created with the pre-Alembic `create_all` path (tables already match `0001`) are **stamped** at head rather than re-created — see `juno.graph.migrations`.
@@ -58,7 +59,7 @@ Concrete rules:
 
 - Contributors must remember: model change ⇒ new Alembic revision in the same PR.
 - Autogenerate can miss renames / data migrations; always read the generated script.
-- Until a second revision exists, “stamp vs upgrade” only matters for people who still have pre-Alembic files — new installs just upgrade to `0001`.
+- **`0002`** adds `draft_artifacts` for HITL drafts ([ADR-09](009-draft-artifacts-hitl.md) / #107). Existing `0001` databases **upgrade**; they are not stamped over `0002`.
 
 ### Follow-ups
 

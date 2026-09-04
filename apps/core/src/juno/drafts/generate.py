@@ -1,4 +1,4 @@
-"""Template-generated journal drafts for Spike S5. Never auto-publish."""
+"""Template-generated draft artifacts. Never auto-publish (ADR-09)."""
 
 from __future__ import annotations
 
@@ -7,14 +7,18 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from juno.bot.services import recent_captures
+from juno.drafts.kinds import (
+    DRAFT_KIND_DOC,
+    DRAFT_KIND_FLASHCARD,
+    DRAFT_KIND_JOURNAL,
+    GENERATOR_TEMPLATE,
+)
 from juno.graph.db import Database
 from juno.hitl.queue import ReviewCard, ReviewQueue
 from juno.models import Capture
 
 logger = logging.getLogger("juno.drafts")
 
-GENERATOR_TEMPLATE = "template"
-DRAFT_KIND_JOURNAL = "journal"
 SMOKE_LOOKBACK_HOURS = 72
 
 
@@ -39,6 +43,27 @@ def format_journal_snippet(captures: list[Capture], *, now: datetime | None = No
     )
 
 
+def format_flashcard(front: str, back: str) -> tuple[str, dict[str, str]]:
+    """Q/A card body plus structured extra. Generation stays template-only."""
+    q = " ".join((front or "What stood out?").split())[:240]
+    a = " ".join((back or "").split())[:500]
+    body = f"Q: {q}\nA: {a or '(empty)'}"
+    return body, {"front": q, "back": a}
+
+
+def format_doc_stub(captures: list[Capture], *, now: datetime | None = None) -> str:
+    now = now or datetime.now(UTC)
+    day = now.strftime("%Y-%m-%d")
+    lines = [f"# Draft README ({day})", "", "Template stub — not a published document."]
+    for cap in captures[:5]:
+        title = (cap.title or cap.uri or f"capture #{cap.id}").strip()
+        title = " ".join(title.split())[:80]
+        lines.append(f"- {title} [{cap.source_type}]")
+    if len(captures) == 0:
+        lines.append("- (no recent captures)")
+    return "\n".join(lines)
+
+
 async def enqueue_journal_draft(
     db: Database,
     *,
@@ -59,10 +84,60 @@ async def enqueue_journal_draft(
         title=title,
         body=body,
         source_capture_ids=ids,
-        generator=generator if generator == GENERATOR_TEMPLATE else GENERATOR_TEMPLATE,
+        generator=generator,
         reason=(
             "Auto-generated journal snippet. Approve keeps it as a confirmed draft; "
             "it is not published to the graph or Telegram."
+        ),
+    )
+
+
+async def enqueue_flashcard_draft(
+    db: Database,
+    *,
+    front: str,
+    back: str,
+    source_capture_ids: list[int] | None = None,
+    title: str | None = None,
+    generator: str = GENERATOR_TEMPLATE,
+) -> ReviewCard:
+    body, extra = format_flashcard(front, back)
+    return await ReviewQueue(db).propose_draft(
+        draft_kind=DRAFT_KIND_FLASHCARD,
+        title=title or extra["front"][:80] or "Flashcard",
+        body=body,
+        extra=extra,
+        source_capture_ids=source_capture_ids,
+        generator=generator,
+        reason=(
+            "Auto-generated flashcard. Approve keeps it as a confirmed draft; "
+            "it is not published and does not enter SRS until later review."
+        ),
+    )
+
+
+async def enqueue_doc_draft(
+    db: Database,
+    *,
+    captures: list[Capture] | None = None,
+    generator: str = GENERATOR_TEMPLATE,
+    lookback_hours: int = SMOKE_LOOKBACK_HOURS,
+    now: datetime | None = None,
+) -> ReviewCard:
+    now = now or datetime.now(UTC)
+    if captures is None:
+        captures = await recent_captures(db, since=now - timedelta(hours=lookback_hours), limit=8)
+    body = format_doc_stub(captures, now=now)
+    ids = [cap.id for cap in captures if cap.id is not None]
+    return await ReviewQueue(db).propose_draft(
+        draft_kind=DRAFT_KIND_DOC,
+        title=f"README draft {now.strftime('%Y-%m-%d')}",
+        body=body,
+        source_capture_ids=ids,
+        generator=generator,
+        reason=(
+            "Auto-generated doc draft. Approve keeps it as a confirmed draft; "
+            "it is not written to any git repo or published."
         ),
     )
 

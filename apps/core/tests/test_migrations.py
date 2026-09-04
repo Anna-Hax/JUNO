@@ -24,6 +24,7 @@ GRAPH_TABLES = {
     "review_items",
     "module_health",
     "settings",
+    "draft_artifacts",
 }
 
 

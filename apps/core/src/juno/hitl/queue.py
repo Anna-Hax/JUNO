@@ -10,7 +10,7 @@ from sqlalchemy import case, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from juno.graph.db import Database
-from juno.models import Edge, Node, ReviewItem
+from juno.models import DraftArtifact, Edge, Node, ReviewItem
 
 Decision = Literal["approve", "reject", "skip"]
 
@@ -258,25 +258,62 @@ class ReviewQueue:
         body: str,
         source_capture_ids: list[int] | None = None,
         generator: str = "template",
+        extra: dict[str, Any] | None = None,
         confidence: float = 0.5,
         reason: str | None = None,
     ) -> ReviewCard:
-        """Queue an auto-generated artifact. Approve confirms; never publishes (#106)."""
-        return await self.enqueue(
-            kind=KIND_DRAFT,
-            confidence=confidence,
-            payload={
-                "draft_kind": draft_kind,
-                "title": title,
-                "body": body,
-                "source_capture_ids": list(source_capture_ids or []),
-                "generator": generator,
-                "reason": reason,
-                "confirmed": False,
-                "published": False,
-                "discarded": False,
-            },
+        """Queue an auto-generated artifact. Approve confirms; never publishes (#106/#107)."""
+        from juno.drafts.kinds import (
+            GENERATOR_TEMPLATE,
+            PUBLISHED_NO,
+            STATUS_PENDING,
+            require_draft_kind,
         )
+
+        kind = require_draft_kind(draft_kind)
+        gen = generator if generator == GENERATOR_TEMPLATE else GENERATOR_TEMPLATE
+        ids = list(source_capture_ids or [])
+
+        async def write(session: AsyncSession) -> ReviewCard:
+            item = ReviewItem(
+                kind=KIND_DRAFT,
+                confidence=confidence,
+                payload={
+                    "draft_kind": kind,
+                    "title": title,
+                    "body": body,
+                    "source_capture_ids": ids,
+                    "generator": gen,
+                    "reason": reason,
+                    "confirmed": False,
+                    "published": False,
+                    "discarded": False,
+                    "extra": extra or {},
+                },
+                status=STATUS_PENDING,
+            )
+            session.add(item)
+            await session.flush()
+            artifact = DraftArtifact(
+                kind=kind,
+                title=title,
+                body=body,
+                extra_json=extra,
+                generator=gen,
+                status=STATUS_PENDING,
+                published=PUBLISHED_NO,
+                review_item_id=item.id,
+                source_capture_ids=ids,
+            )
+            session.add(artifact)
+            await session.flush()
+            payload = dict(item.payload or {})
+            payload["artifact_id"] = artifact.id
+            item.payload = payload
+            await session.flush()
+            return _card(item)
+
+        return await self.db.write(write)
 
     async def next_open(self) -> ReviewCard | None:
         async def load(session: AsyncSession) -> ReviewCard | None:
@@ -421,6 +458,7 @@ async def _apply(session: AsyncSession, row: ReviewItem) -> bool:
         payload["discarded"] = False
         payload["published"] = False
         row.payload = payload
+        await _set_draft_artifact(session, payload, confirmed=True)
         return True
     if row.kind != KIND_MERGE:
         return False
@@ -446,6 +484,7 @@ async def _reject(session: AsyncSession, row: ReviewItem) -> None:
         payload["discarded"] = True
         payload["published"] = False
         row.payload = payload
+        await _set_draft_artifact(session, payload, confirmed=False)
         return
     if row.kind != KIND_MERGE:
         return
@@ -455,3 +494,18 @@ async def _reject(session: AsyncSession, row: ReviewItem) -> None:
     edge = await session.get(Edge, int(edge_id))
     if edge is not None and edge.status != EDGE_COMMITTED:
         edge.status = EDGE_REJECTED
+
+
+async def _set_draft_artifact(
+    session: AsyncSession, payload: dict[str, Any], *, confirmed: bool
+) -> None:
+    from juno.drafts.kinds import PUBLISHED_NO, STATUS_CONFIRMED, STATUS_DISCARDED
+
+    artifact_id = payload.get("artifact_id")
+    if artifact_id is None:
+        return
+    artifact = await session.get(DraftArtifact, int(artifact_id))
+    if artifact is None:
+        return
+    artifact.status = STATUS_CONFIRMED if confirmed else STATUS_DISCARDED
+    artifact.published = PUBLISHED_NO
