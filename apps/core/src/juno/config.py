@@ -67,6 +67,10 @@ class Settings(BaseSettings):
     embedding_model: str = "all-MiniLM-L6-v2"
     embedding_backend: str = "sentence_transformers"  # stub | sentence_transformers
 
+    # Voice STT (ADR-08): auto uses OpenAI Whisper only when OPENAI_API_KEY is set.
+    juno_voice_backend: str = "auto"  # auto | openai | stub | off
+    openai_whisper_model: str = "whisper-1"
+
     # M4 jobs (ADR-07): AsyncIOScheduler on the shared serve loop.
     juno_jobs_enabled: bool = True
     juno_jobs_timezone: str = "UTC"

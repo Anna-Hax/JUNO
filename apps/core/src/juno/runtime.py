@@ -27,6 +27,7 @@ from juno.bot.handlers import (
     start_cmd,
     status_cmd,
     text_msg,
+    voice_msg,
 )
 from juno.bot.review import review_callback, review_cmd
 from juno.bot.services import BOT_DATA_KEY, BotServices, load_capture_paused
@@ -39,6 +40,7 @@ from juno.ingest.watcher import InboxWatcher
 from juno.jobs import load_job_enabled_overrides, start_jobs, stop_jobs
 from juno.llm.chat import ChatProvider, create_chat_provider
 from juno.llm.embedder import Embedder, create_embedder
+from juno.llm.transcribe import create_transcriber
 from juno.models import AppSetting, ModuleHealth
 
 logger = logging.getLogger("juno.runtime")
@@ -60,6 +62,7 @@ def build_telegram_application(settings: Settings) -> Application | None:
     app.add_handler(CommandHandler("status", status_cmd))
     app.add_handler(CommandHandler("review", review_cmd))
     app.add_handler(CallbackQueryHandler(review_callback, pattern=r"^rev:"))
+    app.add_handler(MessageHandler(filters.VOICE, voice_msg))
     app.add_handler(MessageHandler(filters.Document.ALL, document_msg))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_msg))
     return app
@@ -85,13 +88,18 @@ async def persist_embedder_settings(db: Database, embedder: Embedder) -> None:
 
 
 async def persist_llm_health(db: Database, chat: ChatProvider, *, ok: bool) -> None:
+    detail = f"{chat.name}:{chat.model}" if chat.model else chat.name
+    await persist_module_health(db, "llm", detail=detail, ok=ok)
+
+
+async def persist_module_health(db: Database, module: str, *, detail: str | None, ok: bool) -> None:
     async def write(session: AsyncSession) -> None:
-        row = await session.get(ModuleHealth, "llm")
+        row = await session.get(ModuleHealth, module)
         if row is None:
-            row = ModuleHealth(module="llm")
+            row = ModuleHealth(module=module)
             session.add(row)
         now = datetime.now(UTC)
-        row.detail = f"{chat.name}:{chat.model}" if chat.model else chat.name
+        row.detail = detail
         if ok:
             row.last_success_at = now
             row.last_error = None
@@ -135,6 +143,18 @@ def attach_lifespan(fastapi_app: FastAPI) -> FastAPI:
         app.state.llm_healthy = llm_healthy
         app.state.chat = chat
         await persist_llm_health(db, chat, ok=llm_healthy)
+
+        transcriber = getattr(app.state, "transcriber", None)
+        if transcriber is None:
+            transcriber = create_transcriber(
+                settings.juno_voice_backend,
+                openai_api_key=settings.openai_api_key,
+                openai_base_url=settings.openai_base_url,
+                openai_whisper_model=settings.openai_whisper_model,
+            )
+            app.state.transcriber = transcriber
+        voice_ok = await transcriber.healthy()
+        await persist_module_health(db, "voice", detail=transcriber.name, ok=voice_ok)
 
         pipeline = getattr(app.state, "pipeline", None)
         if pipeline is not None:
@@ -209,6 +229,12 @@ async def run_server(settings: Settings | None = None) -> None:
         openai_api_key=settings.openai_api_key,
         openai_model=settings.openai_model,
     )
+    transcriber = create_transcriber(
+        settings.juno_voice_backend,
+        openai_api_key=settings.openai_api_key,
+        openai_base_url=settings.openai_base_url,
+        openai_whisper_model=settings.openai_whisper_model,
+    )
     fastapi_app = create_app(
         settings,
         db=db,
@@ -222,6 +248,7 @@ async def run_server(settings: Settings | None = None) -> None:
     fastapi_app.state.embedder = embedder
     fastapi_app.state.vectors = vectors
     fastapi_app.state.pipeline = pipeline
+    fastapi_app.state.transcriber = transcriber
     fastapi_app.state.ptb = build_telegram_application(settings)
     attach_lifespan(fastapi_app)
 

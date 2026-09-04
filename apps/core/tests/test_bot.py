@@ -18,6 +18,7 @@ from juno.bot.handlers import (
     start_cmd,
     status_cmd,
     text_msg,
+    voice_msg,
 )
 from juno.bot.services import (
     BOT_DATA_KEY,
@@ -438,6 +439,28 @@ async def test_document_is_ingested(allowed_settings):
     dest = pipeline.calls[0][1]
     assert dest.name == "abc123.md"
     assert not dest.exists()
+
+
+@pytest.mark.asyncio
+async def test_voice_note_is_transcribed_and_ingested(allowed_settings):
+    from juno.llm.transcribe import StubTranscriber
+
+    pipeline = FakePipeline()
+    app = create_app(allowed_settings)
+    app.state.transcriber = StubTranscriber("hello from the phone")
+    svc = _svc(allowed_settings, pipeline=pipeline, app=app)
+    update = _update(ALLOWED_ID)
+    tg_file = MagicMock()
+    tg_file.download_as_bytearray = AsyncMock(return_value=bytearray(b"ogg-bytes"))
+    voice = MagicMock()
+    voice.duration = 2
+    voice.get_file = AsyncMock(return_value=tg_file)
+    update.message.voice = voice
+    await voice_msg(update, _context(svc))
+    assert pipeline.calls[0][0] == "text"
+    assert pipeline.calls[0][1] == "hello from the phone"
+    assert pipeline.calls[0][2]["raw"]["kind"] == "voice"
+    assert "Captured #7" in update.message.reply_text.await_args.args[0]
 
 
 class _FakeChat:
