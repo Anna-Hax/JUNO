@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-09-05  
 **Track issues on:** [https://github.com/Anna-Hax/JUNO/issues](https://github.com/Anna-Hax/JUNO/issues)  
-**Package:** `1.3.0` (M4 complete — M5 polish expanded; [`docs/v1.3-release-gate.md`](v1.3-release-gate.md))
+**Package:** `2.0.0` (M5 complete — [`docs/v2.0-release-gate.md`](v2.0-release-gate.md))
 
 Prefer one open issue ≈ one PR (`Closes #N`). This file is kept as-is across branch merges (`merge=ours`).
 
@@ -183,6 +183,12 @@ No blocking prep tickets (unlike Before M2’s Spike S1 / board / protection). M
 
 ---
 
+## M5 — **complete** (2026-09-05)
+
+Epic [#28](https://github.com/Anna-Hax/JUNO/issues/28) closed with this gate; milestone [M5: v2.0 Polish & Extensions](https://github.com/Anna-Hax/JUNO/milestone/11) complete. Gate: [`docs/v2.0-release-gate.md`](v2.0-release-gate.md). Package **2.0.0**.
+
+---
+
 ## Unlock M5 (planning)
 
 Epic: [#28](https://github.com/Anna-Hax/JUNO/issues/28) — *Epic: M5 v2.0 polish*.  
@@ -201,9 +207,9 @@ Milestone: [M5: v2.0 Polish & Extensions](https://github.com/Anna-Hax/JUNO/miles
 | 7 | [#112](https://github.com/Anna-Hax/JUNO/issues/112) | Optional Slack forward into upload space — ✅ [session 55](sessions/55-session-slack-forward.md) |
 | 8 | [#113](https://github.com/Anna-Hax/JUNO/issues/113) | Prune-with-confirm — retention / destructive graph cleanup — ✅ [session 56](sessions/56-session-prune-confirm.md) |
 | 9 | [#114](https://github.com/Anna-Hax/JUNO/issues/114) | Module health — polish jobs freshness + respect /pause — ✅ [session 57](sessions/57-session-polish-health.md) |
-| 10 | [#115](https://github.com/Anna-Hax/JUNO/issues/115) | M5 gate — polish tests, ADR, README, v2.0 release gate |
+| 10 | [#115](https://github.com/Anna-Hax/JUNO/issues/115) | M5 gate — polish tests, ADR, README, v2.0 release gate — ✅ [session 58](sessions/58-session-m5-gate.md) |
 
-**First coding task:** #106–#114 ✅. Next: M5 gate ([#115](https://github.com/Anna-Hax/JUNO/issues/115)).
+**First coding task:** #106–#115 ✅. M5 / epic [#28](https://github.com/Anna-Hax/JUNO/issues/28) complete. Gate: [`docs/v2.0-release-gate.md`](v2.0-release-gate.md).
 
 ### M5 design constraints (do not violate)
 
