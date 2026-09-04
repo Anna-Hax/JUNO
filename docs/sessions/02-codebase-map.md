@@ -41,14 +41,14 @@ JUNO/
 | Alembic | `alembic/` + `alembic.ini` | Head `0003` (`flashcards`) after `0002` / `0001` ([ADR-03](../adr/003-alembic.md)) |
 | LLM | `llm/embedder.py`, `llm/chat.py`, `llm/transcribe.py` | MiniLM (optional extra) + stub embedder; Ollama / OpenAI-compat / offline chat; opt-in voice STT (ADR-08) |
 | Ingest | `ingest/extractors.py`, `chunking.py`, `pipeline.py`, `watcher.py` | File/URL extract, chunk, persist, inbox watch ([#16](https://github.com/Anna-Hax/JUNO/issues/16)) |
-| RAG | `rag/engine.py` | Vector retrieve, join captures, sourced answer + confidence ([#17](https://github.com/Anna-Hax/JUNO/issues/17)); Telegram query uses this |
+| RAG | `rag/engine.py`, `rag/gaps.py` | Vector retrieve, sourced answers ([#17](https://github.com/Anna-Hax/JUNO/issues/17)); skill-gap flags ([#110](https://github.com/Anna-Hax/JUNO/issues/110)) |
 | HITL | `hitl/queue.py` | Review queue; merges stay pending until Approve ([#20](https://github.com/Anna-Hax/JUNO/issues/20)); drafts never auto-publish ([#106](https://github.com/Anna-Hax/JUNO/issues/106)) |
 
 ### Entry points
 
 - `uv run juno serve` → `runtime.main_sync()`
 - `uv run juno db-init` → `Database.migrate()` (Alembic `upgrade head`, or stamp legacy `create_all` DBs)
-- Tests: `test_foundation.py`, `test_migrations.py`, `test_ingest.py`, `test_vectors.py`, `test_embedder.py`, `test_chat.py`, `test_rag.py`, `test_bot.py`, `test_review.py`, `test_bot_review.py`, `test_api.py`, `test_write_queue.py`, `test_integration.py`, `test_export.py`, `test_jobs.py`, `test_transcribe.py`, `test_drafts.py`, `test_flashcards.py`, `test_journal.py`
+- Tests: `test_foundation.py`, `test_migrations.py`, `test_ingest.py`, `test_vectors.py`, `test_embedder.py`, `test_chat.py`, `test_rag.py`, `test_bot.py`, `test_review.py`, `test_bot_review.py`, `test_api.py`, `test_write_queue.py`, `test_integration.py`, `test_export.py`, `test_jobs.py`, `test_transcribe.py`, `test_drafts.py`, `test_flashcards.py`, `test_journal.py`, `test_gaps.py`
 
 ### Dependencies
 

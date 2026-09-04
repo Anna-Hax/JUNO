@@ -58,6 +58,7 @@ Living notes for what was implemented, how GitHub is set up, and what to do next
 | [50-session-draft-scaffold.md](50-session-draft-scaffold.md) | **#107** — Draft kinds + never auto-publish |
 | [51-session-flashcards.md](51-session-flashcards.md) | **#108** — Flashcards / SRS from highlights |
 | [52-session-journal-drafts.md](52-session-journal-drafts.md) | **#109** — IDE journal / README drafts |
+| [53-session-skill-gaps.md](53-session-skill-gaps.md) | **#110** — Skill-gap tracking |
 | [v1.0-release-gate.md](../v1.0-release-gate.md) | M1 checklist (all P0 closed) |
 | [v1.1-release-gate.md](../v1.1-release-gate.md) | M2 checklist (browser capture) |
 | [v1.2-release-gate.md](../v1.2-release-gate.md) | M3 checklist (IDE capture) |
