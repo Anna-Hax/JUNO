@@ -25,6 +25,7 @@ GRAPH_TABLES = {
     "module_health",
     "settings",
     "draft_artifacts",
+    "flashcards",
 }
 
 

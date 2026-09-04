@@ -1,5 +1,6 @@
 """Auto-generated draft artifacts (M5). Stay HITL until approve; never auto-publish."""
 
+from juno.drafts.flashcards import queue_highlight_flashcards, review_card
 from juno.drafts.generate import (
     enqueue_doc_draft,
     enqueue_flashcard_draft,
@@ -30,4 +31,6 @@ __all__ = [
     "format_flashcard",
     "format_journal_snippet",
     "maybe_enqueue_smoke_draft",
+    "queue_highlight_flashcards",
+    "review_card",
 ]

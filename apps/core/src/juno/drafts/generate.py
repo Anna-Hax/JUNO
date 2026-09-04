@@ -99,19 +99,21 @@ async def enqueue_flashcard_draft(
     back: str,
     source_capture_ids: list[int] | None = None,
     title: str | None = None,
+    extra: dict[str, Any] | None = None,
     generator: str = GENERATOR_TEMPLATE,
 ) -> ReviewCard:
-    body, extra = format_flashcard(front, back)
+    body, structured = format_flashcard(front, back)
+    payload_extra = {**structured, **(extra or {})}
     return await ReviewQueue(db).propose_draft(
         draft_kind=DRAFT_KIND_FLASHCARD,
-        title=title or extra["front"][:80] or "Flashcard",
+        title=title or structured["front"][:80] or "Flashcard",
         body=body,
-        extra=extra,
+        extra=payload_extra,
         source_capture_ids=source_capture_ids,
         generator=generator,
         reason=(
-            "Auto-generated flashcard. Approve keeps it as a confirmed draft; "
-            "it is not published and does not enter SRS until later review."
+            "Auto-generated flashcard. Approve confirms it into SRS practice; "
+            "it is not published to the graph or Telegram as canonical."
         ),
     )
 

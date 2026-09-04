@@ -46,3 +46,7 @@ Issue [#106](https://github.com/Anna-Hax/JUNO/issues/106): template journal from
 ## Scaffold (#107)
 
 Issue [#107](https://github.com/Anna-Hax/JUNO/issues/107): kinds `journal` / `flashcard` / `doc` persist as `draft_artifacts` (Alembic **`0002`**) plus a `review_items` row. Approve sets artifact `status=confirmed` and **still** `published=false`. Reject sets `discarded`. CI enqueues all three kinds without an LLM (see [session 50](../sessions/50-session-draft-scaffold.md)).
+
+## Flashcards / SRS (#108)
+
+Highlights on captures (`raw_json.highlights`) become **flashcard drafts**. Approve creates a `flashcards` row (Alembic **`0003`**) that is due for Telegram `/cards` Again/Good (SM-2-lite). Generation is skipped under `/pause`. Cards are never auto-published (see [session 51](../sessions/51-session-flashcards.md)).

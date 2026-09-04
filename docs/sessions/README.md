@@ -56,6 +56,7 @@ Living notes for what was implemented, how GitHub is set up, and what to do next
 | [48-session-m4-gate.md](48-session-m4-gate.md) | **#95** — M4 gate + v1.3 |
 | [49-session-spike-s5.md](49-session-spike-s5.md) | **#106** — Spike S5 draft through HITL |
 | [50-session-draft-scaffold.md](50-session-draft-scaffold.md) | **#107** — Draft kinds + never auto-publish |
+| [51-session-flashcards.md](51-session-flashcards.md) | **#108** — Flashcards / SRS from highlights |
 | [v1.0-release-gate.md](../v1.0-release-gate.md) | M1 checklist (all P0 closed) |
 | [v1.1-release-gate.md](../v1.1-release-gate.md) | M2 checklist (browser capture) |
 | [v1.2-release-gate.md](../v1.2-release-gate.md) | M3 checklist (IDE capture) |

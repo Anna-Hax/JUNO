@@ -46,7 +46,7 @@ uv run juno wipe --confirm wipe-all-data
 - API: `http://127.0.0.1:8787/health` (no token). `/status` `/ingest` `/search` need `Authorization: Bearer <JUNO_API_TOKEN>`. Serve refuses the example `change-me` token and any non-loopback `JUNO_API_HOST`.
 - Token-gated `GET /status` reports the live embedder (model / backend / dimensions) and LLM health (`llm_healthy`, `llm_provider`, `llm_model`). If Ollama is down, `llm_healthy` is false and answers stay retrieve-only.
 - Token-gated `GET /search?q=` returns citations + confidence (sourced answer when the LLM is healthy).
-- Bot runs only while this process (and PC) is on. Telegram queues updates ~24h; longer downtime can drop messages. Commands: `/start` `/help` `/digest today|week` `/jobs` `/pause` `/resume` `/status` `/review`. Forward a message, send a link, attach a doc, or send a **voice note** to capture; other text queries the graph. Voice STT is opt-in ([ADR-08](docs/adr/008-voice-transcription.md)).
+- Bot runs only while this process (and PC) is on. Telegram queues updates ~24h; longer downtime can drop messages. Commands: `/start` `/help` `/digest today|week` `/jobs` `/pause` `/resume` `/status` `/review` `/cards`. Forward a message, send a link, attach a doc, or send a **voice note** to capture; other text queries the graph. Voice STT is opt-in ([ADR-08](docs/adr/008-voice-transcription.md)). New flashcards stay HITL drafts until Approve.
 
 ### Tests
 
