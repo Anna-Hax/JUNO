@@ -31,7 +31,7 @@ JUNO/
 | Config | `config.py` | pydantic-settings from `.env` |
 | CLI | `cli.py` | `juno serve` / `db-init` / `export` / `wipe` / `version` |
 | Runtime | `runtime.py` | Shared asyncio: uvicorn + PTB + inbox watcher + jobs scheduler lifespan |
-| Jobs | `jobs/scheduler.py`, `jobs/registry.py` | AsyncIOScheduler + named cron registry (ADR-07) |
+| Jobs | `jobs/scheduler.py`, `jobs/registry.py`, `jobs/resurface.py` | AsyncIOScheduler + named cron registry (ADR-07) |
 | API | `api/__init__.py` | FastAPI routes + token + loopback middleware |
 | Bot | `bot/handlers.py`, `bot/services.py`, `bot/review.py` | Telegram allowlist, query, capture, pause/digest/status ([#18](https://github.com/Anna-Hax/JUNO/issues/18) / [#19](https://github.com/Anna-Hax/JUNO/issues/19)); HITL `/review` ([#20](https://github.com/Anna-Hax/JUNO/issues/20)) |
 | Graph DB | `graph/db.py`, `graph/migrations.py`, `graph/ownership.py` | Engine, WAL, write queue, Alembic upgrade/stamp; export/wipe ([#23](https://github.com/Anna-Hax/JUNO/issues/23)) |

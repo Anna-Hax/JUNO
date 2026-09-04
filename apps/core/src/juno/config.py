@@ -75,7 +75,7 @@ class Settings(BaseSettings):
     juno_jobs_digest_daily_cron: str = "0 7 * * *"
     juno_jobs_digest_weekly: bool = True
     juno_jobs_digest_weekly_cron: str = "0 7 * * mon"
-    juno_jobs_resurfacing: bool = False
+    juno_jobs_resurfacing: bool = True
     juno_jobs_resurfacing_cron: str = "0 * * * *"
 
     def allowed_user_id_set(self) -> set[int]:
