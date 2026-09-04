@@ -12,7 +12,7 @@ Personal knowledge-graph agent: passively (and manually) capture what you read, 
 - **Browser extension** (`apps/extension`): MV3 loopback client ([ADR-05](docs/adr/005-browser-extension-client.md)); Spike S2 captures tabs → `POST /ingest`
 - **IDE adapter** (`apps/ide`): read-only Cursor `state.vscdb` client ([ADR-06](docs/adr/006-ide-adapter-client.md)); poll/watch posts chats + terminal errors → `POST /ingest` (runbook in [`apps/ide/README.md`](apps/ide/README.md))
 - **Inbox** (`inbox/`): drop `.txt` / `.md` / `.pdf` / `.url` (or a one-line http(s) text file). `juno serve` watches the folder; good files move to `inbox/.processed/`, unreadable PDFs to `inbox/.failed/`. Optional Slack.com links via Telegram when `JUNO_SLACK_FORWARD=true` (not a workspace bot; [ADR-11](docs/adr/011-slack-forward.md)).
-- **HITL** (`/review`): inline Approve / Reject / Skip for pending graph merges, sensitive batches, and auto-generated **drafts** (never auto-published; [ADR-09](docs/adr/009-draft-artifacts-hitl.md))
+- **HITL** (`/review`): inline Approve / Reject / Skip for pending graph merges, sensitive batches, auto-generated **drafts** (never auto-published; [ADR-09](docs/adr/009-draft-artifacts-hitl.md)), and **prune** (archive only after confirm; [ADR-12](docs/adr/012-prune-with-confirm.md))
 
 ## Prerequisites
 
@@ -39,6 +39,8 @@ Data ownership:
 
 ```powershell
 uv run juno export -o ../../data/backup.json
+# Selective archive is HITL only (never silent delete):
+uv run juno prune --confirm prune-selected
 # Stop juno serve first on Windows, then:
 uv run juno wipe --confirm wipe-all-data
 ```
@@ -46,7 +48,7 @@ uv run juno wipe --confirm wipe-all-data
 - API: `http://127.0.0.1:8787/health` (no token). `/status` `/ingest` `/search` need `Authorization: Bearer <JUNO_API_TOKEN>`. Serve refuses the example `change-me` token and any non-loopback `JUNO_API_HOST`.
 - Token-gated `GET /status` reports the live embedder (model / backend / dimensions) and LLM health (`llm_healthy`, `llm_provider`, `llm_model`). If Ollama is down, `llm_healthy` is false and answers stay retrieve-only.
 - Token-gated `GET /search?q=` returns citations + confidence (sourced answer when the LLM is healthy).
-- Bot runs only while this process (and PC) is on. Telegram queues updates ~24h; longer downtime can drop messages. Commands: `/start` `/help` `/digest today|week` `/jobs` `/pause` `/resume` `/status` `/review` `/cards` `/drafts journal|readme` `/gaps` `/trust`. Forward a message, send a link, attach a doc, or send a **voice note** to capture; other text queries the graph. Voice STT is opt-in ([ADR-08](docs/adr/008-voice-transcription.md)). New flashcards and journal/README drafts stay HITL until Approve; `/drafts` never writes git files unattended.
+- Bot runs only while this process (and PC) is on. Telegram queues updates ~24h; longer downtime can drop messages. Commands: `/start` `/help` `/digest today|week` `/jobs` `/pause` `/resume` `/status` `/review` `/cards` `/drafts journal|readme` `/gaps` `/trust` `/prune`. Forward a message, send a link, attach a doc, or send a **voice note** to capture; other text queries the graph. Voice STT is opt-in ([ADR-08](docs/adr/008-voice-transcription.md)). New flashcards and journal/README drafts stay HITL until Approve; `/drafts` never writes git files unattended. `/prune confirm` queues archive of old unused captures; Approve in `/review` is required.
 
 ### Tests
 

@@ -89,6 +89,9 @@ class Settings(BaseSettings):
     # M5 Slack (PRD §6.3): opt-in URL/doc forward into inbox space — not a workspace bot.
     juno_slack_forward: bool = False
 
+    # M5 prune (ADR-12): unused captures older than this many days are HITL candidates.
+    juno_prune_min_age_days: int = 90
+
     def allowed_user_id_set(self) -> set[int]:
         if not self.allowed_telegram_user_ids.strip():
             return set()

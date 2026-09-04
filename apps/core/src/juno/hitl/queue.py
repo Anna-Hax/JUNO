@@ -21,6 +21,7 @@ KIND_MOBILE_BATCH = "mobile_batch"
 KIND_RESURFACE = "resurface"
 KIND_DRAFT = "draft"
 KIND_SKILL_GAP = "skill_gap"
+KIND_PRUNE = "prune"
 STATUS_PENDING = "pending"
 STATUS_SKIPPED = "skipped"
 STATUS_DECIDED = "decided"
@@ -114,6 +115,20 @@ class ReviewCard:
             lines.append(
                 "Approve if this is a real struggle; Reject to ignore (Juno will not nag)."
             )
+        elif self.kind == KIND_PRUNE:
+            ids = self.payload.get("capture_ids") or []
+            count = len(ids) if isinstance(ids, list) else 0
+            lines.append(f"Prune {count} capture(s) (archive, not wipe).")
+            titles = self.payload.get("titles") or []
+            if isinstance(titles, list):
+                lines.extend(str(t) for t in titles[:8])
+            reason = self.payload.get("reason")
+            if reason:
+                lines.append(str(reason))
+            exported = self.payload.get("exported_path")
+            if exported:
+                lines.append(f"Export saved: {exported}")
+            lines.append("Approve archives these rows and drops their vectors. Reject leaves them.")
         else:
             preview = str(self.payload)[:500]
             if preview:
@@ -132,8 +147,9 @@ class DecideResult:
 class ReviewQueue:
     """Persist HITL items and apply merge payloads only on approve."""
 
-    def __init__(self, db: Database) -> None:
+    def __init__(self, db: Database, vectors: Any | None = None) -> None:
         self.db = db
+        self.vectors = vectors
 
     async def enqueue(
         self,
@@ -394,6 +410,14 @@ class ReviewQueue:
             )
 
         result = await self.db.write(write)
+        chroma_ids = list((result.card.payload or {}).get("chroma_ids") or [])
+        if (
+            result.applied
+            and result.card.kind == KIND_PRUNE
+            and chroma_ids
+            and self.vectors is not None
+        ):
+            await self.vectors.delete_async(chroma_ids)
         if not result.already_decided and result.card.decision == "approve" and result.applied:
             from juno.hitl.trust import record_success
 
@@ -494,6 +518,16 @@ async def _apply(session: AsyncSession, row: ReviewItem) -> bool:
         row.payload = payload
         await _set_draft_artifact(session, payload, confirmed=True)
         return True
+    if row.kind == KIND_PRUNE:
+        from juno.graph.prune import apply_prune_captures
+
+        ids = [int(x) for x in (row.payload or {}).get("capture_ids") or []]
+        chroma_ids = await apply_prune_captures(session, ids)
+        payload = dict(row.payload or {})
+        payload["archived"] = True
+        payload["chroma_ids"] = chroma_ids
+        row.payload = payload
+        return True
     if row.kind != KIND_MERGE:
         return False
     edge_id = (row.payload or {}).get("edge_id")
@@ -519,6 +553,11 @@ async def _reject(session: AsyncSession, row: ReviewItem) -> None:
         payload["published"] = False
         row.payload = payload
         await _set_draft_artifact(session, payload, confirmed=False)
+        return
+    if row.kind == KIND_PRUNE:
+        payload = dict(row.payload or {})
+        payload["archived"] = False
+        row.payload = payload
         return
     if row.kind != KIND_MERGE:
         return

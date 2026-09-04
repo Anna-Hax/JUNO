@@ -26,6 +26,7 @@ from juno.bot.handlers import (
     help_cmd,
     jobs_cmd,
     pause_cmd,
+    prune_cmd,
     resume_cmd,
     start_cmd,
     status_cmd,
@@ -71,6 +72,7 @@ def build_telegram_application(settings: Settings) -> Application | None:
     app.add_handler(CommandHandler("drafts", drafts_cmd))
     app.add_handler(CommandHandler("gaps", gaps_cmd))
     app.add_handler(CommandHandler("trust", trust_cmd))
+    app.add_handler(CommandHandler("prune", prune_cmd))
     app.add_handler(CallbackQueryHandler(review_callback, pattern=r"^rev:"))
     app.add_handler(CallbackQueryHandler(cards_callback, pattern=r"^srs:"))
     app.add_handler(MessageHandler(filters.VOICE, voice_msg))
@@ -181,7 +183,7 @@ def attach_lifespan(fastapi_app: FastAPI) -> FastAPI:
         ptb: Application | None = app.state.ptb
         if ptb is not None:
             ptb.bot_data["settings"] = settings
-            ptb.bot_data["review"] = ReviewQueue(db)
+            ptb.bot_data["review"] = ReviewQueue(db, vectors=getattr(app.state, "vectors", None))
             ptb.bot_data[BOT_DATA_KEY] = BotServices(
                 settings=settings,
                 db=db,

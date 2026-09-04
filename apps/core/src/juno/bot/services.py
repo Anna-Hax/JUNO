@@ -347,6 +347,7 @@ async def recent_captures(db: Database, *, since: datetime, limit: int = 20) -> 
         result = await session.execute(
             select(Capture)
             .where(Capture.captured_at >= since)
+            .where(Capture.status != "archived")
             .order_by(Capture.captured_at.desc())
             .limit(limit)
         )

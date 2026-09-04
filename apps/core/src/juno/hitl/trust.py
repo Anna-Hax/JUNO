@@ -1,4 +1,4 @@
-"""Per-category trust dials (PRD §8 P2). Mobile and drafts stay gated."""
+"""Per-category trust dials (PRD §8 P2). Mobile, drafts, and prune stay gated."""
 
 from __future__ import annotations
 
@@ -9,8 +9,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from juno.graph.db import Database
 from juno.models import AppSetting
 
-CATEGORIES = ("merge", "browser", "ide_error", "mobile", "drafts")
-LOCKED = frozenset({"mobile", "drafts"})
+CATEGORIES = ("merge", "browser", "ide_error", "mobile", "drafts", "prune")
+LOCKED = frozenset({"mobile", "drafts", "prune"})
 DEFAULT_THRESHOLD = 5
 HIGH_CONFIDENCE = 0.8
 
@@ -110,7 +110,7 @@ def format_trust(dials: list[TrustDial]) -> str:
     lines = ["Trust dials (per category, not a global switch):"]
     lines.extend(f"• {d.summary()}" for d in dials)
     lines.append("Toggle: /trust merge|browser|ide_error on|off")
-    lines.append("mobile and drafts stay gated.")
+    lines.append("mobile, drafts, and prune stay gated.")
     return "\n".join(lines)
 
 

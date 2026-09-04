@@ -35,7 +35,7 @@ def review_queue_from_context(context: ContextTypes.DEFAULT_TYPE) -> ReviewQueue
         return queue
     svc = _services(context)
     if svc is not None and svc.db is not None:
-        queue = ReviewQueue(svc.db)
+        queue = ReviewQueue(svc.db, vectors=svc.vectors)
         context.application.bot_data["review"] = queue
         return queue
     return None
@@ -124,6 +124,11 @@ async def review_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             text += " Draft confirmed; it was not published."
         elif result.card.kind == "draft" and decision == "reject":
             text += " Draft discarded; it was not published."
+        elif result.card.kind == "prune" and decision == "approve":
+            n = len(result.card.payload.get("capture_ids") or [])
+            text += f" Archived {n} capture(s); this is not a wipe."
+        elif result.card.kind == "prune" and decision == "reject":
+            text += " Captures left in the graph."
         elif decision == "skip":
             text += " Left in the queue."
 
