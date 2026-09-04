@@ -197,13 +197,13 @@ Milestone: [M5: v2.0 Polish & Extensions](https://github.com/Anna-Hax/JUNO/miles
 | 3 | [#108](https://github.com/Anna-Hax/JUNO/issues/108) | Flashcards / spaced repetition from highlights — ✅ [session 51](sessions/51-session-flashcards.md) |
 | 4 | [#109](https://github.com/Anna-Hax/JUNO/issues/109) | Auto-drafted dev journal / README drafts — ✅ [session 52](sessions/52-session-journal-drafts.md) |
 | 5 | [#110](https://github.com/Anna-Hax/JUNO/issues/110) | Skill-gap tracking — ✅ [session 53](sessions/53-session-skill-gaps.md) |
-| 6 | [#111](https://github.com/Anna-Hax/JUNO/issues/111) | Trust dial — per-category auto-commit thresholds |
+| 6 | [#111](https://github.com/Anna-Hax/JUNO/issues/111) | Trust dial — per-category auto-commit thresholds — ✅ [session 54](sessions/54-session-trust-dial.md) |
 | 7 | [#112](https://github.com/Anna-Hax/JUNO/issues/112) | Optional Slack forward into upload space |
 | 8 | [#113](https://github.com/Anna-Hax/JUNO/issues/113) | Prune-with-confirm — retention / destructive graph cleanup |
 | 9 | [#114](https://github.com/Anna-Hax/JUNO/issues/114) | Module health — polish jobs freshness + respect /pause |
 | 10 | [#115](https://github.com/Anna-Hax/JUNO/issues/115) | M5 gate — polish tests, ADR, README, v2.0 release gate |
 
-**First coding task:** #106–#110 ✅. Next: trust dial ([#111](https://github.com/Anna-Hax/JUNO/issues/111)).
+**First coding task:** #106–#111 ✅. Next: optional Slack forward ([#112](https://github.com/Anna-Hax/JUNO/issues/112)).
 
 ### M5 design constraints (do not violate)
 

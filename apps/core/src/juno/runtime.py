@@ -30,6 +30,7 @@ from juno.bot.handlers import (
     start_cmd,
     status_cmd,
     text_msg,
+    trust_cmd,
     voice_msg,
 )
 from juno.bot.review import review_callback, review_cmd
@@ -69,6 +70,7 @@ def build_telegram_application(settings: Settings) -> Application | None:
     app.add_handler(CommandHandler("cards", cards_cmd))
     app.add_handler(CommandHandler("drafts", drafts_cmd))
     app.add_handler(CommandHandler("gaps", gaps_cmd))
+    app.add_handler(CommandHandler("trust", trust_cmd))
     app.add_handler(CallbackQueryHandler(review_callback, pattern=r"^rev:"))
     app.add_handler(CallbackQueryHandler(cards_callback, pattern=r"^srs:"))
     app.add_handler(MessageHandler(filters.VOICE, voice_msg))
