@@ -48,6 +48,7 @@ Living notes for what was implemented, how GitHub is set up, and what to do next
 | [40-session-jobs-scaffold.md](40-session-jobs-scaffold.md) | **#87** — Jobs scheduler scaffold + registry |
 | [41-session-jobs-digest.md](41-session-jobs-digest.md) | **#88** — Scheduled daily/weekly digest push |
 | [42-session-jobs-resurface.md](42-session-jobs-resurface.md) | **#89** — Contextual resurfacing |
+| [43-session-temporal.md](43-session-temporal.md) | **#90** — Temporal queries |
 | [v1.0-release-gate.md](../v1.0-release-gate.md) | M1 checklist (all P0 closed) |
 | [v1.1-release-gate.md](../v1.1-release-gate.md) | M2 checklist (browser capture) |
 | [v1.2-release-gate.md](../v1.2-release-gate.md) | M3 checklist (IDE capture) |

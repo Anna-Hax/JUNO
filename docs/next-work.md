@@ -145,14 +145,14 @@ Milestone: [M4: v1.3 Proactive & Mobile](https://github.com/Anna-Hax/JUNO/milest
 | 2 | [#87](https://github.com/Anna-Hax/JUNO/issues/87) | Scheduler scaffold — APScheduler in serve lifespan + job registry — ✅ [session 40](sessions/40-session-jobs-scaffold.md) |
 | 3 | [#88](https://github.com/Anna-Hax/JUNO/issues/88) | Scheduled push digests — morning daily + weekly — ✅ [session 41](sessions/41-session-jobs-digest.md) |
 | 4 | [#89](https://github.com/Anna-Hax/JUNO/issues/89) | Contextual resurfacing — push when something comes up again — ✅ [session 42](sessions/42-session-jobs-resurface.md) |
-| 5 | [#90](https://github.com/Anna-Hax/JUNO/issues/90) | Temporal queries — how has my understanding of X evolved |
+| 5 | [#90](https://github.com/Anna-Hax/JUNO/issues/90) | Temporal queries — how has my understanding of X evolved — ✅ [session 43](sessions/43-session-temporal.md) |
 | 6 | [#91](https://github.com/Anna-Hax/JUNO/issues/91) | Voice memos — Telegram voice → transcription → ingest |
 | 7 | [#92](https://github.com/Anna-Hax/JUNO/issues/92) | Mobile depth — phone captures via Telegram + sensitive HITL |
 | 8 | [#93](https://github.com/Anna-Hax/JUNO/issues/93) | PC-off / serve-down status for operators |
 | 9 | [#94](https://github.com/Anna-Hax/JUNO/issues/94) | Module health — jobs scheduler freshness + respect /pause |
 | 10 | [#95](https://github.com/Anna-Hax/JUNO/issues/95) | M4 gate — jobs tests, ADR, README, v1.3 release gate |
 
-**First coding task:** #86–#89 ✅. Next: temporal queries ([#90](https://github.com/Anna-Hax/JUNO/issues/90)).
+**First coding task:** #86–#90 ✅. Next: voice memos ([#91](https://github.com/Anna-Hax/JUNO/issues/91)).
 
 ### M4 design constraints (do not violate)
 
