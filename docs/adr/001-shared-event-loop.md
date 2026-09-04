@@ -7,7 +7,7 @@ Accepted (v1)
 ## Date
 
 2026-08-20 (M0 scaffold)  
-**Last reviewed:** 2026-09-05 (M5 Spike S5 / ADR-09)
+**Last reviewed:** 2026-09-05 (M5 gate / v2.0)
 
 ## Context
 
@@ -94,6 +94,6 @@ Operator may still tap `/start`, a short query, and `/status` in Telegram for fu
 
 ### Follow-ups (not M1)
 
-- **APScheduler** on this loop landed in M4 ([ADR-07](007-proactive-jobs-shared-loop.md); [#86](https://github.com/Anna-Hax/JUNO/issues/86)–[#89](https://github.com/Anna-Hax/JUNO/issues/89), [#94](https://github.com/Anna-Hax/JUNO/issues/94)).
+- **APScheduler** on this loop landed in M4 ([ADR-07](007-proactive-jobs-shared-loop.md); [#86](https://github.com/Anna-Hax/JUNO/issues/86)–[#89](https://github.com/Anna-Hax/JUNO/issues/89), [#94](https://github.com/Anna-Hax/JUNO/issues/94)). M5 polish ticks use the same scheduler ([#114](https://github.com/Anna-Hax/JUNO/issues/114)).
 - Keep documenting “no `run_polling()`” next to any new entrypoint so this ADR is not rediscovered the hard way.
 - IDE / Cursor capture is a **loopback HTTP client** ([ADR-06](006-ide-adapter-client.md)), not a second process or event loop.

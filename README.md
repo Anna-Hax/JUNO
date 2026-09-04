@@ -2,7 +2,7 @@
 
 Personal knowledge-graph agent: passively (and manually) capture what you read, code, and discuss — query it from **Telegram**. Local-first on your PC.
 
-**Status:** **v1.3 Proactive & mobile** (M4 complete) — scheduled Telegram digests and resurfacing on the shared asyncio loop, temporal queries, voice memos, and mobile HITL. Polish (M5) is next.
+**Status:** **v2.0 Polish** (M5 complete) — HITL drafts and flashcards, trust dials, opt-in Slack link forward, prune-with-confirm, polish jobs on the shared loop.
 
 ## Architecture (v1)
 
