@@ -168,8 +168,12 @@ class ReviewQueue:
     ) -> ReviewCard:
         """Create nodes (if needed) plus a *pending* edge and a review item.
 
-        The edge is not committed here — that requires ``decide(..., "approve")``.
+        The edge is not committed here — that requires ``decide(..., "approve")``,
+        unless the merge trust dial is on and confidence is high.
         """
+        from juno.hitl.trust import should_auto_commit
+
+        auto = await should_auto_commit(self.db, "merge", confidence)
 
         async def write(session: AsyncSession) -> ReviewCard:
             src = await _get_or_create_node(session, from_name.strip(), from_kind)
@@ -192,11 +196,16 @@ class ReviewQueue:
                     "edge_id": edge.id,
                     "relation": relation,
                     "reason": reason,
+                    "auto_committed": auto,
                 },
-                status=STATUS_PENDING,
+                status=STATUS_DECIDED if auto else STATUS_PENDING,
+                decision="approve" if auto else None,
+                decided_at=datetime.now(UTC) if auto else None,
             )
             session.add(item)
             await session.flush()
+            if auto:
+                edge.status = EDGE_COMMITTED
             return _card(item)
 
         return await self.db.write(write)
@@ -384,7 +393,17 @@ class ReviewQueue:
                 next_card=next_card,
             )
 
-        return await self.db.write(write)
+        result = await self.db.write(write)
+        if not result.already_decided and result.card.decision == "approve" and result.applied:
+            from juno.hitl.trust import record_success
+
+            category = {
+                KIND_MERGE: "merge",
+                KIND_ERROR_MATCH: "ide_error",
+            }.get(result.card.kind)
+            if category:
+                await record_success(self.db, category)
+        return result
 
 
 def _card(row: ReviewItem) -> ReviewCard:

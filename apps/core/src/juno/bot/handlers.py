@@ -41,6 +41,7 @@ HELP_TEXT = (
     "/cards — flashcards due (Again/Good); new cards stay drafts until /review\n"
     "/drafts journal|readme — queue an IDE journal or README draft (never writes files)\n"
     "/gaps — repeat IDE errors / unfinished reads (low-confidence stays in /review)\n"
+    "/trust — per-category auto-commit dials (mobile/drafts stay gated)\n"
     "Ask a question to search the graph.\n"
     "Forward a message, send a link, attach a doc, or send a voice note to capture."
 )
@@ -168,6 +169,33 @@ async def gaps_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(format_gaps(list(result.fresh)) + extra)
 
 
+async def trust_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not update.message or not _authorized(update, context):
+        return
+    svc = _services(context)
+    if svc is None or svc.db is None:
+        await update.message.reply_text("Trust dials unavailable (database not attached).")
+        return
+    from juno.hitl.trust import CATEGORIES, format_trust, list_dials, set_auto
+
+    args = [a.lower() for a in (context.args or [])]
+    if not args:
+        dials = await list_dials(svc.db)
+        await update.message.reply_text(format_trust(dials))
+        return
+    if len(args) != 2 or args[0] not in CATEGORIES or args[1] not in {"on", "off"}:
+        await update.message.reply_text(
+            "Usage: /trust   or   /trust merge|browser|ide_error on|off"
+        )
+        return
+    try:
+        dial = await set_auto(svc.db, args[0], enabled=args[1] == "on")
+    except ValueError as exc:
+        await update.message.reply_text(str(exc))
+        return
+    await update.message.reply_text(dial.summary())
+
+
 async def pause_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not update.message or not _authorized(update, context):
         return
@@ -218,21 +246,25 @@ async def status_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     health: list = []
     if svc.db is not None:
         health = await all_module_health(svc.db)
-    await update.message.reply_text(
-        format_status(
-            paused=svc.is_paused(),
-            llm_healthy=llm_healthy,
-            llm_provider=getattr(chat, "name", None) or settings.llm_provider,
-            llm_model=getattr(chat, "model", None) or settings.llm_model,
-            embedding_model=getattr(embedder, "model_id", settings.embedding_model),
-            embedding_backend=getattr(embedder, "backend", settings.embedding_backend),
-            chroma_collection=chroma_collection,
-            chroma_count=chroma_count,
-            health=health,
-            api_host=settings.juno_api_host,
-            api_port=settings.juno_api_port,
-        )
+    body = format_status(
+        paused=svc.is_paused(),
+        llm_healthy=llm_healthy,
+        llm_provider=getattr(chat, "name", None) or settings.llm_provider,
+        llm_model=getattr(chat, "model", None) or settings.llm_model,
+        embedding_model=getattr(embedder, "model_id", settings.embedding_model),
+        embedding_backend=getattr(embedder, "backend", settings.embedding_backend),
+        chroma_collection=chroma_collection,
+        chroma_count=chroma_count,
+        health=health,
+        api_host=settings.juno_api_host,
+        api_port=settings.juno_api_port,
     )
+    if svc.db is not None:
+        from juno.hitl.trust import list_dials
+
+        dials = await list_dials(svc.db)
+        body = body + "\nTrust: " + "; ".join(d.summary() for d in dials)
+    await update.message.reply_text(body)
 
 
 async def text_msg(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

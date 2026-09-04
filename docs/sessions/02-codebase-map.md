@@ -42,7 +42,7 @@ JUNO/
 | LLM | `llm/embedder.py`, `llm/chat.py`, `llm/transcribe.py` | MiniLM (optional extra) + stub embedder; Ollama / OpenAI-compat / offline chat; opt-in voice STT (ADR-08) |
 | Ingest | `ingest/extractors.py`, `chunking.py`, `pipeline.py`, `watcher.py` | File/URL extract, chunk, persist, inbox watch ([#16](https://github.com/Anna-Hax/JUNO/issues/16)) |
 | RAG | `rag/engine.py`, `rag/gaps.py` | Vector retrieve, sourced answers ([#17](https://github.com/Anna-Hax/JUNO/issues/17)); skill-gap flags ([#110](https://github.com/Anna-Hax/JUNO/issues/110)) |
-| HITL | `hitl/queue.py` | Review queue; merges stay pending until Approve ([#20](https://github.com/Anna-Hax/JUNO/issues/20)); drafts never auto-publish ([#106](https://github.com/Anna-Hax/JUNO/issues/106)) |
+| HITL | `hitl/queue.py`, `hitl/trust.py` | Review queue; per-category trust dials (ADR-10) |
 
 ### Entry points
 

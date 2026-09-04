@@ -258,6 +258,7 @@ def test_build_telegram_application_registers_commands(allowed_settings):
         "cards",
         "drafts",
         "gaps",
+        "trust",
     }
 
 
@@ -294,6 +295,7 @@ async def test_start_and_help_reply_for_allowlisted_user(allowed_settings):
     assert "/cards" in body
     assert "/drafts" in body
     assert "/gaps" in body
+    assert "/trust" in body
     assert "Approve" in body
 
 
