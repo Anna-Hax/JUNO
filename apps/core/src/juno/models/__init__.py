@@ -111,6 +111,28 @@ class DraftArtifact(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
+class Flashcard(Base):
+    """SRS card created only after a flashcard draft is approved (ADR-09)."""
+
+    __tablename__ = "flashcards"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    artifact_id: Mapped[int] = mapped_column(
+        ForeignKey("draft_artifacts.id"), unique=True, index=True
+    )
+    front: Mapped[str] = mapped_column(Text)
+    back: Mapped[str] = mapped_column(Text)
+    fingerprint: Mapped[str] = mapped_column(String(128), unique=True, index=True)
+    capture_id: Mapped[int | None] = mapped_column(
+        ForeignKey("captures.id"), nullable=True, index=True
+    )
+    due_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    ease: Mapped[float] = mapped_column(Float, default=2.5)
+    interval_days: Mapped[int] = mapped_column(Integer, default=0)
+    reps: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 class ModuleHealth(Base):
     __tablename__ = "module_health"
 

@@ -17,6 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler, MessageHandler, filters
 
 from juno.api import create_app
+from juno.bot.cards import cards_callback, cards_cmd
 from juno.bot.handlers import (
     digest_cmd,
     document_msg,
@@ -63,7 +64,9 @@ def build_telegram_application(settings: Settings) -> Application | None:
     app.add_handler(CommandHandler("resume", resume_cmd))
     app.add_handler(CommandHandler("status", status_cmd))
     app.add_handler(CommandHandler("review", review_cmd))
+    app.add_handler(CommandHandler("cards", cards_cmd))
     app.add_handler(CallbackQueryHandler(review_callback, pattern=r"^rev:"))
+    app.add_handler(CallbackQueryHandler(cards_callback, pattern=r"^srs:"))
     app.add_handler(MessageHandler(filters.VOICE, voice_msg))
     app.add_handler(MessageHandler(filters.Document.ALL, document_msg))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_msg))

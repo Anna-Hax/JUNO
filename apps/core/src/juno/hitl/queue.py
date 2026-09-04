@@ -509,3 +509,7 @@ async def _set_draft_artifact(
         return
     artifact.status = STATUS_CONFIRMED if confirmed else STATUS_DISCARDED
     artifact.published = PUBLISHED_NO
+    if confirmed:
+        from juno.drafts.flashcards import activate_approved_flashcard
+
+        await activate_approved_flashcard(session, artifact)
