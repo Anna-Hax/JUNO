@@ -142,7 +142,7 @@ Milestone: [M4: v1.3 Proactive & Mobile](https://github.com/Anna-Hax/JUNO/milest
 | Order | Issue | Title |
 | ----- | ----- | ----- |
 | 1 | [#86](https://github.com/Anna-Hax/JUNO/issues/86) | Spike S4 — APScheduler on shared loop + one Telegram push smoke — ✅ [session 39](sessions/39-session-spike-s4.md) |
-| 2 | [#87](https://github.com/Anna-Hax/JUNO/issues/87) | Scheduler scaffold — APScheduler in serve lifespan + job registry |
+| 2 | [#87](https://github.com/Anna-Hax/JUNO/issues/87) | Scheduler scaffold — APScheduler in serve lifespan + job registry — ✅ [session 40](sessions/40-session-jobs-scaffold.md) |
 | 3 | [#88](https://github.com/Anna-Hax/JUNO/issues/88) | Scheduled push digests — morning daily + weekly |
 | 4 | [#89](https://github.com/Anna-Hax/JUNO/issues/89) | Contextual resurfacing — push when something comes up again |
 | 5 | [#90](https://github.com/Anna-Hax/JUNO/issues/90) | Temporal queries — how has my understanding of X evolved |
@@ -152,7 +152,7 @@ Milestone: [M4: v1.3 Proactive & Mobile](https://github.com/Anna-Hax/JUNO/milest
 | 9 | [#94](https://github.com/Anna-Hax/JUNO/issues/94) | Module health — jobs scheduler freshness + respect /pause |
 | 10 | [#95](https://github.com/Anna-Hax/JUNO/issues/95) | M4 gate — jobs tests, ADR, README, v1.3 release gate |
 
-**First coding task:** #86 ✅. Next: scheduler scaffold ([#87](https://github.com/Anna-Hax/JUNO/issues/87)).
+**First coding task:** #86–#87 ✅. Next: scheduled push digests ([#88](https://github.com/Anna-Hax/JUNO/issues/88)).
 
 ### M4 design constraints (do not violate)
 

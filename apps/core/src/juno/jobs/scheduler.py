@@ -11,11 +11,25 @@ from zoneinfo import ZoneInfo
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from juno.config import Settings
+from juno.jobs.handlers import digest_daily, digest_weekly, resurfacing
+from juno.jobs.registry import (
+    DIGEST_DAILY_JOB_ID,
+    DIGEST_WEEKLY_JOB_ID,
+    RESURFACING_JOB_ID,
+    JobSpec,
+    builtin_job_specs,
+)
 
 logger = logging.getLogger("juno.jobs")
 
 SMOKE_JOB_ID = "spike_s4_smoke"
 SMOKE_TEXT = "Juno jobs smoke: AsyncIOScheduler fired on the shared serve loop."
+
+_HANDLER_BY_ID = {
+    DIGEST_DAILY_JOB_ID: digest_daily,
+    DIGEST_WEEKLY_JOB_ID: digest_weekly,
+    RESURFACING_JOB_ID: resurfacing,
+}
 
 
 def create_scheduler(timezone: str = "UTC") -> AsyncIOScheduler:
@@ -54,6 +68,39 @@ async def send_allowlisted_push(
     return sent
 
 
+def register_job_specs(
+    scheduler: AsyncIOScheduler,
+    specs: tuple[JobSpec, ...] | list[JobSpec],
+    *,
+    app: Any | None = None,
+) -> list[str]:
+    """Add enabled cron jobs. Safe without a live Telegram bot (handlers are ticks until #88)."""
+    added: list[str] = []
+    for spec in specs:
+        if not spec.enabled:
+            logger.info("job %s disabled", spec.id)
+            continue
+        handler = _HANDLER_BY_ID.get(spec.id)
+        if handler is None:
+            logger.warning("job %s has no handler — skipped", spec.id)
+            continue
+        trigger = spec.trigger()
+
+        async def run(*, fn=handler) -> None:
+            await fn(app)
+
+        scheduler.add_job(
+            run,
+            trigger=trigger,
+            id=spec.id,
+            replace_existing=True,
+            misfire_grace_time=spec.misfire_grace_time,
+        )
+        added.append(spec.id)
+        logger.info("job %s registered cron=%s tz=%s", spec.id, spec.crontab, spec.timezone)
+    return added
+
+
 def register_smoke_job(
     scheduler: AsyncIOScheduler,
     *,
@@ -73,14 +120,18 @@ def register_smoke_job(
 
 
 def start_jobs(app: Any) -> AsyncIOScheduler | None:
-    """Start AsyncIOScheduler on the serve loop. Optional one-shot Telegram smoke push."""
+    """Start AsyncIOScheduler on the serve loop and register builtin cron jobs."""
     settings: Settings = app.state.settings
     if not settings.juno_jobs_enabled:
         logger.info("jobs scheduler disabled (JUNO_JOBS_ENABLED=false)")
         app.state.scheduler = None
+        app.state.job_specs = ()
         return None
 
     scheduler = create_scheduler(settings.juno_jobs_timezone)
+    specs = builtin_job_specs(settings)
+    app.state.job_specs = specs
+    register_job_specs(scheduler, specs, app=app)
     scheduler.start()
     app.state.scheduler = scheduler
     logger.info(
