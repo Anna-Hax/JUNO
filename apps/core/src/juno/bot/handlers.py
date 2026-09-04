@@ -39,7 +39,7 @@ HELP_TEXT = (
     "/status — capture + module health\n"
     "/review — HITL Approve/Reject/Skip (merges, IDE, chat batches, resurfacing)\n"
     "Ask a question to search the graph.\n"
-    "Forward a message, send a link, or attach a doc to capture."
+    "Forward a message, send a link, attach a doc, or send a voice note to capture."
 )
 
 
@@ -215,6 +215,40 @@ async def document_msg(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         return
     finally:
         dest.unlink(missing_ok=True)
+    await update.message.reply_text(format_capture_ack(result))
+
+
+async def voice_msg(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not update.message or not _authorized(update, context):
+        return
+    svc = _services(context)
+    if svc is None or svc.pipeline is None:
+        await update.message.reply_text("Capture unavailable (ingest pipeline not attached).")
+        return
+    if svc.is_paused():
+        await update.message.reply_text("Capture is paused. /resume to ingest again.")
+        return
+    voice = update.message.voice
+    if voice is None:
+        return
+    transcriber = getattr(svc.app.state, "transcriber", None) if svc.app is not None else None
+    if transcriber is None:
+        await update.message.reply_text("Voice capture unavailable (transcriber not attached).")
+        return
+    try:
+        file = await voice.get_file()
+        blob = await file.download_as_bytearray()
+        text = await transcriber.transcribe(bytes(blob), filename="voice.ogg")
+        result = await svc.pipeline.ingest_text(
+            text,
+            source_type="telegram",
+            title="Voice memo",
+            raw={"kind": "voice", "duration": getattr(voice, "duration", None)},
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("telegram voice ingest failed")
+        await update.message.reply_text(clip(f"Voice capture failed: {exc}"))
+        return
     await update.message.reply_text(format_capture_ack(result))
 
 
