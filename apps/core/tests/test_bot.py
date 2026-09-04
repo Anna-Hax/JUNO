@@ -12,6 +12,7 @@ from juno.bot.handlers import (
     digest_cmd,
     document_msg,
     help_cmd,
+    jobs_cmd,
     pause_cmd,
     resume_cmd,
     start_cmd,
@@ -276,6 +277,7 @@ async def test_start_and_help_reply_for_allowlisted_user(allowed_settings):
     body = help_update.message.reply_text.await_args.args[0]
     assert "/pause" in body
     assert "/digest" in body
+    assert "/jobs" in body
     assert "/review" in body
     assert "Approve" in body
 
@@ -375,6 +377,27 @@ async def test_digest_lists_recent_captures(allowed_settings, db):
     body = update.message.reply_text.await_args.args[0]
     assert "Digest today" in body
     assert "rust" in body
+
+
+@pytest.mark.asyncio
+async def test_jobs_cmd_lists_and_toggles_daily(allowed_settings, db):
+    from juno.jobs import DIGEST_DAILY_JOB_ID, load_job_enabled_overrides, start_jobs, stop_jobs
+
+    app = create_app(allowed_settings, db=db)
+    start_jobs(app)
+    svc = _svc(allowed_settings, db=db, app=app)
+    try:
+        listing = _update(ALLOWED_ID, "/jobs")
+        await jobs_cmd(listing, _context(svc))
+        body = listing.message.reply_text.await_args.args[0]
+        assert "digest_daily" in body
+        off = _update(ALLOWED_ID, "/jobs")
+        await jobs_cmd(off, _context(svc, args=["daily", "off"]))
+        assert "off" in off.message.reply_text.await_args.args[0]
+        stored = await load_job_enabled_overrides(db)
+        assert stored[DIGEST_DAILY_JOB_ID] is False
+    finally:
+        stop_jobs(app)
 
 
 @pytest.mark.asyncio

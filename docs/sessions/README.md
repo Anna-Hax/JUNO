@@ -46,6 +46,7 @@ Living notes for what was implemented, how GitHub is set up, and what to do next
 | [38-session-m3-gate.md](38-session-m3-gate.md) | **#73** — M3 gate + v1.2 |
 | [39-session-spike-s4.md](39-session-spike-s4.md) | **#86** — Spike S4 APScheduler shared-loop smoke |
 | [40-session-jobs-scaffold.md](40-session-jobs-scaffold.md) | **#87** — Jobs scheduler scaffold + registry |
+| [41-session-jobs-digest.md](41-session-jobs-digest.md) | **#88** — Scheduled daily/weekly digest push |
 | [v1.0-release-gate.md](../v1.0-release-gate.md) | M1 checklist (all P0 closed) |
 | [v1.1-release-gate.md](../v1.1-release-gate.md) | M2 checklist (browser capture) |
 | [v1.2-release-gate.md](../v1.2-release-gate.md) | M3 checklist (IDE capture) |

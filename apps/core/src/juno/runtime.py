@@ -21,6 +21,7 @@ from juno.bot.handlers import (
     digest_cmd,
     document_msg,
     help_cmd,
+    jobs_cmd,
     pause_cmd,
     resume_cmd,
     start_cmd,
@@ -35,7 +36,7 @@ from juno.graph.vectors import VectorStore
 from juno.hitl.queue import ReviewQueue
 from juno.ingest.pipeline import IngestPipeline
 from juno.ingest.watcher import InboxWatcher
-from juno.jobs import start_jobs, stop_jobs
+from juno.jobs import load_job_enabled_overrides, start_jobs, stop_jobs
 from juno.llm.chat import ChatProvider, create_chat_provider
 from juno.llm.embedder import Embedder, create_embedder
 from juno.models import AppSetting, ModuleHealth
@@ -53,6 +54,7 @@ def build_telegram_application(settings: Settings) -> Application | None:
     app.add_handler(CommandHandler("start", start_cmd))
     app.add_handler(CommandHandler("help", help_cmd))
     app.add_handler(CommandHandler("digest", digest_cmd))
+    app.add_handler(CommandHandler("jobs", jobs_cmd))
     app.add_handler(CommandHandler("pause", pause_cmd))
     app.add_handler(CommandHandler("resume", resume_cmd))
     app.add_handler(CommandHandler("status", status_cmd))
@@ -161,6 +163,7 @@ def attach_lifespan(fastapi_app: FastAPI) -> FastAPI:
                 await ptb.updater.start_polling(drop_pending_updates=False)
             logger.info("Telegram bot polling started")
 
+        app.state.job_enabled_overrides = await load_job_enabled_overrides(db)
         start_jobs(app)
 
         yield

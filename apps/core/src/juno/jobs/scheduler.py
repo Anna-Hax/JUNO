@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Awaitable, Callable
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -17,6 +18,7 @@ from juno.jobs.registry import (
     DIGEST_WEEKLY_JOB_ID,
     RESURFACING_JOB_ID,
     JobSpec,
+    apply_enabled_overrides,
     builtin_job_specs,
 )
 
@@ -74,7 +76,7 @@ def register_job_specs(
     *,
     app: Any | None = None,
 ) -> list[str]:
-    """Add enabled cron jobs. Safe without a live Telegram bot (handlers are ticks until #88)."""
+    """Add enabled cron jobs. Handlers may send Telegram; tests pass a mock bot."""
     added: list[str] = []
     for spec in specs:
         if not spec.enabled:
@@ -129,7 +131,10 @@ def start_jobs(app: Any) -> AsyncIOScheduler | None:
         return None
 
     scheduler = create_scheduler(settings.juno_jobs_timezone)
-    specs = builtin_job_specs(settings)
+    specs = apply_enabled_overrides(
+        builtin_job_specs(settings),
+        dict(getattr(app.state, "job_enabled_overrides", None) or {}),
+    )
     app.state.job_specs = specs
     register_job_specs(scheduler, specs, app=app)
     scheduler.start()
@@ -165,3 +170,53 @@ def stop_jobs(app: Any) -> None:
         scheduler.shutdown(wait=False)
     app.state.scheduler = None
     logger.info("jobs scheduler stopped")
+
+
+async def set_cron_job_enabled(app: Any, job_id: str, enabled: bool) -> str:
+    """Persist enable flag and pause/resume (or register) the live job."""
+    db = getattr(app.state, "db", None)
+    if db is not None:
+        from juno.jobs.registry import persist_job_enabled
+
+        await persist_job_enabled(db, job_id, enabled)
+    overrides = dict(getattr(app.state, "job_enabled_overrides", None) or {})
+    overrides[job_id] = enabled
+    app.state.job_enabled_overrides = overrides
+    specs = tuple(getattr(app.state, "job_specs", None) or ())
+    if specs:
+        app.state.job_specs = apply_enabled_overrides(specs, {job_id: enabled})
+    scheduler = getattr(app.state, "scheduler", None)
+    if scheduler is None:
+        return "Jobs scheduler is off."
+    job = scheduler.get_job(job_id)
+    if enabled:
+        if job is not None:
+            scheduler.resume_job(job_id)
+        else:
+            spec = next((s for s in (app.state.job_specs or ()) if s.id == job_id), None)
+            if spec is None:
+                return f"Unknown job {job_id}."
+            register_job_specs(scheduler, (replace(spec, enabled=True),), app=app)
+        return f"{job_id} is on."
+    if job is not None:
+        scheduler.pause_job(job_id)
+    return f"{job_id} is off."
+
+
+def format_jobs_status(app: Any) -> str:
+    settings: Settings = app.state.settings
+    scheduler = getattr(app.state, "scheduler", None)
+    if not settings.juno_jobs_enabled or scheduler is None:
+        return "Jobs scheduler is off (JUNO_JOBS_ENABLED=false)."
+    specs = tuple(getattr(app.state, "job_specs", None) or ())
+    lines = [f"Jobs timezone {settings.juno_jobs_timezone}:"]
+    for spec in specs:
+        job = scheduler.get_job(spec.id)
+        if job is None or not spec.enabled:
+            lines.append(f"• {spec.id}: off  ({spec.crontab})")
+            continue
+        nxt = job.next_run_time
+        when = nxt.strftime("%Y-%m-%d %H:%M %Z") if nxt is not None else "paused"
+        lines.append(f"• {spec.id}: on → {when}  ({spec.crontab})")
+    lines.append("Toggle: /jobs daily on|off  /jobs weekly on|off")
+    return "\n".join(lines)

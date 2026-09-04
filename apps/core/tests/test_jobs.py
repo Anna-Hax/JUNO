@@ -164,3 +164,45 @@ async def test_start_jobs_registers_enabled_cron_jobs(settings: Settings):
         assert scheduler.get_job(RESURFACING_JOB_ID) is None
     finally:
         stop_jobs(app)
+
+
+@pytest.mark.asyncio
+async def test_push_scheduled_digest_sends_grouped_text(settings: Settings):
+    from juno.graph.db import Database
+    from juno.ingest.pipeline import IngestPipeline
+    from juno.jobs.handlers import push_scheduled_digest
+
+    settings.allowed_telegram_user_ids = "42"
+    db = Database(settings)
+    await db.migrate()
+    bot = AsyncMock()
+    app = SimpleNamespace(
+        state=SimpleNamespace(
+            settings=settings,
+            db=db,
+            ptb=SimpleNamespace(bot=bot),
+            capture_paused=False,
+        )
+    )
+    try:
+        await IngestPipeline(db).ingest_text("Ownership notes", source_type="upload", title="rust")
+        sent = await push_scheduled_digest(app, "today")
+        assert sent == 1
+        text = bot.send_message.await_args.kwargs["text"]
+        assert "Morning digest" in text
+        assert "rust" in text
+        bot.send_message.reset_mock()
+        app.state.capture_paused = True
+        skipped = await push_scheduled_digest(app, "today")
+        assert skipped == 0
+        bot.send_message.assert_not_awaited()
+    finally:
+        await db.dispose()
+
+
+def test_apply_enabled_overrides(settings: Settings):
+    from juno.jobs import apply_enabled_overrides
+
+    specs = builtin_job_specs(settings)
+    patched = apply_enabled_overrides(specs, {DIGEST_DAILY_JOB_ID: False})
+    assert enabled_job_ids(patched) == [DIGEST_WEEKLY_JOB_ID]

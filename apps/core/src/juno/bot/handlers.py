@@ -33,6 +33,7 @@ HELP_TEXT = (
     "/start — hello\n"
     "/help — this message\n"
     "/digest today|week — recent captures\n"
+    "/jobs — scheduled digest on/off (daily|weekly)\n"
     "/pause — stop all ingest\n"
     "/resume — resume ingest (processes inbox backlog)\n"
     "/status — capture + module health\n"
@@ -89,6 +90,28 @@ async def digest_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     await update.message.reply_text(format_digest(rows, window))
 
 
+async def jobs_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not update.message or not _authorized(update, context):
+        return
+    svc = _services(context)
+    if svc is None or svc.app is None:
+        await update.message.reply_text("Jobs unavailable (runtime not attached).")
+        return
+    from juno.jobs.registry import TOGGLEABLE_JOBS
+    from juno.jobs.scheduler import format_jobs_status, set_cron_job_enabled
+
+    args = [a.lower() for a in (context.args or [])]
+    if not args:
+        await update.message.reply_text(format_jobs_status(svc.app))
+        return
+    if len(args) != 2 or args[0] not in TOGGLEABLE_JOBS or args[1] not in {"on", "off"}:
+        await update.message.reply_text("Usage: /jobs   or   /jobs daily|weekly on|off")
+        return
+    job_id = TOGGLEABLE_JOBS[args[0]]
+    msg = await set_cron_job_enabled(svc.app, job_id, enabled=args[1] == "on")
+    await update.message.reply_text(msg)
+
+
 async def pause_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not update.message or not _authorized(update, context):
         return
@@ -98,7 +121,8 @@ async def pause_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         return
     await svc.set_paused(True)
     await update.message.reply_text(
-        "Capture paused. Inbox, API /ingest, and Telegram capture are stopped."
+        "Capture paused. Inbox, API /ingest, Telegram capture, "
+        "and scheduled digest pushes are stopped."
     )
 
 
