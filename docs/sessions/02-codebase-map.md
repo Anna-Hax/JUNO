@@ -32,7 +32,7 @@ JUNO/
 | CLI | `cli.py` | `juno serve` / `db-init` / `export` / `wipe` / `version` |
 | Runtime | `runtime.py` | Shared asyncio: uvicorn + PTB + inbox watcher + jobs scheduler lifespan |
 | Jobs | `jobs/scheduler.py`, `jobs/registry.py`, `jobs/handlers.py`, `jobs/health.py`, `jobs/resurface.py` | AsyncIOScheduler + named cron registry (ADR-07) |
-| Drafts | `drafts/generate.py`, `drafts/kinds.py`, `drafts/flashcards.py` | Template journal/flashcard/doc HITL drafts; SRS after flashcard approve (ADR-09) |
+| Drafts | `drafts/generate.py`, `drafts/kinds.py`, `drafts/flashcards.py`, `drafts/journal.py` | HITL journal/flashcard/doc; SRS after flashcard approve; IDE journal/README via `/drafts` (ADR-09) |
 | API | `api/__init__.py` | FastAPI routes + token + loopback middleware |
 | Bot | `bot/handlers.py`, `bot/services.py`, `bot/review.py` | Telegram allowlist, query, capture, pause/digest/status ([#18](https://github.com/Anna-Hax/JUNO/issues/18) / [#19](https://github.com/Anna-Hax/JUNO/issues/19)); HITL `/review` ([#20](https://github.com/Anna-Hax/JUNO/issues/20)) |
 | Graph DB | `graph/db.py`, `graph/migrations.py`, `graph/ownership.py` | Engine, WAL, write queue, Alembic upgrade/stamp; export/wipe ([#23](https://github.com/Anna-Hax/JUNO/issues/23)) |
@@ -48,7 +48,7 @@ JUNO/
 
 - `uv run juno serve` → `runtime.main_sync()`
 - `uv run juno db-init` → `Database.migrate()` (Alembic `upgrade head`, or stamp legacy `create_all` DBs)
-- Tests: `test_foundation.py`, `test_migrations.py`, `test_ingest.py`, `test_vectors.py`, `test_embedder.py`, `test_chat.py`, `test_rag.py`, `test_bot.py`, `test_review.py`, `test_bot_review.py`, `test_api.py`, `test_write_queue.py`, `test_integration.py`, `test_export.py`, `test_jobs.py`, `test_transcribe.py`, `test_drafts.py`, `test_flashcards.py`
+- Tests: `test_foundation.py`, `test_migrations.py`, `test_ingest.py`, `test_vectors.py`, `test_embedder.py`, `test_chat.py`, `test_rag.py`, `test_bot.py`, `test_review.py`, `test_bot_review.py`, `test_api.py`, `test_write_queue.py`, `test_integration.py`, `test_export.py`, `test_jobs.py`, `test_transcribe.py`, `test_drafts.py`, `test_flashcards.py`, `test_journal.py`
 
 ### Dependencies
 

@@ -247,7 +247,17 @@ def test_build_telegram_application_registers_commands(allowed_settings):
     for group in app.handlers.values():
         for handler in group:
             commands.update(getattr(handler, "commands", set()))
-    assert commands >= {"start", "help", "digest", "pause", "resume", "status", "review", "cards"}
+    assert commands >= {
+        "start",
+        "help",
+        "digest",
+        "pause",
+        "resume",
+        "status",
+        "review",
+        "cards",
+        "drafts",
+    }
 
 
 @pytest.mark.asyncio
@@ -281,6 +291,7 @@ async def test_start_and_help_reply_for_allowlisted_user(allowed_settings):
     assert "/jobs" in body
     assert "/review" in body
     assert "/cards" in body
+    assert "/drafts" in body
     assert "Approve" in body
 
 

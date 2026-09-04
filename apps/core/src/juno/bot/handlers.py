@@ -39,6 +39,7 @@ HELP_TEXT = (
     "/status — capture + module health\n"
     "/review — HITL Approve/Reject/Skip (merges, IDE, mobile, resurfacing, drafts)\n"
     "/cards — flashcards due (Again/Good); new cards stay drafts until /review\n"
+    "/drafts journal|readme — queue an IDE journal or README draft (never writes files)\n"
     "Ask a question to search the graph.\n"
     "Forward a message, send a link, attach a doc, or send a voice note to capture."
 )
@@ -111,6 +112,36 @@ async def jobs_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     job_id = TOGGLEABLE_JOBS[args[0]]
     msg = await set_cron_job_enabled(svc.app, job_id, enabled=args[1] == "on")
     await update.message.reply_text(msg)
+
+
+async def drafts_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not update.message or not _authorized(update, context):
+        return
+    args = [a.lower() for a in (context.args or [])]
+    kind = args[0] if args else "journal"
+    if kind not in {"journal", "readme", "doc"}:
+        await update.message.reply_text("Usage: /drafts journal|readme")
+        return
+    svc = _services(context)
+    if svc is None or svc.db is None:
+        await update.message.reply_text("Drafts unavailable (database not attached).")
+        return
+    from juno.drafts.journal import queue_ide_journal_draft, queue_ide_readme_draft
+
+    paused = False
+    if svc.app is not None:
+        paused = bool(getattr(svc.app.state, "capture_paused", False))
+    if kind == "journal":
+        card = await queue_ide_journal_draft(svc.db, paused=paused)
+    else:
+        card = await queue_ide_readme_draft(svc.db, paused=paused)
+    if card is None:
+        await update.message.reply_text("Draft generation skipped (capture paused).")
+        return
+    await update.message.reply_text(
+        f"Queued {card.payload.get('draft_kind')} draft #{card.id} for /review. "
+        "Approve confirms the draft; Juno does not write files to your repos."
+    )
 
 
 async def pause_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
