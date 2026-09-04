@@ -51,6 +51,7 @@ Living notes for what was implemented, how GitHub is set up, and what to do next
 | [43-session-temporal.md](43-session-temporal.md) | **#90** — Temporal queries |
 | [44-session-voice.md](44-session-voice.md) | **#91** — Voice memos |
 | [45-session-mobile-hitl.md](45-session-mobile-hitl.md) | **#92** — Mobile HITL |
+| [46-session-serve-down.md](46-session-serve-down.md) | **#93** — PC-off / serve-down |
 | [v1.0-release-gate.md](../v1.0-release-gate.md) | M1 checklist (all P0 closed) |
 | [v1.1-release-gate.md](../v1.1-release-gate.md) | M2 checklist (browser capture) |
 | [v1.2-release-gate.md](../v1.2-release-gate.md) | M3 checklist (IDE capture) |

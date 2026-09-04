@@ -79,4 +79,6 @@ Create a Startup-folder shortcut to:
 uv run --directory D:\Juno\JUNO\apps\core juno serve
 ```
 
-so Juno comes back after login. This is not a service; sleep/shutdown still pauses capture.
+so Juno comes back after login. This is not a Windows service: sleep, shutdown, or a crashed `juno serve` still means **the bot cannot reply**. Telegram will queue updates for about 24 hours; longer downtime can drop messages.
+
+When Juno is running, `/status` shows a `core` module heartbeat (`last ok`) and a serve-down reminder. If `/status` never answers, the process is down — start serve (or the Startup shortcut) again.

@@ -431,6 +431,7 @@ async def test_status_reports_pause_and_health(allowed_settings, db):
     assert "Capture: paused" in body
     assert "retrieve-only" in body
     assert "stub-hash-v1" in body
+    assert "Serve-down" in body
 
 
 @pytest.mark.asyncio
