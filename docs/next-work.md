@@ -193,7 +193,7 @@ Milestone: [M5: v2.0 Polish & Extensions](https://github.com/Anna-Hax/JUNO/miles
 | Order | Issue | Title |
 | ----- | ----- | ----- |
 | 1 | [#106](https://github.com/Anna-Hax/JUNO/issues/106) | Spike S5 — one auto-generated draft through HITL — ✅ [session 49](sessions/49-session-spike-s5.md) |
-| 2 | [#107](https://github.com/Anna-Hax/JUNO/issues/107) | Draft artifacts scaffold — draft kinds + never auto-publish |
+| 2 | [#107](https://github.com/Anna-Hax/JUNO/issues/107) | Draft artifacts scaffold — draft kinds + never auto-publish — ✅ [session 50](sessions/50-session-draft-scaffold.md) |
 | 3 | [#108](https://github.com/Anna-Hax/JUNO/issues/108) | Flashcards / spaced repetition from highlights |
 | 4 | [#109](https://github.com/Anna-Hax/JUNO/issues/109) | Auto-drafted dev journal / README drafts |
 | 5 | [#110](https://github.com/Anna-Hax/JUNO/issues/110) | Skill-gap tracking |
@@ -203,7 +203,7 @@ Milestone: [M5: v2.0 Polish & Extensions](https://github.com/Anna-Hax/JUNO/miles
 | 9 | [#114](https://github.com/Anna-Hax/JUNO/issues/114) | Module health — polish jobs freshness + respect /pause |
 | 10 | [#115](https://github.com/Anna-Hax/JUNO/issues/115) | M5 gate — polish tests, ADR, README, v2.0 release gate |
 
-**First coding task:** #106 ✅. Next: draft artifacts scaffold ([#107](https://github.com/Anna-Hax/JUNO/issues/107)).
+**First coding task:** #106–#107 ✅. Next: flashcards / SRS ([#108](https://github.com/Anna-Hax/JUNO/issues/108)).
 
 ### M5 design constraints (do not violate)
 

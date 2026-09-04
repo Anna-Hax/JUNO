@@ -91,6 +91,26 @@ class ReviewItem(Base):
     decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
+class DraftArtifact(Base):
+    """HITL auto-generated artifact. Confirm via /review; never auto-publish (ADR-09)."""
+
+    __tablename__ = "draft_artifacts"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    kind: Mapped[str] = mapped_column(String(32), index=True)
+    title: Mapped[str] = mapped_column(String(1024))
+    body: Mapped[str] = mapped_column(Text)
+    extra_json: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    generator: Mapped[str] = mapped_column(String(32), default="template")
+    status: Mapped[str] = mapped_column(String(32), default="pending", index=True)
+    published: Mapped[str] = mapped_column(String(8), default="false")
+    review_item_id: Mapped[int | None] = mapped_column(
+        ForeignKey("review_items.id"), nullable=True, index=True
+    )
+    source_capture_ids: Mapped[list[Any] | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 class ModuleHealth(Base):
     __tablename__ = "module_health"
 

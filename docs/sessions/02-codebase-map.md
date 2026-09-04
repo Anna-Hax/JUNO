@@ -32,13 +32,13 @@ JUNO/
 | CLI | `cli.py` | `juno serve` / `db-init` / `export` / `wipe` / `version` |
 | Runtime | `runtime.py` | Shared asyncio: uvicorn + PTB + inbox watcher + jobs scheduler lifespan |
 | Jobs | `jobs/scheduler.py`, `jobs/registry.py`, `jobs/handlers.py`, `jobs/health.py`, `jobs/resurface.py` | AsyncIOScheduler + named cron registry (ADR-07) |
-| Drafts | `drafts/generate.py` | Template journal snippets queued as HITL `draft` (ADR-09 / Spike S5) |
+| Drafts | `drafts/generate.py`, `drafts/kinds.py` | Template journal/flashcard/doc queued as HITL `draft` + `draft_artifacts` (ADR-09 / #107) |
 | API | `api/__init__.py` | FastAPI routes + token + loopback middleware |
 | Bot | `bot/handlers.py`, `bot/services.py`, `bot/review.py` | Telegram allowlist, query, capture, pause/digest/status ([#18](https://github.com/Anna-Hax/JUNO/issues/18) / [#19](https://github.com/Anna-Hax/JUNO/issues/19)); HITL `/review` ([#20](https://github.com/Anna-Hax/JUNO/issues/20)) |
 | Graph DB | `graph/db.py`, `graph/migrations.py`, `graph/ownership.py` | Engine, WAL, write queue, Alembic upgrade/stamp; export/wipe ([#23](https://github.com/Anna-Hax/JUNO/issues/23)) |
 | Vectors | `graph/vectors.py` | Persistent Chroma; one collection per embedding model ([ADR-04](../adr/004-chroma-collections.md)) |
-| Models | `models/__init__.py` | SQLAlchemy tables |
-| Alembic | `alembic/` + `alembic.ini` | Revision `0001` = current ORM ([ADR-03](../adr/003-alembic.md)) |
+| Models | `models/__init__.py` | SQLAlchemy tables including `draft_artifacts` |
+| Alembic | `alembic/` + `alembic.ini` | Head `0002` (`draft_artifacts`) after `0001` ([ADR-03](../adr/003-alembic.md)) |
 | LLM | `llm/embedder.py`, `llm/chat.py`, `llm/transcribe.py` | MiniLM (optional extra) + stub embedder; Ollama / OpenAI-compat / offline chat; opt-in voice STT (ADR-08) |
 | Ingest | `ingest/extractors.py`, `chunking.py`, `pipeline.py`, `watcher.py` | File/URL extract, chunk, persist, inbox watch ([#16](https://github.com/Anna-Hax/JUNO/issues/16)) |
 | RAG | `rag/engine.py` | Vector retrieve, join captures, sourced answer + confidence ([#17](https://github.com/Anna-Hax/JUNO/issues/17)); Telegram query uses this |

@@ -36,9 +36,13 @@ Options:
 ## Consequences
 
 - Operators prove the HITL path with `JUNO_DRAFTS_SMOKE=true` then `/review` — no live LLM.
-- Later kinds (flashcard / doc) reuse the same `draft` kind + payload `draft_kind` discriminator ([#107](https://github.com/Anna-Hax/JUNO/issues/107)).
+- Later kinds (flashcard / doc) reuse the same `draft` kind + payload `draft_kind` discriminator ([#107](https://github.com/Anna-Hax/JUNO/issues/107)). Confirmed rows live in `draft_artifacts`; they are still not published.
 - Publishing (file write, ingest, Telegram canonical) is a later, explicit confirm step — never a side effect of Approve in S5.
 
 ## Spike S5 proof
 
 Issue [#106](https://github.com/Anna-Hax/JUNO/issues/106): template journal from recent captures (or a placeholder if none) lands pending; Approve/Reject/Skip work; `published` stays false (see [session 49](../sessions/49-session-spike-s5.md)).
+
+## Scaffold (#107)
+
+Issue [#107](https://github.com/Anna-Hax/JUNO/issues/107): kinds `journal` / `flashcard` / `doc` persist as `draft_artifacts` (Alembic **`0002`**) plus a `review_items` row. Approve sets artifact `status=confirmed` and **still** `published=false`. Reject sets `discarded`. CI enqueues all three kinds without an LLM (see [session 50](../sessions/50-session-draft-scaffold.md)).
