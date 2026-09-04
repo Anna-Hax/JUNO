@@ -424,6 +424,9 @@ async def test_status_reports_pause_and_health(allowed_settings, db):
     app.state.llm_healthy = False
     app.state.embedder = SimpleNamespace(model_id="stub-hash-v1")
     vectors = FakeVectors()
+    from juno.jobs.health import record_jobs_health
+
+    await record_jobs_health(db, detail="digest_daily skipped (paused)", ok=True)
     svc = _svc(allowed_settings, db=db, app=app, vectors=vectors)
     update = _update(ALLOWED_ID, "/status")
     await status_cmd(update, _context(svc))
@@ -432,6 +435,8 @@ async def test_status_reports_pause_and_health(allowed_settings, db):
     assert "retrieve-only" in body
     assert "stub-hash-v1" in body
     assert "Serve-down" in body
+    assert "jobs:" in body
+    assert "paused" in body
 
 
 @pytest.mark.asyncio

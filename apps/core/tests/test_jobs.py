@@ -205,6 +205,44 @@ async def test_push_scheduled_digest_sends_grouped_text(settings: Settings):
         await db.dispose()
 
 
+@pytest.mark.asyncio
+async def test_digest_pause_records_jobs_module_health(settings: Settings):
+    from fastapi.testclient import TestClient
+
+    from juno.api import create_app
+    from juno.graph.db import Database
+    from juno.jobs.handlers import digest_daily
+    from juno.models import ModuleHealth
+
+    db = Database(settings)
+    await db.migrate()
+    bot = AsyncMock()
+    app = create_app(settings, db=db)
+    app.state.ptb = SimpleNamespace(bot=bot)
+    app.state.capture_paused = True
+    try:
+        await digest_daily(app)
+
+        async def jobs_row(session):
+            return await session.get(ModuleHealth, "jobs")
+
+        health = await db.read(jobs_row)
+        assert health is not None
+        assert health.last_success_at is not None
+        assert health.last_error is None
+        assert "paused" in (health.detail or "")
+
+        client = TestClient(app)
+        resp = client.get("/status", headers={"Authorization": "Bearer test-token"})
+        assert resp.status_code == 200
+        modules = {row["module"]: row for row in resp.json()["modules"]}
+        assert "jobs" in modules
+        assert "paused" in (modules["jobs"]["detail"] or "")
+        bot.send_message.assert_not_awaited()
+    finally:
+        await db.dispose()
+
+
 def test_apply_enabled_overrides(settings: Settings):
     from juno.jobs import apply_enabled_overrides
 

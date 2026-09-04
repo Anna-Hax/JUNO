@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 from juno.bot.services import digest_since, format_digest, recent_captures
+from juno.jobs.health import record_jobs_health
 
 logger = logging.getLogger("juno.jobs")
 
@@ -38,13 +39,27 @@ async def push_scheduled_digest(app: Any, window: str) -> int:
 
 
 async def digest_daily(app: Any) -> None:
-    sent = await push_scheduled_digest(app, "today")
-    logger.info("digest_daily sent to %s chat(s)", sent)
+    await _run_digest_job(app, job_id="digest_daily", window="today")
 
 
 async def digest_weekly(app: Any) -> None:
-    sent = await push_scheduled_digest(app, "week")
-    logger.info("digest_weekly sent to %s chat(s)", sent)
+    await _run_digest_job(app, job_id="digest_weekly", window="week")
+
+
+async def _run_digest_job(app: Any, *, job_id: str, window: str) -> None:
+    db = getattr(app.state, "db", None) if app is not None else None
+    try:
+        if app is not None and bool(getattr(app.state, "capture_paused", False)):
+            logger.info("%s skipped — capture paused", job_id)
+            await record_jobs_health(db, detail=f"{job_id} skipped (paused)", ok=True)
+            return
+        sent = await push_scheduled_digest(app, window)
+        logger.info("%s sent to %s chat(s)", job_id, sent)
+        await record_jobs_health(db, detail=f"{job_id} sent={sent}", ok=True)
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("%s failed", job_id)
+        await record_jobs_health(db, detail=job_id, ok=False, error=str(exc))
+        raise
 
 
 async def resurfacing(app: Any) -> None:
@@ -55,6 +70,19 @@ async def resurfacing(app: Any) -> None:
     if db is None:
         logger.info("resurfacing skipped — database not attached")
         return
-    candidates = await find_resurface_candidates(db, vectors)
-    stats = await apply_resurface_candidates(app, candidates)
-    logger.info("resurfacing pushed=%s queued=%s", stats["pushed"], stats["queued"])
+    try:
+        if app is not None and bool(getattr(app.state, "capture_paused", False)):
+            await record_jobs_health(db, detail="resurfacing skipped (paused)", ok=True)
+            return
+        candidates = await find_resurface_candidates(db, vectors)
+        stats = await apply_resurface_candidates(app, candidates)
+        logger.info("resurfacing pushed=%s queued=%s", stats["pushed"], stats["queued"])
+        await record_jobs_health(
+            db,
+            detail=f"resurfacing pushed={stats['pushed']} queued={stats['queued']}",
+            ok=True,
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("resurfacing failed")
+        await record_jobs_health(db, detail="resurfacing", ok=False, error=str(exc))
+        raise
