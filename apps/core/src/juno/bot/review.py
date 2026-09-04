@@ -120,6 +120,10 @@ async def review_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             text += " Merge is now committed."
         elif result.card.kind == "merge" and decision == "reject":
             text += " Merge was not applied."
+        elif result.card.kind == "draft" and decision == "approve":
+            text += " Draft confirmed; it was not published."
+        elif result.card.kind == "draft" and decision == "reject":
+            text += " Draft discarded; it was not published."
         elif decision == "skip":
             text += " Left in the queue."
 

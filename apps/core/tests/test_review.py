@@ -119,6 +119,24 @@ async def test_next_open_prefers_pending_then_skipped(queue):
 
 
 @pytest.mark.asyncio
+async def test_draft_approve_does_not_publish(queue):
+    card = await queue.propose_draft(
+        draft_kind="journal",
+        title="Journal snippet 2026-09-05",
+        body="Recently captured HITL notes.",
+        source_capture_ids=[1],
+        generator="template",
+        reason="spike",
+    )
+    assert card.kind == "draft"
+    assert "not published" in card.summary()
+    result = await queue.decide(card.id, "approve")
+    assert result.applied is True
+    assert result.card.payload["published"] is False
+    assert result.card.payload["confirmed"] is True
+
+
+@pytest.mark.asyncio
 async def test_decide_missing_item(queue):
     with pytest.raises(LookupError):
         await queue.decide(999, "approve")

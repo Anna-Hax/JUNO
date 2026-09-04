@@ -12,7 +12,7 @@ Personal knowledge-graph agent: passively (and manually) capture what you read, 
 - **Browser extension** (`apps/extension`): MV3 loopback client ([ADR-05](docs/adr/005-browser-extension-client.md)); Spike S2 captures tabs → `POST /ingest`
 - **IDE adapter** (`apps/ide`): read-only Cursor `state.vscdb` client ([ADR-06](docs/adr/006-ide-adapter-client.md)); poll/watch posts chats + terminal errors → `POST /ingest` (runbook in [`apps/ide/README.md`](apps/ide/README.md))
 - **Inbox** (`inbox/`): drop `.txt` / `.md` / `.pdf` / `.url` (or a one-line http(s) text file). `juno serve` watches the folder; good files move to `inbox/.processed/`, unreadable PDFs to `inbox/.failed/`.
-- **HITL** (`/review`): inline Approve / Reject / Skip for pending graph merges
+- **HITL** (`/review`): inline Approve / Reject / Skip for pending graph merges, sensitive batches, and auto-generated **drafts** (never auto-published; [ADR-09](docs/adr/009-draft-artifacts-hitl.md))
 
 ## Prerequisites
 

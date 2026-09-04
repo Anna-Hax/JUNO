@@ -32,6 +32,7 @@ from juno.bot.handlers import (
 from juno.bot.review import review_callback, review_cmd
 from juno.bot.services import BOT_DATA_KEY, BotServices, load_capture_paused
 from juno.config import Settings, get_settings, validate_serve_settings
+from juno.drafts import maybe_enqueue_smoke_draft
 from juno.graph.db import Database
 from juno.graph.vectors import VectorStore
 from juno.hitl.queue import ReviewQueue
@@ -191,6 +192,7 @@ def attach_lifespan(fastapi_app: FastAPI) -> FastAPI:
             await record_jobs_health(db, detail="scheduler started", ok=True)
         else:
             await record_jobs_health(db, detail="scheduler disabled", ok=True)
+        await maybe_enqueue_smoke_draft(app)
 
         yield
 

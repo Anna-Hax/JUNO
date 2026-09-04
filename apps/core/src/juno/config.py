@@ -82,6 +82,10 @@ class Settings(BaseSettings):
     juno_jobs_resurfacing: bool = True
     juno_jobs_resurfacing_cron: str = "0 * * * *"
 
+    # M5 drafts (ADR-09): template HITL artifacts; never auto-publish.
+    juno_drafts_smoke: bool = False
+    juno_drafts_generator: str = "template"  # template (llm deferred to #109)
+
     def allowed_user_id_set(self) -> set[int]:
         if not self.allowed_telegram_user_ids.strip():
             return set()

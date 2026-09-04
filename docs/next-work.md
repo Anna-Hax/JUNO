@@ -1,8 +1,8 @@
 # Next work
 
-**Last updated:** 2026-09-04  
+**Last updated:** 2026-09-05  
 **Track issues on:** [https://github.com/Anna-Hax/JUNO/issues](https://github.com/Anna-Hax/JUNO/issues)  
-**Package:** `1.3.0` (M4 complete — [`docs/v1.3-release-gate.md`](v1.3-release-gate.md))
+**Package:** `1.3.0` (M4 complete — M5 polish expanded; [`docs/v1.3-release-gate.md`](v1.3-release-gate.md))
 
 Prefer one open issue ≈ one PR (`Closes #N`). This file is kept as-is across branch merges (`merge=ours`).
 
@@ -177,9 +177,50 @@ Epic [#27](https://github.com/Anna-Hax/JUNO/issues/27) closed; milestone [M4: v1
 
 ---
 
-## Unlock M5 (planning) — not started
+## Before M5 — **complete** (2026-09-05)
 
-Epic: [#28](https://github.com/Anna-Hax/JUNO/issues/28) — *Epic: M5 v2 polish*. Do not expand child issues until an explicit M5 kickoff.
+No blocking prep tickets (unlike Before M2’s Spike S1 / board / protection). M4 milestone already closed; branch protection and the [JUNO Roadmap](https://github.com/users/Anna-Hax/projects/1) board remain in place. Closed leftover [M0: Project Setup & CI](https://github.com/Anna-Hax/JUNO/milestone/1) (0 open, 10 closed). ADRs current through M4 ([ADR-07](adr/007-proactive-jobs-shared-loop.md), [ADR-08](adr/008-voice-transcription.md)).
+
+---
+
+## Unlock M5 (planning)
+
+Epic: [#28](https://github.com/Anna-Hax/JUNO/issues/28) — *Epic: M5 v2.0 polish*.  
+Milestone: [M5: v2.0 Polish & Extensions](https://github.com/Anna-Hax/JUNO/milestone/11).
+
+**Child issues expanded 2026-09-05** (#106–#115). Prefer one issue ≈ one PR.
+
+| Order | Issue | Title |
+| ----- | ----- | ----- |
+| 1 | [#106](https://github.com/Anna-Hax/JUNO/issues/106) | Spike S5 — one auto-generated draft through HITL — ✅ [session 49](sessions/49-session-spike-s5.md) |
+| 2 | [#107](https://github.com/Anna-Hax/JUNO/issues/107) | Draft artifacts scaffold — draft kinds + never auto-publish |
+| 3 | [#108](https://github.com/Anna-Hax/JUNO/issues/108) | Flashcards / spaced repetition from highlights |
+| 4 | [#109](https://github.com/Anna-Hax/JUNO/issues/109) | Auto-drafted dev journal / README drafts |
+| 5 | [#110](https://github.com/Anna-Hax/JUNO/issues/110) | Skill-gap tracking |
+| 6 | [#111](https://github.com/Anna-Hax/JUNO/issues/111) | Trust dial — per-category auto-commit thresholds |
+| 7 | [#112](https://github.com/Anna-Hax/JUNO/issues/112) | Optional Slack forward into upload space |
+| 8 | [#113](https://github.com/Anna-Hax/JUNO/issues/113) | Prune-with-confirm — retention / destructive graph cleanup |
+| 9 | [#114](https://github.com/Anna-Hax/JUNO/issues/114) | Module health — polish jobs freshness + respect /pause |
+| 10 | [#115](https://github.com/Anna-Hax/JUNO/issues/115) | M5 gate — polish tests, ADR, README, v2.0 release gate |
+
+**First coding task:** #106 ✅. Next: draft artifacts scaffold ([#107](https://github.com/Anna-Hax/JUNO/issues/107)).
+
+### M5 design constraints (do not violate)
+
+1. One process, one loop ([ADR-01](adr/001-shared-event-loop.md)) — flashcard/SRS/draft jobs on the **same** asyncio loop; no second daemon.
+2. All DB writes through `Database.write()` ([ADR-02](adr/002-sqlite-write-queue.md)).
+3. Schema changes = new Alembic revision ([ADR-03](adr/003-alembic.md)).
+4. Vectors only via the serve-process `VectorStore` after ingest ([ADR-04](adr/004-chroma-collections.md)).
+5. Auto-generated artifacts stay HITL drafts until approve — never auto-publish ([#107](https://github.com/Anna-Hax/JUNO/issues/107), [#20](https://github.com/Anna-Hax/JUNO/issues/20) patterns).
+6. Destructive prune always requires confirm ([#113](https://github.com/Anna-Hax/JUNO/issues/113)). Slack is opt-in forward into the existing inbox — not a live workspace listener ([#112](https://github.com/Anna-Hax/JUNO/issues/112)).
+
+### Explicitly **not** M5 (keep deferred)
+
+| Item | Why |
+| ---- | --- |
+| Live Slack workspace bot / passive listener | PRD §6.3 non-goal; #112 is opt-in forward only |
+| Rabbit-hole session narrative (A→B→C) | PRD §6.1 P1 browser; not in epic #28 |
+| Write drafts into user git repos unattended | #109 requires confirm before any file write |
 
 ---
 
