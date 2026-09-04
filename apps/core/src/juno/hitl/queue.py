@@ -20,6 +20,7 @@ KIND_IDE_BATCH = "ide_batch"
 KIND_MOBILE_BATCH = "mobile_batch"
 KIND_RESURFACE = "resurface"
 KIND_DRAFT = "draft"
+KIND_SKILL_GAP = "skill_gap"
 STATUS_PENDING = "pending"
 STATUS_SKIPPED = "skipped"
 STATUS_DECIDED = "decided"
@@ -99,6 +100,20 @@ class ReviewCard:
             if reason:
                 lines.append(str(reason))
             lines.append("This draft is not published. Approve to keep it; Reject to discard.")
+        elif self.kind == KIND_SKILL_GAP:
+            topic = str(self.payload.get("topic") or "topic")
+            gap_kind = str(self.payload.get("gap_kind") or "gap")
+            count = self.payload.get("count") or "?"
+            lines.append(f"Skill gap ({gap_kind}): {topic} ({count}x)")
+            related = self.payload.get("related") or []
+            if related:
+                lines.append("Related: " + ", ".join(str(x) for x in related[:3]))
+            reason = self.payload.get("reason")
+            if reason:
+                lines.append(str(reason))
+            lines.append(
+                "Approve if this is a real struggle; Reject to ignore (Juno will not nag)."
+            )
         else:
             preview = str(self.payload)[:500]
             if preview:
@@ -447,7 +462,7 @@ async def _pending_edge(
 
 
 async def _apply(session: AsyncSession, row: ReviewItem) -> bool:
-    if row.kind in {KIND_ERROR_MATCH, KIND_IDE_BATCH}:
+    if row.kind in {KIND_ERROR_MATCH, KIND_IDE_BATCH, KIND_SKILL_GAP}:
         payload = dict(row.payload or {})
         payload["confirmed"] = True
         row.payload = payload
@@ -473,7 +488,7 @@ async def _apply(session: AsyncSession, row: ReviewItem) -> bool:
 
 
 async def _reject(session: AsyncSession, row: ReviewItem) -> None:
-    if row.kind in {KIND_ERROR_MATCH, KIND_IDE_BATCH}:
+    if row.kind in {KIND_ERROR_MATCH, KIND_IDE_BATCH, KIND_SKILL_GAP}:
         payload = dict(row.payload or {})
         payload["confirmed"] = False
         row.payload = payload

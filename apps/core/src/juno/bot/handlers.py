@@ -40,6 +40,7 @@ HELP_TEXT = (
     "/review — HITL Approve/Reject/Skip (merges, IDE, mobile, resurfacing, drafts)\n"
     "/cards — flashcards due (Again/Good); new cards stay drafts until /review\n"
     "/drafts journal|readme — queue an IDE journal or README draft (never writes files)\n"
+    "/gaps — repeat IDE errors / unfinished reads (low-confidence stays in /review)\n"
     "Ask a question to search the graph.\n"
     "Forward a message, send a link, attach a doc, or send a voice note to capture."
 )
@@ -142,6 +143,29 @@ async def drafts_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         f"Queued {card.payload.get('draft_kind')} draft #{card.id} for /review. "
         "Approve confirms the draft; Juno does not write files to your repos."
     )
+
+
+async def gaps_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not update.message or not _authorized(update, context):
+        return
+    svc = _services(context)
+    if svc is None or svc.db is None:
+        await update.message.reply_text("Gaps unavailable (database not attached).")
+        return
+    from juno.rag.gaps import apply_skill_gaps, find_skill_gaps, format_gaps
+
+    paused = False
+    if svc.app is not None:
+        paused = bool(getattr(svc.app.state, "capture_paused", False))
+    gaps = await find_skill_gaps(svc.db)
+    result = await apply_skill_gaps(svc.db, gaps, paused=paused)
+    if paused:
+        await update.message.reply_text("Skill-gap scan skipped (capture paused).")
+        return
+    extra = ""
+    if result.queued:
+        extra = f"\nQueued {result.queued} low-confidence flag(s) for /review."
+    await update.message.reply_text(format_gaps(list(result.fresh)) + extra)
 
 
 async def pause_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
