@@ -44,6 +44,7 @@ Living notes for what was implemented, how GitHub is set up, and what to do next
 | [36-session-ide-digest.md](36-session-ide-digest.md) | **#71** — Digest enrichment for IDE |
 | [37-session-ide-health.md](37-session-ide-health.md) | **#72** — IDE module health |
 | [38-session-m3-gate.md](38-session-m3-gate.md) | **#73** — M3 gate + v1.2 |
+| [39-session-spike-s4.md](39-session-spike-s4.md) | **#86** — Spike S4 APScheduler shared-loop smoke |
 | [v1.0-release-gate.md](../v1.0-release-gate.md) | M1 checklist (all P0 closed) |
 | [v1.1-release-gate.md](../v1.1-release-gate.md) | M2 checklist (browser capture) |
 | [v1.2-release-gate.md](../v1.2-release-gate.md) | M3 checklist (IDE capture) |

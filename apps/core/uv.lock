@@ -1103,7 +1103,7 @@ embeddings = [
 requires-dist = [
     { name = "aiosqlite", specifier = ">=0.20.0" },
     { name = "alembic", specifier = ">=1.14.0" },
-    { name = "apscheduler", specifier = ">=3.10.4" },
+    { name = "apscheduler", specifier = ">=3.10.4,<4" },
     { name = "chromadb", specifier = ">=0.5.23" },
     { name = "fastapi", specifier = ">=0.115.0" },
     { name = "httpx", specifier = ">=0.27.0" },

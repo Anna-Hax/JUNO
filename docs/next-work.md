@@ -1,8 +1,8 @@
 # Next work
 
-**Last updated:** 2026-09-02  
+**Last updated:** 2026-09-04  
 **Track issues on:** [https://github.com/Anna-Hax/JUNO/issues](https://github.com/Anna-Hax/JUNO/issues)  
-**Package:** `1.2.0` (M3 complete — [`docs/v1.2-release-gate.md`](v1.2-release-gate.md))
+**Package:** `1.2.0` (M3 complete — M4 proactive expanded; [`docs/v1.2-release-gate.md`](v1.2-release-gate.md))
 
 Prefer one open issue ≈ one PR (`Closes #N`). This file is kept as-is across branch merges (`merge=ours`).
 
@@ -134,14 +134,39 @@ Epic [#26](https://github.com/Anna-Hax/JUNO/issues/26) closed; milestone [M3: v1
 
 ## Unlock M4 (planning)
 
-Epic: [#27](https://github.com/Anna-Hax/JUNO/issues/27) — *Epic: M4 Proactive + mobile (v1.3)*.  
-Do **not** start M4 coding until this epic is expanded into child issues.
+Epic: [#27](https://github.com/Anna-Hax/JUNO/issues/27) — *Epic: M4 Proactive + mobile depth (v1.3)*.  
+Milestone: [M4: v1.3 Proactive & Mobile](https://github.com/Anna-Hax/JUNO/milestone/10).
 
-### Explicitly **not** M3 / still later
+**Child issues expanded 2026-09-04** (#86–#95). Prefer one issue ≈ one PR.
+
+| Order | Issue | Title |
+| ----- | ----- | ----- |
+| 1 | [#86](https://github.com/Anna-Hax/JUNO/issues/86) | Spike S4 — APScheduler on shared loop + one Telegram push smoke — ✅ [session 39](sessions/39-session-spike-s4.md) |
+| 2 | [#87](https://github.com/Anna-Hax/JUNO/issues/87) | Scheduler scaffold — APScheduler in serve lifespan + job registry |
+| 3 | [#88](https://github.com/Anna-Hax/JUNO/issues/88) | Scheduled push digests — morning daily + weekly |
+| 4 | [#89](https://github.com/Anna-Hax/JUNO/issues/89) | Contextual resurfacing — push when something comes up again |
+| 5 | [#90](https://github.com/Anna-Hax/JUNO/issues/90) | Temporal queries — how has my understanding of X evolved |
+| 6 | [#91](https://github.com/Anna-Hax/JUNO/issues/91) | Voice memos — Telegram voice → transcription → ingest |
+| 7 | [#92](https://github.com/Anna-Hax/JUNO/issues/92) | Mobile depth — phone captures via Telegram + sensitive HITL |
+| 8 | [#93](https://github.com/Anna-Hax/JUNO/issues/93) | PC-off / serve-down status for operators |
+| 9 | [#94](https://github.com/Anna-Hax/JUNO/issues/94) | Module health — jobs scheduler freshness + respect /pause |
+| 10 | [#95](https://github.com/Anna-Hax/JUNO/issues/95) | M4 gate — jobs tests, ADR, README, v1.3 release gate |
+
+**First coding task:** #86 ✅. Next: scheduler scaffold ([#87](https://github.com/Anna-Hax/JUNO/issues/87)).
+
+### M4 design constraints (do not violate)
+
+1. One process, one loop ([ADR-01](adr/001-shared-event-loop.md)) — APScheduler on the **same** asyncio loop as uvicorn + PTB; no second daemon.
+2. All DB writes through `Database.write()` ([ADR-02](adr/002-sqlite-write-queue.md)).
+3. Schema changes = new Alembic revision ([ADR-03](adr/003-alembic.md)).
+4. Vectors only via the serve-process `VectorStore` after ingest ([ADR-04](adr/004-chroma-collections.md)).
+5. Push jobs respect allowlist + global `/pause`; never bind `0.0.0.0` for capture clients.
+6. Sensitive mobile / voice batches stay HITL-reviewable ([#92](https://github.com/Anna-Hax/JUNO/issues/92), [#20](https://github.com/Anna-Hax/JUNO/issues/20) patterns).
+
+### Explicitly **not** M4 (keep in later epics)
 
 | Epic | Milestone | Scope |
 | ---- | --------- | ----- |
-| [#27](https://github.com/Anna-Hax/JUNO/issues/27) | M4 Proactive + mobile | APScheduler push digests, voice, temporal |
 | [#28](https://github.com/Anna-Hax/JUNO/issues/28) | M5 v2 polish | Flashcards, drafts, trust dial, Slack |
 
 ---
