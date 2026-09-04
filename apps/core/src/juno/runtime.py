@@ -21,6 +21,7 @@ from juno.bot.cards import cards_callback, cards_cmd
 from juno.bot.handlers import (
     digest_cmd,
     document_msg,
+    drafts_cmd,
     help_cmd,
     jobs_cmd,
     pause_cmd,
@@ -65,6 +66,7 @@ def build_telegram_application(settings: Settings) -> Application | None:
     app.add_handler(CommandHandler("status", status_cmd))
     app.add_handler(CommandHandler("review", review_cmd))
     app.add_handler(CommandHandler("cards", cards_cmd))
+    app.add_handler(CommandHandler("drafts", drafts_cmd))
     app.add_handler(CallbackQueryHandler(review_callback, pattern=r"^rev:"))
     app.add_handler(CallbackQueryHandler(cards_callback, pattern=r"^srs:"))
     app.add_handler(MessageHandler(filters.VOICE, voice_msg))
