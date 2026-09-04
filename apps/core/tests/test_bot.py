@@ -320,6 +320,22 @@ async def test_url_and_forward_are_captured(allowed_settings):
 
 
 @pytest.mark.asyncio
+async def test_forward_queues_mobile_hitl(allowed_settings, db):
+    from juno.hitl.queue import KIND_MOBILE_BATCH, ReviewQueue
+    from juno.ingest.pipeline import IngestPipeline
+
+    pipe = IngestPipeline(db)
+    svc = _svc(allowed_settings, db=db, pipeline=pipe, app=create_app(allowed_settings, db=db))
+    fwd = _update(ALLOWED_ID, "a forwarded phone note", forwarded=True)
+    await text_msg(fwd, _context(svc))
+    body = fwd.message.reply_text.await_args.args[0]
+    assert "Queued for /review" in body
+    card = await ReviewQueue(db).next_open()
+    assert card is not None
+    assert card.kind == KIND_MOBILE_BATCH
+
+
+@pytest.mark.asyncio
 async def test_pause_blocks_telegram_and_api_ingest(allowed_settings, db):
     pipeline = FakePipeline()
     app = create_app(allowed_settings, db=db, pipeline=IngestPipeline(db))

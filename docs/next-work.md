@@ -147,12 +147,12 @@ Milestone: [M4: v1.3 Proactive & Mobile](https://github.com/Anna-Hax/JUNO/milest
 | 4 | [#89](https://github.com/Anna-Hax/JUNO/issues/89) | Contextual resurfacing — push when something comes up again — ✅ [session 42](sessions/42-session-jobs-resurface.md) |
 | 5 | [#90](https://github.com/Anna-Hax/JUNO/issues/90) | Temporal queries — how has my understanding of X evolved — ✅ [session 43](sessions/43-session-temporal.md) |
 | 6 | [#91](https://github.com/Anna-Hax/JUNO/issues/91) | Voice memos — Telegram voice → transcription → ingest — ✅ [session 44](sessions/44-session-voice.md) |
-| 7 | [#92](https://github.com/Anna-Hax/JUNO/issues/92) | Mobile depth — phone captures via Telegram + sensitive HITL |
+| 7 | [#92](https://github.com/Anna-Hax/JUNO/issues/92) | Mobile depth — phone captures via Telegram + sensitive HITL — ✅ [session 45](sessions/45-session-mobile-hitl.md) |
 | 8 | [#93](https://github.com/Anna-Hax/JUNO/issues/93) | PC-off / serve-down status for operators |
 | 9 | [#94](https://github.com/Anna-Hax/JUNO/issues/94) | Module health — jobs scheduler freshness + respect /pause |
 | 10 | [#95](https://github.com/Anna-Hax/JUNO/issues/95) | M4 gate — jobs tests, ADR, README, v1.3 release gate |
 
-**First coding task:** #86–#91 ✅. Next: mobile depth HITL ([#92](https://github.com/Anna-Hax/JUNO/issues/92)).
+**First coding task:** #86–#92 ✅. Next: PC-off / serve-down status ([#93](https://github.com/Anna-Hax/JUNO/issues/93)).
 
 ### M4 design constraints (do not violate)
 
