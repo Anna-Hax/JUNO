@@ -7,7 +7,7 @@ Accepted (v1)
 ## Date
 
 2026-08-20 (M0 scaffold)  
-**Last reviewed:** 2026-08-26 (after M1 / v1.0 foundation)
+**Last reviewed:** 2026-09-04 (M4 Spike S4 / ADR-07)
 
 ## Context
 
@@ -47,10 +47,10 @@ Concrete rules (implemented in `apps/core/src/juno/runtime.py`):
 3. Build the PTB `Application` normally, but **never** call `Application.run_polling()`.
 4. Inside FastAPI **lifespan**:
    - **Startup:** `await ptb.initialize()` → `await ptb.start()` → `await ptb.updater.start_polling(...)`
-   - **Shutdown (reverse):** `updater.stop()` → `ptb.stop()` → `ptb.shutdown()`, then stop the inbox watcher and dispose the DB.
+   - **Shutdown (reverse):** jobs scheduler → inbox watcher → `updater.stop()` → `ptb.stop()` → `ptb.shutdown()`, then dispose the DB.
 5. **All background work** on this process must be asyncio tasks, lifespan-managed objects, or async-compatible schedulers on **this same loop** — not a second “main” loop in another thread. That includes:
    - The inbox watcher (`InboxWatcher`, landed in M1 / #16)
-   - Future APScheduler / proactive jobs (dependency declared; wiring deferred to M4 / epic #27)
+   - APScheduler proactive jobs on this loop ([ADR-07](007-proactive-jobs-shared-loop.md); Spike S4 / #86)
    - Chroma I/O via `VectorStore` async helpers ([ADR-04](004-chroma-collections.md))
 6. If `TELEGRAM_BOT_TOKEN` is empty, the API (and inbox watcher) still run and the bot is simply disabled — same process model either way.
 7. Before listen, `validate_serve_settings()` refuses a non-loopback bind and the example API token ([#21](https://github.com/Anna-Hax/JUNO/issues/21)).
@@ -93,6 +93,6 @@ Operator may still tap `/start`, a short query, and `/status` in Telegram for fu
 
 ### Follow-ups (not M1)
 
-- Wire **APScheduler** (already in `pyproject.toml`) as an asyncio-friendly scheduler on this loop for digests / resurfacing (M4 / epic [#27](https://github.com/Anna-Hax/JUNO/issues/27)).
+- Wire **APScheduler** as `AsyncIOScheduler` on this loop ([ADR-07](007-proactive-jobs-shared-loop.md); Spike S4 [#86](https://github.com/Anna-Hax/JUNO/issues/86)). Job registry and cron digests remain later M4 issues.
 - Keep documenting “no `run_polling()`” next to any new entrypoint so this ADR is not rediscovered the hard way.
 - IDE / Cursor capture is a **loopback HTTP client** ([ADR-06](006-ide-adapter-client.md)), not a second process or event loop.

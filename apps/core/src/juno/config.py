@@ -67,6 +67,11 @@ class Settings(BaseSettings):
     embedding_model: str = "all-MiniLM-L6-v2"
     embedding_backend: str = "sentence_transformers"  # stub | sentence_transformers
 
+    # M4 jobs (ADR-07): AsyncIOScheduler on the shared serve loop.
+    juno_jobs_enabled: bool = True
+    juno_jobs_timezone: str = "UTC"
+    juno_jobs_smoke: bool = False
+
     def allowed_user_id_set(self) -> set[int]:
         if not self.allowed_telegram_user_ids.strip():
             return set()

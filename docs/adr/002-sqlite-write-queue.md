@@ -64,5 +64,5 @@ Acceptance for [#12](https://github.com/Anna-Hax/JUNO/issues/12): concurrent ing
 
 ### Follow-ups
 
-- When M4 jobs land, they must use the same `Database.write` path — do not add a second writer.
+- M4 jobs ([ADR-07](007-proactive-jobs-shared-loop.md)) must use the same `Database.write` path — do not add a second writer. Spike S4 (#86) only sends Telegram; digest/resurfacing writes stay on this queue.
 - If a future milestone needs true multi-process writers (e.g. a separate capture helper), revisit this ADR; WAL alone will not be enough across processes without a stronger coordination story.
