@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-09-04  
 **Track issues on:** [https://github.com/Anna-Hax/JUNO/issues](https://github.com/Anna-Hax/JUNO/issues)  
-**Package:** `1.2.0` (M3 complete — M4 proactive expanded; [`docs/v1.2-release-gate.md`](v1.2-release-gate.md))
+**Package:** `1.3.0` (M4 complete — [`docs/v1.3-release-gate.md`](v1.3-release-gate.md))
 
 Prefer one open issue ≈ one PR (`Closes #N`). This file is kept as-is across branch merges (`merge=ours`).
 
@@ -150,9 +150,9 @@ Milestone: [M4: v1.3 Proactive & Mobile](https://github.com/Anna-Hax/JUNO/milest
 | 7 | [#92](https://github.com/Anna-Hax/JUNO/issues/92) | Mobile depth — phone captures via Telegram + sensitive HITL — ✅ [session 45](sessions/45-session-mobile-hitl.md) |
 | 8 | [#93](https://github.com/Anna-Hax/JUNO/issues/93) | PC-off / serve-down status for operators — ✅ [session 46](sessions/46-session-serve-down.md) |
 | 9 | [#94](https://github.com/Anna-Hax/JUNO/issues/94) | Module health — jobs scheduler freshness + respect /pause — ✅ [session 47](sessions/47-session-jobs-health.md) |
-| 10 | [#95](https://github.com/Anna-Hax/JUNO/issues/95) | M4 gate — jobs tests, ADR, README, v1.3 release gate |
+| 10 | [#95](https://github.com/Anna-Hax/JUNO/issues/95) | M4 gate — jobs tests, ADR, README, v1.3 release gate — ✅ [session 48](sessions/48-session-m4-gate.md) |
 
-**First coding task:** #86–#94 ✅. Next: M4 gate ([#95](https://github.com/Anna-Hax/JUNO/issues/95)).
+**First coding task:** #86–#95 ✅. M4 complete.
 
 ### M4 design constraints (do not violate)
 
@@ -168,6 +168,18 @@ Milestone: [M4: v1.3 Proactive & Mobile](https://github.com/Anna-Hax/JUNO/milest
 | Epic | Milestone | Scope |
 | ---- | --------- | ----- |
 | [#28](https://github.com/Anna-Hax/JUNO/issues/28) | M5 v2 polish | Flashcards, drafts, trust dial, Slack |
+
+---
+
+## M4 — **complete** (2026-09-04)
+
+Epic [#27](https://github.com/Anna-Hax/JUNO/issues/27) closed; milestone [M4: v1.3 Proactive & Mobile](https://github.com/Anna-Hax/JUNO/milestone/10) complete. Gate: [`docs/v1.3-release-gate.md`](v1.3-release-gate.md).
+
+---
+
+## Unlock M5 (planning) — not started
+
+Epic: [#28](https://github.com/Anna-Hax/JUNO/issues/28) — *Epic: M5 v2 polish*. Do not expand child issues until an explicit M5 kickoff.
 
 ---
 
