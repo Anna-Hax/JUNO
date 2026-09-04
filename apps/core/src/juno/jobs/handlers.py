@@ -48,4 +48,13 @@ async def digest_weekly(app: Any) -> None:
 
 
 async def resurfacing(app: Any) -> None:
-    logger.info("job resurfacing tick (push body deferred to #89)")
+    from juno.jobs.resurface import apply_resurface_candidates, find_resurface_candidates
+
+    db = getattr(app.state, "db", None) if app is not None else None
+    vectors = getattr(app.state, "vectors", None) if app is not None else None
+    if db is None:
+        logger.info("resurfacing skipped — database not attached")
+        return
+    candidates = await find_resurface_candidates(db, vectors)
+    stats = await apply_resurface_candidates(app, candidates)
+    logger.info("resurfacing pushed=%s queued=%s", stats["pushed"], stats["queued"])

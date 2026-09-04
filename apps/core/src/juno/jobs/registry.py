@@ -18,6 +18,7 @@ RESURFACING_JOB_ID = "resurfacing"
 TOGGLEABLE_JOBS = {
     "daily": DIGEST_DAILY_JOB_ID,
     "weekly": DIGEST_WEEKLY_JOB_ID,
+    "resurface": RESURFACING_JOB_ID,
 }
 
 

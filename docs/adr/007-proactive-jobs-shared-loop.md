@@ -45,7 +45,7 @@ Concrete rules (`juno.jobs.scheduler`):
    - Per-job enable + 5-field crontab: `JUNO_JOBS_DIGEST_DAILY` / `_CRON` (default `0 7 * * *`), `JUNO_JOBS_DIGEST_WEEKLY` / `_CRON` (default `0 7 * * mon`), `JUNO_JOBS_RESURFACING` / `_CRON` (default off, `0 * * * *`)
 6. Tests and CI must not require live Telegram: `builtin_job_specs` / `register_job_specs` import and register without a bot; keep `JUNO_JOBS_SMOKE` off unless an operator is proving the loop.
 
-Named jobs live in `juno.jobs.registry` (`digest_daily`, `digest_weekly`, `resurfacing`). Invalid crontab fails at serve start (`CronTrigger.from_crontab`). Digest push bodies land in [#88](https://github.com/Anna-Hax/JUNO/issues/88) (`push_scheduled_digest` reuses `/digest` grouping; `/jobs daily|weekly on|off` persists enable flags). Resurfacing stays [#89](https://github.com/Anna-Hax/JUNO/issues/89); `module_health.jobs` stays [#94](https://github.com/Anna-Hax/JUNO/issues/94).
+Named jobs live in `juno.jobs.registry` (`digest_daily`, `digest_weekly`, `resurfacing`). Invalid crontab fails at serve start (`CronTrigger.from_crontab`). Digest push bodies land in [#88](https://github.com/Anna-Hax/JUNO/issues/88). Resurfacing ([#89](https://github.com/Anna-Hax/JUNO/issues/89)) pushes high-confidence “this came up again” notes and queues low-confidence suggestions as HITL `resurface`. `module_health.jobs` stays [#94](https://github.com/Anna-Hax/JUNO/issues/94).
 
 ## Consequences
 

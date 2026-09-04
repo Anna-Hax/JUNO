@@ -33,11 +33,11 @@ HELP_TEXT = (
     "/start — hello\n"
     "/help — this message\n"
     "/digest today|week — recent captures\n"
-    "/jobs — scheduled digest on/off (daily|weekly)\n"
+    "/jobs — scheduled digest / resurfacing on|off\n"
     "/pause — stop all ingest\n"
     "/resume — resume ingest (processes inbox backlog)\n"
     "/status — capture + module health\n"
-    "/review — HITL queue (Approve / Reject / Skip: merges, IDE error-match, chat batches)\n"
+    "/review — HITL Approve/Reject/Skip (merges, IDE, chat batches, resurfacing)\n"
     "Ask a question to search the graph.\n"
     "Forward a message, send a link, or attach a doc to capture."
 )
@@ -105,7 +105,7 @@ async def jobs_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await update.message.reply_text(format_jobs_status(svc.app))
         return
     if len(args) != 2 or args[0] not in TOGGLEABLE_JOBS or args[1] not in {"on", "off"}:
-        await update.message.reply_text("Usage: /jobs   or   /jobs daily|weekly on|off")
+        await update.message.reply_text("Usage: /jobs   or   /jobs daily|weekly|resurface on|off")
         return
     job_id = TOGGLEABLE_JOBS[args[0]]
     msg = await set_cron_job_enabled(svc.app, job_id, enabled=args[1] == "on")

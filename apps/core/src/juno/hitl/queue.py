@@ -17,6 +17,7 @@ Decision = Literal["approve", "reject", "skip"]
 KIND_MERGE = "merge"
 KIND_ERROR_MATCH = "error_match"
 KIND_IDE_BATCH = "ide_batch"
+KIND_RESURFACE = "resurface"
 STATUS_PENDING = "pending"
 STATUS_SKIPPED = "skipped"
 STATUS_DECIDED = "decided"
@@ -66,6 +67,14 @@ class ReviewCard:
             if reason:
                 lines.append(str(reason))
             lines.append("Approve to keep this batch in the graph; Reject to leave it unconfirmed.")
+        elif self.kind == KIND_RESURFACE:
+            recent = str(self.payload.get("recent_title") or "recent")
+            past = str(self.payload.get("past_title") or "earlier")
+            lines.append(f'This came up again?\nNow: "{recent}"\nEarlier: "{past}"')
+            reason = self.payload.get("reason")
+            if reason:
+                lines.append(str(reason))
+            lines.append("Approve if it is the same topic; Reject to ignore this suggestion.")
         else:
             preview = str(self.payload)[:500]
             if preview:

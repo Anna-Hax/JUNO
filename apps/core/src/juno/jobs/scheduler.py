@@ -218,5 +218,5 @@ def format_jobs_status(app: Any) -> str:
         nxt = job.next_run_time
         when = nxt.strftime("%Y-%m-%d %H:%M %Z") if nxt is not None else "paused"
         lines.append(f"• {spec.id}: on → {when}  ({spec.crontab})")
-    lines.append("Toggle: /jobs daily on|off  /jobs weekly on|off")
+    lines.append("Toggle: /jobs daily|weekly|resurface on|off")
     return "\n".join(lines)
