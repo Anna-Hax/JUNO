@@ -34,7 +34,7 @@ JUNO/
 | Jobs | `jobs/scheduler.py`, `jobs/registry.py`, `jobs/handlers.py`, `jobs/health.py`, `jobs/resurface.py` | AsyncIOScheduler + named cron registry (ADR-07) |
 | Drafts | `drafts/generate.py`, `drafts/kinds.py`, `drafts/flashcards.py`, `drafts/journal.py` | HITL journal/flashcard/doc; SRS after flashcard approve; IDE journal/README via `/drafts` (ADR-09) |
 | API | `api/__init__.py` | FastAPI routes + token + loopback middleware |
-| Bot | `bot/handlers.py`, `bot/services.py`, `bot/review.py` | Telegram allowlist, query, capture, pause/digest/status ([#18](https://github.com/Anna-Hax/JUNO/issues/18) / [#19](https://github.com/Anna-Hax/JUNO/issues/19)); HITL `/review` ([#20](https://github.com/Anna-Hax/JUNO/issues/20)) |
+| Bot | `bot/handlers.py`, `bot/services.py`, `bot/review.py` | Telegram allowlist, query, capture, pause/digest/status ([#18](https://github.com/Anna-Hax/JUNO/issues/18) / [#19](https://github.com/Anna-Hax/JUNO/issues/19)); HITL `/review` ([#20](https://github.com/Anna-Hax/JUNO/issues/20)); opt-in Slack.com links ([ADR-11](../adr/011-slack-forward.md)) |
 | Graph DB | `graph/db.py`, `graph/migrations.py`, `graph/ownership.py` | Engine, WAL, write queue, Alembic upgrade/stamp; export/wipe ([#23](https://github.com/Anna-Hax/JUNO/issues/23)) |
 | Vectors | `graph/vectors.py` | Persistent Chroma; one collection per embedding model ([ADR-04](../adr/004-chroma-collections.md)) |
 | Models | `models/__init__.py` | SQLAlchemy tables including `draft_artifacts` |

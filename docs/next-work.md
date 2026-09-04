@@ -198,12 +198,12 @@ Milestone: [M5: v2.0 Polish & Extensions](https://github.com/Anna-Hax/JUNO/miles
 | 4 | [#109](https://github.com/Anna-Hax/JUNO/issues/109) | Auto-drafted dev journal / README drafts — ✅ [session 52](sessions/52-session-journal-drafts.md) |
 | 5 | [#110](https://github.com/Anna-Hax/JUNO/issues/110) | Skill-gap tracking — ✅ [session 53](sessions/53-session-skill-gaps.md) |
 | 6 | [#111](https://github.com/Anna-Hax/JUNO/issues/111) | Trust dial — per-category auto-commit thresholds — ✅ [session 54](sessions/54-session-trust-dial.md) |
-| 7 | [#112](https://github.com/Anna-Hax/JUNO/issues/112) | Optional Slack forward into upload space |
+| 7 | [#112](https://github.com/Anna-Hax/JUNO/issues/112) | Optional Slack forward into upload space — ✅ [session 55](sessions/55-session-slack-forward.md) |
 | 8 | [#113](https://github.com/Anna-Hax/JUNO/issues/113) | Prune-with-confirm — retention / destructive graph cleanup |
 | 9 | [#114](https://github.com/Anna-Hax/JUNO/issues/114) | Module health — polish jobs freshness + respect /pause |
 | 10 | [#115](https://github.com/Anna-Hax/JUNO/issues/115) | M5 gate — polish tests, ADR, README, v2.0 release gate |
 
-**First coding task:** #106–#111 ✅. Next: optional Slack forward ([#112](https://github.com/Anna-Hax/JUNO/issues/112)).
+**First coding task:** #106–#112 ✅. Next: prune-with-confirm ([#113](https://github.com/Anna-Hax/JUNO/issues/113)).
 
 ### M5 design constraints (do not violate)
 
@@ -212,7 +212,7 @@ Milestone: [M5: v2.0 Polish & Extensions](https://github.com/Anna-Hax/JUNO/miles
 3. Schema changes = new Alembic revision ([ADR-03](adr/003-alembic.md)).
 4. Vectors only via the serve-process `VectorStore` after ingest ([ADR-04](adr/004-chroma-collections.md)).
 5. Auto-generated artifacts stay HITL drafts until approve — never auto-publish ([#107](https://github.com/Anna-Hax/JUNO/issues/107), [#20](https://github.com/Anna-Hax/JUNO/issues/20) patterns).
-6. Destructive prune always requires confirm ([#113](https://github.com/Anna-Hax/JUNO/issues/113)). Slack is opt-in forward into the existing inbox — not a live workspace listener ([#112](https://github.com/Anna-Hax/JUNO/issues/112)).
+6. Destructive prune always requires confirm ([#113](https://github.com/Anna-Hax/JUNO/issues/113)). Slack is opt-in forward into the existing inbox — not a live workspace listener ([#112](https://github.com/Anna-Hax/JUNO/issues/112), [ADR-11](adr/011-slack-forward.md)).
 
 ### Explicitly **not** M5 (keep deferred)
 

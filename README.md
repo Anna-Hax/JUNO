@@ -11,7 +11,7 @@ Personal knowledge-graph agent: passively (and manually) capture what you read, 
 - **Chroma** for vectors — persistent client, one collection per embedding model ([ADR-04](docs/adr/004-chroma-collections.md)); **stub embedder** in CI
 - **Browser extension** (`apps/extension`): MV3 loopback client ([ADR-05](docs/adr/005-browser-extension-client.md)); Spike S2 captures tabs → `POST /ingest`
 - **IDE adapter** (`apps/ide`): read-only Cursor `state.vscdb` client ([ADR-06](docs/adr/006-ide-adapter-client.md)); poll/watch posts chats + terminal errors → `POST /ingest` (runbook in [`apps/ide/README.md`](apps/ide/README.md))
-- **Inbox** (`inbox/`): drop `.txt` / `.md` / `.pdf` / `.url` (or a one-line http(s) text file). `juno serve` watches the folder; good files move to `inbox/.processed/`, unreadable PDFs to `inbox/.failed/`.
+- **Inbox** (`inbox/`): drop `.txt` / `.md` / `.pdf` / `.url` (or a one-line http(s) text file). `juno serve` watches the folder; good files move to `inbox/.processed/`, unreadable PDFs to `inbox/.failed/`. Optional Slack.com links via Telegram when `JUNO_SLACK_FORWARD=true` (not a workspace bot; [ADR-11](docs/adr/011-slack-forward.md)).
 - **HITL** (`/review`): inline Approve / Reject / Skip for pending graph merges, sensitive batches, and auto-generated **drafts** (never auto-published; [ADR-09](docs/adr/009-draft-artifacts-hitl.md))
 
 ## Prerequisites

@@ -80,7 +80,7 @@ class FakePipeline:
         self.calls.append(("url", url, kwargs))
         return IngestResult(
             accepted=True,
-            source_type="telegram",
+            source_type=str(kwargs.get("source_type") or "telegram"),
             status="committed",
             capture_id=8,
             chunk_count=2,
@@ -333,6 +333,38 @@ async def test_url_and_forward_are_captured(allowed_settings):
     assert pipeline.calls[1][0] == "text"
     assert pipeline.calls[1][1] == "a forwarded note about ownership"
     assert "Captured #7" in fwd.message.reply_text.await_args.args[0]
+
+
+@pytest.mark.asyncio
+async def test_slack_url_requires_opt_in(allowed_settings):
+    from juno.bot.services import is_slack_url
+
+    assert is_slack_url("https://acme.slack.com/archives/C123/p1")
+    pipeline = FakePipeline()
+    svc = _svc(allowed_settings, pipeline=pipeline, app=create_app(allowed_settings))
+    update = _update(ALLOWED_ID, "https://acme.slack.com/archives/C123/p1")
+    await text_msg(update, _context(svc))
+    assert pipeline.calls == []
+    assert "Slack forward is off" in update.message.reply_text.await_args.args[0]
+
+
+@pytest.mark.asyncio
+async def test_slack_url_ingests_when_enabled(allowed_settings, db):
+    from juno.hitl.queue import KIND_MOBILE_BATCH, ReviewQueue
+
+    allowed_settings.juno_slack_forward = True
+    pipeline = FakePipeline()
+    svc = _svc(allowed_settings, db=db, pipeline=pipeline, app=create_app(allowed_settings, db=db))
+    update = _update(ALLOWED_ID, "https://acme.slack.com/archives/C123/p1")
+    await text_msg(update, _context(svc))
+    assert pipeline.calls[0][0] == "url"
+    assert pipeline.calls[0][2]["source_type"] == "slack"
+    reply = update.message.reply_text.await_args.args[0]
+    assert "Queued for /review" in reply
+    card = await ReviewQueue(db).next_open()
+    assert card is not None
+    assert card.kind == KIND_MOBILE_BATCH
+    assert "Slack" in card.payload["title"]
 
 
 @pytest.mark.asyncio

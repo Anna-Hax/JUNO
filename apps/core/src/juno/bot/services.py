@@ -22,6 +22,7 @@ BOT_DATA_KEY = "juno"
 CAPTURE_PAUSED_KEY = "capture_paused"
 TELEGRAM_LIMIT = 4000
 _URL_ONLY = re.compile(r"^https?://\S+$", re.IGNORECASE)
+_SLACK_HOST = re.compile(r"(^|\.)slack\.com$", re.IGNORECASE)
 
 
 @dataclass
@@ -61,6 +62,18 @@ def single_http_url(text: str) -> str | None:
     if _URL_ONLY.match(stripped):
         return stripped
     return None
+
+
+def is_slack_url(text: str) -> bool:
+    """True for slack.com links (opt-in forward into the upload space, not a workspace bot)."""
+    url = single_http_url(text) or (text or "").strip()
+    try:
+        host = urlparse(url).netloc.lower()
+    except ValueError:
+        return False
+    if host.startswith("www."):
+        host = host[4:]
+    return bool(_SLACK_HOST.search(host) or host.endswith(".slack.com") or host == "slack.com")
 
 
 def is_forwarded(message: Any) -> bool:
@@ -400,7 +413,7 @@ async def related_upload_captures(
     return await related_captures(
         db,
         hits=browser_hits,
-        source_types=("upload", "telegram", "url", "api"),
+        source_types=("upload", "telegram", "url", "api", "slack"),
         limit=limit,
     )
 
