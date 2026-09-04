@@ -149,10 +149,10 @@ Milestone: [M4: v1.3 Proactive & Mobile](https://github.com/Anna-Hax/JUNO/milest
 | 6 | [#91](https://github.com/Anna-Hax/JUNO/issues/91) | Voice memos — Telegram voice → transcription → ingest — ✅ [session 44](sessions/44-session-voice.md) |
 | 7 | [#92](https://github.com/Anna-Hax/JUNO/issues/92) | Mobile depth — phone captures via Telegram + sensitive HITL — ✅ [session 45](sessions/45-session-mobile-hitl.md) |
 | 8 | [#93](https://github.com/Anna-Hax/JUNO/issues/93) | PC-off / serve-down status for operators — ✅ [session 46](sessions/46-session-serve-down.md) |
-| 9 | [#94](https://github.com/Anna-Hax/JUNO/issues/94) | Module health — jobs scheduler freshness + respect /pause |
+| 9 | [#94](https://github.com/Anna-Hax/JUNO/issues/94) | Module health — jobs scheduler freshness + respect /pause — ✅ [session 47](sessions/47-session-jobs-health.md) |
 | 10 | [#95](https://github.com/Anna-Hax/JUNO/issues/95) | M4 gate — jobs tests, ADR, README, v1.3 release gate |
 
-**First coding task:** #86–#93 ✅. Next: jobs module health ([#94](https://github.com/Anna-Hax/JUNO/issues/94)).
+**First coding task:** #86–#94 ✅. Next: M4 gate ([#95](https://github.com/Anna-Hax/JUNO/issues/95)).
 
 ### M4 design constraints (do not violate)
 

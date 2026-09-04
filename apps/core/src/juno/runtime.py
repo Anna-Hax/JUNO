@@ -38,6 +38,7 @@ from juno.hitl.queue import ReviewQueue
 from juno.ingest.pipeline import IngestPipeline
 from juno.ingest.watcher import InboxWatcher
 from juno.jobs import load_job_enabled_overrides, start_jobs, stop_jobs
+from juno.jobs.health import record_jobs_health
 from juno.llm.chat import ChatProvider, create_chat_provider
 from juno.llm.embedder import Embedder, create_embedder
 from juno.llm.transcribe import create_transcriber
@@ -186,6 +187,10 @@ def attach_lifespan(fastapi_app: FastAPI) -> FastAPI:
 
         app.state.job_enabled_overrides = await load_job_enabled_overrides(db)
         start_jobs(app)
+        if getattr(app.state, "scheduler", None) is not None:
+            await record_jobs_health(db, detail="scheduler started", ok=True)
+        else:
+            await record_jobs_health(db, detail="scheduler disabled", ok=True)
 
         yield
 

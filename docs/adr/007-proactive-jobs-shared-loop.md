@@ -45,7 +45,7 @@ Concrete rules (`juno.jobs.scheduler`):
    - Per-job enable + 5-field crontab: `JUNO_JOBS_DIGEST_DAILY` / `_CRON` (default `0 7 * * *`), `JUNO_JOBS_DIGEST_WEEKLY` / `_CRON` (default `0 7 * * mon`), `JUNO_JOBS_RESURFACING` / `_CRON` (default off, `0 * * * *`)
 6. Tests and CI must not require live Telegram: `builtin_job_specs` / `register_job_specs` import and register without a bot; keep `JUNO_JOBS_SMOKE` off unless an operator is proving the loop.
 
-Named jobs live in `juno.jobs.registry` (`digest_daily`, `digest_weekly`, `resurfacing`). Invalid crontab fails at serve start (`CronTrigger.from_crontab`). Digest push bodies land in [#88](https://github.com/Anna-Hax/JUNO/issues/88). Resurfacing ([#89](https://github.com/Anna-Hax/JUNO/issues/89)) pushes high-confidence “this came up again” notes and queues low-confidence suggestions as HITL `resurface`. `module_health.jobs` stays [#94](https://github.com/Anna-Hax/JUNO/issues/94).
+Named jobs live in `juno.jobs.registry` (`digest_daily`, `digest_weekly`, `resurfacing`). Invalid crontab fails at serve start (`CronTrigger.from_crontab`). Digest push bodies land in [#88](https://github.com/Anna-Hax/JUNO/issues/88). Resurfacing ([#89](https://github.com/Anna-Hax/JUNO/issues/89)) pushes high-confidence “this came up again” notes and queues low-confidence suggestions as HITL `resurface`. `module_health.jobs` records scheduler freshness ([#94](https://github.com/Anna-Hax/JUNO/issues/94)).
 
 ## Consequences
 
@@ -68,3 +68,7 @@ Issue [#86](https://github.com/Anna-Hax/JUNO/issues/86): `AsyncIOScheduler` date
 ## Scaffold (#87)
 
 Issue [#87](https://github.com/Anna-Hax/JUNO/issues/87): `builtin_job_specs` + `register_job_specs` on the serve loop; CI registers cron jobs without sending Telegram (see [session 40](../sessions/40-session-jobs-scaffold.md)).
+
+## Module health (#94)
+
+Issue [#94](https://github.com/Anna-Hax/JUNO/issues/94): `module_health.jobs` is written through `Database.write()` on scheduler start and after each digest/resurfacing tick (including `/pause` skips). Last success/error shows on Telegram `/status` and `GET /status.modules`.
