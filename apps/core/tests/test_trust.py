@@ -22,8 +22,11 @@ async def test_mobile_and_drafts_stay_gated(db):
         await set_auto(db, "mobile", True)
     with pytest.raises(ValueError, match="gated"):
         await set_auto(db, "drafts", True)
+    with pytest.raises(ValueError, match="gated"):
+        await set_auto(db, "prune", True)
     assert await should_auto_commit(db, "mobile", 0.99) is False
     assert await should_auto_commit(db, "drafts", 0.99) is False
+    assert await should_auto_commit(db, "prune", 0.99) is False
 
 
 @pytest.mark.asyncio

@@ -14,6 +14,7 @@ from juno.bot.handlers import (
     help_cmd,
     jobs_cmd,
     pause_cmd,
+    prune_cmd,
     resume_cmd,
     start_cmd,
     status_cmd,
@@ -259,6 +260,7 @@ def test_build_telegram_application_registers_commands(allowed_settings):
         "drafts",
         "gaps",
         "trust",
+        "prune",
     }
 
 
@@ -296,6 +298,7 @@ async def test_start_and_help_reply_for_allowlisted_user(allowed_settings):
     assert "/drafts" in body
     assert "/gaps" in body
     assert "/trust" in body
+    assert "/prune" in body
     assert "Approve" in body
 
 
@@ -365,6 +368,43 @@ async def test_slack_url_ingests_when_enabled(allowed_settings, db):
     assert card is not None
     assert card.kind == KIND_MOBILE_BATCH
     assert "Slack" in card.payload["title"]
+
+
+@pytest.mark.asyncio
+async def test_prune_confirm_queues_hitl(allowed_settings, db):
+    from datetime import UTC, datetime, timedelta
+
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from juno.graph.vectors import VectorStore
+    from juno.hitl.queue import KIND_PRUNE, ReviewQueue
+    from juno.ingest.pipeline import IngestPipeline
+    from juno.llm.embedder import StubEmbedder
+    from juno.models import Capture
+
+    allowed_settings.juno_prune_min_age_days = 90
+    vectors = VectorStore(allowed_settings, StubEmbedder())
+    pipe = IngestPipeline(db, vectors=vectors)
+    result = await pipe.ingest_text("old dust", source_type="upload", title="dust")
+
+    async def age(session: AsyncSession) -> None:
+        cap = await session.get(Capture, result.capture_id)
+        assert cap is not None
+        cap.captured_at = datetime.now(UTC) - timedelta(days=100)
+
+    await db.write(age)
+    svc = _svc(allowed_settings, db=db, vectors=vectors)
+    listed = _update(ALLOWED_ID, "/prune")
+    await prune_cmd(listed, _context(svc))
+    preview = listed.message.reply_text.await_args.args[0]
+    assert "Nothing is deleted" in preview
+    queued = _update(ALLOWED_ID, "/prune confirm")
+    await prune_cmd(queued, _context(svc, args=["confirm"]))
+    assert "Queued prune" in queued.message.reply_text.await_args.args[0]
+    card = await ReviewQueue(db).next_open()
+    assert card is not None
+    assert card.kind == KIND_PRUNE
+    assert result.capture_id in card.payload["capture_ids"]
 
 
 @pytest.mark.asyncio

@@ -15,8 +15,8 @@ PRD §8 P2: as the agent earns confidence in a category, that category's gate ca
 ## Decision
 
 1. Store dials in `settings` (`trust.{category}.successes` / `.auto` / `.threshold`). No extra table.
-2. Categories: `merge`, `browser`, `ide_error`, `mobile`, `drafts`.
-3. **`mobile` and `drafts` are locked** — `/trust mobile on` is rejected; `should_auto_commit` is always false.
+2. Categories: `merge`, `browser`, `ide_error`, `mobile`, `drafts`, `prune`.
+3. **`mobile`, `drafts`, and `prune` are locked** — `/trust mobile on` is rejected; `should_auto_commit` is always false.
 4. Five successful Approve taps on `merge` or `ide_error` turns auto-commit **on** for that category. High-confidence (`>= 0.8`) merges then commit without a pending `/review` card (audit row still stored as decided).
 5. Operator can `/trust merge|browser|ide_error on|off`. `/status` lists current dials.
 
@@ -24,3 +24,4 @@ PRD §8 P2: as the agent earns confidence in a category, that category's gate ca
 
 - Early graphs stay HITL-heavy; a month of good merge reviews can loosen only merges.
 - Draft auto-publish remains forbidden ([ADR-09](009-draft-artifacts-hitl.md)).
+- Selective prune stays confirm-only ([ADR-12](012-prune-with-confirm.md)).

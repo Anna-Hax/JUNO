@@ -31,6 +31,29 @@ def main(argv: list[str] | None = None) -> None:
         help='Must be exactly "wipe-all-data"',
     )
 
+    prune_p = sub.add_parser(
+        "prune",
+        help="Queue HITL prune of old/unused captures (never silent delete)",
+    )
+    prune_p.add_argument(
+        "--days",
+        type=int,
+        default=None,
+        help="Minimum age in days for unused captures (default: JUNO_PRUNE_MIN_AGE_DAYS)",
+    )
+    prune_p.add_argument(
+        "-o",
+        "--export",
+        type=Path,
+        default=None,
+        help="Optional JSON export path written before queueing (full graph, same as juno export)",
+    )
+    prune_p.add_argument(
+        "--confirm",
+        default="",
+        help='Must be exactly "prune-selected" to queue /review; omit for dry-run',
+    )
+
     sub.add_parser("version", help="Print version")
 
     args = parser.parse_args(argv)
@@ -66,6 +89,10 @@ def main(argv: list[str] | None = None) -> None:
 
     if args.command == "wipe":
         asyncio.run(_wipe(args.confirm))
+        return
+
+    if args.command == "prune":
+        asyncio.run(_prune(days=args.days, confirm=args.confirm, export_path=args.export))
         return
 
     parser.print_help()
@@ -131,6 +158,73 @@ async def _wipe(confirm: str) -> None:
     print(f"Wiped {len(removed)} path(s); empty schema at {settings.sqlite_path}")
     for path in removed:
         print(f"  removed {path}")
+
+
+async def _prune(
+    days: int | None,
+    confirm: str,
+    export_path: Path | None,
+) -> None:
+    from juno.config import get_settings
+    from juno.graph.db import Database
+    from juno.graph.ownership import build_export_payload, write_export_file
+    from juno.graph.prune import (
+        DEFAULT_MIN_AGE_DAYS,
+        PRUNE_CONFIRM_PHRASE,
+        format_candidates,
+        list_prune_candidates,
+        propose_prune,
+    )
+    from juno.graph.vectors import VectorStore
+    from juno.llm.embedder import create_embedder
+
+    settings = get_settings()
+    age = settings.juno_prune_min_age_days or DEFAULT_MIN_AGE_DAYS
+    min_days = int(days if days is not None else age)
+    db = Database(settings)
+    await db.migrate()
+    vectors = None
+    try:
+        candidates = await list_prune_candidates(db, min_age_days=min_days)
+        print(format_candidates(candidates, min_age_days=min_days))
+        if not confirm:
+            print("Dry-run only. Re-run with --confirm prune-selected to queue HITL.")
+            return
+        if confirm != PRUNE_CONFIRM_PHRASE:
+            print(
+                f'Refuse prune queue without --confirm "{PRUNE_CONFIRM_PHRASE}" '
+                "(this still does not delete; Approve in /review archives).",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        exported = None
+        if export_path is not None:
+            try:
+                embedder = create_embedder(settings.embedding_backend, settings.embedding_model)
+            except Exception:
+                embedder = create_embedder("stub", settings.embedding_model)
+            vectors = VectorStore(settings, embedder)
+            payload = await build_export_payload(
+                settings, db=db, vectors=vectors, embedder=embedder
+            )
+            dest = write_export_file(payload, export_path)
+            exported = str(dest)
+            print(f"Export written to {dest}")
+        if not candidates:
+            return
+        card = await propose_prune(db, candidates=candidates, exported_path=exported)
+        if card is None:
+            print("Already queued in /review. Nothing deleted.")
+            return
+        print(
+            f"Queued prune review #{card.id} "
+            f"({len(card.payload.get('capture_ids') or [])} capture(s)). "
+            "Approve in Telegram /review to archive. Not a wipe."
+        )
+    finally:
+        if vectors is not None:
+            vectors.close()
+        await db.dispose()
 
 
 if __name__ == "__main__":

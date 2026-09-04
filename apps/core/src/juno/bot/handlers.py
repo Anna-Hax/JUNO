@@ -38,11 +38,12 @@ HELP_TEXT = (
     "/pause — stop all ingest\n"
     "/resume — resume ingest (processes inbox backlog)\n"
     "/status — capture + module health\n"
-    "/review — HITL Approve/Reject/Skip (merges, IDE, mobile, resurfacing, drafts)\n"
+    "/review — HITL Approve/Reject/Skip (merges, IDE, mobile, resurfacing, drafts, prune)\n"
     "/cards — flashcards due (Again/Good); new cards stay drafts until /review\n"
     "/drafts journal|readme — queue an IDE journal or README draft (never writes files)\n"
     "/gaps — repeat IDE errors / unfinished reads (low-confidence stays in /review)\n"
-    "/trust — per-category auto-commit dials (mobile/drafts stay gated)\n"
+    "/trust — per-category auto-commit dials (mobile/drafts/prune stay gated)\n"
+    "/prune — list old/unused; /prune confirm queues HITL (never silent delete)\n"
     "Ask a question to search the graph.\n"
     "Forward a message, send a link, attach a doc, or send a voice note to capture.\n"
     "Slack.com links ingest only when JUNO_SLACK_FORWARD=true (not a workspace bot)."
@@ -196,6 +197,47 @@ async def trust_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await update.message.reply_text(str(exc))
         return
     await update.message.reply_text(dial.summary())
+
+
+async def prune_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not update.message or not _authorized(update, context):
+        return
+    svc = _services(context)
+    if svc is None or svc.db is None:
+        await update.message.reply_text("Prune unavailable (database not attached).")
+        return
+    from juno.graph.prune import (
+        DEFAULT_MIN_AGE_DAYS,
+        format_candidates,
+        list_prune_candidates,
+        propose_prune,
+    )
+
+    days = int(
+        getattr(svc.settings, "juno_prune_min_age_days", DEFAULT_MIN_AGE_DAYS)
+        or DEFAULT_MIN_AGE_DAYS
+    )
+    candidates = await list_prune_candidates(svc.db, min_age_days=days)
+    args = [a.lower() for a in (context.args or [])]
+    if not args:
+        await update.message.reply_text(format_candidates(candidates, min_age_days=days))
+        return
+    if args != ["confirm"]:
+        await update.message.reply_text("Usage: /prune   or   /prune confirm")
+        return
+    if not candidates:
+        await update.message.reply_text(format_candidates(candidates, min_age_days=days))
+        return
+    card = await propose_prune(svc.db, candidates=candidates)
+    if card is None:
+        await update.message.reply_text(
+            "Those captures are already waiting in /review. Approve there; nothing was deleted."
+        )
+        return
+    await update.message.reply_text(
+        f"Queued prune #{card.id} for /review ({len(card.payload.get('capture_ids') or [])} "
+        "capture(s)). Approve archives; Reject leaves them. Not a wipe."
+    )
 
 
 async def pause_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

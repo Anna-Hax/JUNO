@@ -142,6 +142,8 @@ async def retrieve(
     sourced: list[SourcedHit] = []
     for hit in hits:
         chunk, capture = by_chroma.get(hit.id, (None, None))
+        if capture is not None and capture.status == "archived":
+            continue
         meta = hit.metadata or {}
         text = (chunk.text if chunk is not None else None) or hit.text or ""
         sourced.append(
