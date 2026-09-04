@@ -62,6 +62,7 @@ Living notes for what was implemented, how GitHub is set up, and what to do next
 | [54-session-trust-dial.md](54-session-trust-dial.md) | **#111** — Trust dial |
 | [55-session-slack-forward.md](55-session-slack-forward.md) | **#112** — Optional Slack forward |
 | [56-session-prune-confirm.md](56-session-prune-confirm.md) | **#113** — Prune-with-confirm |
+| [57-session-polish-health.md](57-session-polish-health.md) | **#114** — Polish jobs module health |
 | [v1.0-release-gate.md](../v1.0-release-gate.md) | M1 checklist (all P0 closed) |
 | [v1.1-release-gate.md](../v1.1-release-gate.md) | M2 checklist (browser capture) |
 | [v1.2-release-gate.md](../v1.2-release-gate.md) | M3 checklist (IDE capture) |

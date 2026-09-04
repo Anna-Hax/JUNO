@@ -146,16 +146,20 @@ async def enqueue_doc_draft(
 
 async def maybe_enqueue_smoke_draft(app: Any) -> ReviewCard | None:
     """Spike S5: one draft at serve start when JUNO_DRAFTS_SMOKE is on."""
+    from juno.jobs.health import record_polish_health
+
     settings = getattr(app.state, "settings", None)
     if settings is None or not bool(getattr(settings, "juno_drafts_smoke", False)):
         return None
+    db: Database | None = getattr(app.state, "db", None)
     if bool(getattr(app.state, "capture_paused", False)):
         logger.info("drafts smoke skipped — capture paused")
+        await record_polish_health(db, detail="drafts smoke skipped (paused)", ok=True)
         return None
-    db: Database | None = getattr(app.state, "db", None)
     if db is None:
         return None
     generator = getattr(settings, "juno_drafts_generator", GENERATOR_TEMPLATE)
     card = await enqueue_journal_draft(db, generator=generator)
     logger.info("drafts smoke queued review #%s (kind=%s)", card.id, card.kind)
+    await record_polish_health(db, detail=f"drafts smoke queued #{card.id}", ok=True)
     return card

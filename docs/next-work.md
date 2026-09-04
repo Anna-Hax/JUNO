@@ -200,10 +200,10 @@ Milestone: [M5: v2.0 Polish & Extensions](https://github.com/Anna-Hax/JUNO/miles
 | 6 | [#111](https://github.com/Anna-Hax/JUNO/issues/111) | Trust dial — per-category auto-commit thresholds — ✅ [session 54](sessions/54-session-trust-dial.md) |
 | 7 | [#112](https://github.com/Anna-Hax/JUNO/issues/112) | Optional Slack forward into upload space — ✅ [session 55](sessions/55-session-slack-forward.md) |
 | 8 | [#113](https://github.com/Anna-Hax/JUNO/issues/113) | Prune-with-confirm — retention / destructive graph cleanup — ✅ [session 56](sessions/56-session-prune-confirm.md) |
-| 9 | [#114](https://github.com/Anna-Hax/JUNO/issues/114) | Module health — polish jobs freshness + respect /pause |
+| 9 | [#114](https://github.com/Anna-Hax/JUNO/issues/114) | Module health — polish jobs freshness + respect /pause — ✅ [session 57](sessions/57-session-polish-health.md) |
 | 10 | [#115](https://github.com/Anna-Hax/JUNO/issues/115) | M5 gate — polish tests, ADR, README, v2.0 release gate |
 
-**First coding task:** #106–#113 ✅. Next: module health polish ([#114](https://github.com/Anna-Hax/JUNO/issues/114)).
+**First coding task:** #106–#114 ✅. Next: M5 gate ([#115](https://github.com/Anna-Hax/JUNO/issues/115)).
 
 ### M5 design constraints (do not violate)
 

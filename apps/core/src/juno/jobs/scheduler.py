@@ -12,10 +12,11 @@ from zoneinfo import ZoneInfo
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from juno.config import Settings
-from juno.jobs.handlers import digest_daily, digest_weekly, resurfacing
+from juno.jobs.handlers import digest_daily, digest_weekly, polish, resurfacing
 from juno.jobs.registry import (
     DIGEST_DAILY_JOB_ID,
     DIGEST_WEEKLY_JOB_ID,
+    POLISH_JOB_ID,
     RESURFACING_JOB_ID,
     JobSpec,
     apply_enabled_overrides,
@@ -31,6 +32,7 @@ _HANDLER_BY_ID = {
     DIGEST_DAILY_JOB_ID: digest_daily,
     DIGEST_WEEKLY_JOB_ID: digest_weekly,
     RESURFACING_JOB_ID: resurfacing,
+    POLISH_JOB_ID: polish,
 }
 
 
@@ -218,5 +220,5 @@ def format_jobs_status(app: Any) -> str:
         nxt = job.next_run_time
         when = nxt.strftime("%Y-%m-%d %H:%M %Z") if nxt is not None else "paused"
         lines.append(f"• {spec.id}: on → {when}  ({spec.crontab})")
-    lines.append("Toggle: /jobs daily|weekly|resurface on|off")
+    lines.append("Toggle: /jobs daily|weekly|resurface|polish on|off")
     return "\n".join(lines)

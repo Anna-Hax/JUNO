@@ -81,6 +81,8 @@ class Settings(BaseSettings):
     juno_jobs_digest_weekly_cron: str = "0 7 * * mon"
     juno_jobs_resurfacing: bool = True
     juno_jobs_resurfacing_cron: str = "0 * * * *"
+    juno_jobs_polish: bool = True
+    juno_jobs_polish_cron: str = "0 8 * * *"
 
     # M5 drafts (ADR-09): template HITL artifacts; never auto-publish.
     juno_drafts_smoke: bool = False

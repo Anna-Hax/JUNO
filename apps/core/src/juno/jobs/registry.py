@@ -15,10 +15,12 @@ from juno.models import AppSetting
 DIGEST_DAILY_JOB_ID = "digest_daily"
 DIGEST_WEEKLY_JOB_ID = "digest_weekly"
 RESURFACING_JOB_ID = "resurfacing"
+POLISH_JOB_ID = "polish"
 TOGGLEABLE_JOBS = {
     "daily": DIGEST_DAILY_JOB_ID,
     "weekly": DIGEST_WEEKLY_JOB_ID,
     "resurface": RESURFACING_JOB_ID,
+    "polish": POLISH_JOB_ID,
 }
 
 
@@ -55,6 +57,12 @@ def builtin_job_specs(settings: Settings) -> tuple[JobSpec, ...]:
             enabled=settings.juno_jobs_resurfacing,
             timezone=tz,
         ),
+        JobSpec(
+            id=POLISH_JOB_ID,
+            crontab=settings.juno_jobs_polish_cron,
+            enabled=settings.juno_jobs_polish,
+            timezone=tz,
+        ),
     )
 
 
@@ -86,7 +94,7 @@ def apply_enabled_overrides(
 
 
 async def load_job_enabled_overrides(db: Database) -> dict[str, bool]:
-    keys = (DIGEST_DAILY_JOB_ID, DIGEST_WEEKLY_JOB_ID, RESURFACING_JOB_ID)
+    keys = (DIGEST_DAILY_JOB_ID, DIGEST_WEEKLY_JOB_ID, RESURFACING_JOB_ID, POLISH_JOB_ID)
 
     async def fn(session: AsyncSession) -> dict[str, bool]:
         out: dict[str, bool] = {}

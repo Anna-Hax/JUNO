@@ -86,3 +86,47 @@ async def resurfacing(app: Any) -> None:
         logger.exception("resurfacing failed")
         await record_jobs_health(db, detail="resurfacing", ok=False, error=str(exc))
         raise
+
+
+async def polish(app: Any) -> None:
+    """Generate HITL flashcard/journal drafts. No Telegram push; skip when paused."""
+    from sqlalchemy import func, select
+
+    from juno.drafts.flashcards import queue_highlight_flashcards
+    from juno.drafts.journal import queue_ide_journal_draft
+    from juno.drafts.kinds import DRAFT_KIND_JOURNAL, STATUS_PENDING
+    from juno.jobs.health import record_polish_health
+    from juno.models import DraftArtifact
+
+    db = getattr(app.state, "db", None) if app is not None else None
+    if db is None:
+        logger.info("polish skipped — database not attached")
+        return
+    try:
+        if app is not None and bool(getattr(app.state, "capture_paused", False)):
+            await record_polish_health(db, detail="polish skipped (paused)", ok=True)
+            return
+        cards = await queue_highlight_flashcards(db, paused=False)
+
+        async def pending_journals(session) -> int:
+            result = await session.execute(
+                select(func.count())
+                .select_from(DraftArtifact)
+                .where(DraftArtifact.kind == DRAFT_KIND_JOURNAL)
+                .where(DraftArtifact.status == STATUS_PENDING)
+            )
+            return int(result.scalar_one())
+
+        journal_n = 0
+        if await db.read(pending_journals) == 0:
+            queued = await queue_ide_journal_draft(db, paused=False)
+            journal_n = 1 if queued is not None else 0
+        await record_polish_health(
+            db,
+            detail=f"polish flashcards={len(cards)} journal={journal_n}",
+            ok=True,
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("polish failed")
+        await record_polish_health(db, detail="polish", ok=False, error=str(exc))
+        raise

@@ -3,6 +3,7 @@
 from juno.jobs.registry import (
     DIGEST_DAILY_JOB_ID,
     DIGEST_WEEKLY_JOB_ID,
+    POLISH_JOB_ID,
     RESURFACING_JOB_ID,
     TOGGLEABLE_JOBS,
     JobSpec,
@@ -28,6 +29,7 @@ from juno.jobs.scheduler import (
 __all__ = [
     "DIGEST_DAILY_JOB_ID",
     "DIGEST_WEEKLY_JOB_ID",
+    "POLISH_JOB_ID",
     "RESURFACING_JOB_ID",
     "SMOKE_JOB_ID",
     "SMOKE_TEXT",
