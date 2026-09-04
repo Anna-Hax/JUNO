@@ -86,6 +86,9 @@ class Settings(BaseSettings):
     juno_drafts_smoke: bool = False
     juno_drafts_generator: str = "template"  # template (llm deferred to #109)
 
+    # M5 Slack (PRD §6.3): opt-in URL/doc forward into inbox space — not a workspace bot.
+    juno_slack_forward: bool = False
+
     def allowed_user_id_set(self) -> set[int]:
         if not self.allowed_telegram_user_ids.strip():
             return set()

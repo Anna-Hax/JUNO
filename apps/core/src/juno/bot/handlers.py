@@ -20,6 +20,7 @@ from juno.bot.services import (
     format_digest,
     format_status,
     is_forwarded,
+    is_slack_url,
     recent_captures,
     single_http_url,
     user_allowed,
@@ -43,7 +44,8 @@ HELP_TEXT = (
     "/gaps — repeat IDE errors / unfinished reads (low-confidence stays in /review)\n"
     "/trust — per-category auto-commit dials (mobile/drafts stay gated)\n"
     "Ask a question to search the graph.\n"
-    "Forward a message, send a link, attach a doc, or send a voice note to capture."
+    "Forward a message, send a link, attach a doc, or send a voice note to capture.\n"
+    "Slack.com links ingest only when JUNO_SLACK_FORWARD=true (not a workspace bot)."
 )
 
 
@@ -364,6 +366,22 @@ async def _capture_text(update: Update, context: ContextTypes.DEFAULT_TYPE, text
     url = single_http_url(text)
     title = None
     try:
+        if url and is_slack_url(url):
+            if not svc.settings.juno_slack_forward:
+                await update.message.reply_text(
+                    "Slack forward is off. Set JUNO_SLACK_FORWARD=true to ingest slack.com "
+                    "links into the upload space (not a live workspace listener)."
+                )
+                return
+            result = await svc.pipeline.ingest_url(url, source_type="slack")
+            extra = await _queue_mobile_review(
+                svc,
+                result,
+                title="Slack forward",
+                reason="Opt-in Slack link — confirm this batch belongs in the graph.",
+            )
+            await update.message.reply_text(format_capture_ack(result) + extra)
+            return
         if url:
             result = await svc.pipeline.ingest_url(url, source_type="telegram")
         else:
