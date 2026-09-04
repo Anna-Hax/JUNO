@@ -53,8 +53,10 @@ Living notes for what was implemented, how GitHub is set up, and what to do next
 | [45-session-mobile-hitl.md](45-session-mobile-hitl.md) | **#92** — Mobile HITL |
 | [46-session-serve-down.md](46-session-serve-down.md) | **#93** — PC-off / serve-down |
 | [47-session-jobs-health.md](47-session-jobs-health.md) | **#94** — Jobs module health |
+| [48-session-m4-gate.md](48-session-m4-gate.md) | **#95** — M4 gate + v1.3 |
 | [v1.0-release-gate.md](../v1.0-release-gate.md) | M1 checklist (all P0 closed) |
 | [v1.1-release-gate.md](../v1.1-release-gate.md) | M2 checklist (browser capture) |
 | [v1.2-release-gate.md](../v1.2-release-gate.md) | M3 checklist (IDE capture) |
+| [v1.3-release-gate.md](../v1.3-release-gate.md) | M4 checklist (proactive + mobile) |
 
 Architecture decisions live in [`../adr/`](../adr/). Product requirements: [`../../personal-knowledge-graph-prd.md](../../personal-knowledge-graph-prd.md).

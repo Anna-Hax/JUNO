@@ -93,6 +93,6 @@ Operator may still tap `/start`, a short query, and `/status` in Telegram for fu
 
 ### Follow-ups (not M1)
 
-- Wire **APScheduler** as `AsyncIOScheduler` on this loop ([ADR-07](007-proactive-jobs-shared-loop.md); Spike S4 [#86](https://github.com/Anna-Hax/JUNO/issues/86)). Job registry and cron digests remain later M4 issues.
+- **APScheduler** on this loop landed in M4 ([ADR-07](007-proactive-jobs-shared-loop.md); [#86](https://github.com/Anna-Hax/JUNO/issues/86)–[#89](https://github.com/Anna-Hax/JUNO/issues/89), [#94](https://github.com/Anna-Hax/JUNO/issues/94)).
 - Keep documenting “no `run_polling()`” next to any new entrypoint so this ADR is not rediscovered the hard way.
 - IDE / Cursor capture is a **loopback HTTP client** ([ADR-06](006-ide-adapter-client.md)), not a second process or event loop.

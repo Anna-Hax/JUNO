@@ -2,11 +2,11 @@
 
 Personal knowledge-graph agent: passively (and manually) capture what you read, code, and discuss — query it from **Telegram**. Local-first on your PC.
 
-**Status:** **v1.2 IDE capture** (M3 complete) — v1.1 browser capture plus a read-only Cursor adapter → loopback ingest of chats and terminal errors, error-match retrieval, grouped digests. Proactive push (M4) is next.
+**Status:** **v1.3 Proactive & mobile** (M4 complete) — scheduled Telegram digests and resurfacing on the shared asyncio loop, temporal queries, voice memos, and mobile HITL. Polish (M5) is next.
 
 ## Architecture (v1)
 
-- **Python core** (`apps/core`): FastAPI on `127.0.0.1` + Telegram long-polling in one shared asyncio event loop ([ADR-01](docs/adr/001-shared-event-loop.md)); APScheduler jobs on that same loop ([ADR-07](docs/adr/007-proactive-jobs-shared-loop.md))
+- **Python core** (`apps/core`): FastAPI on `127.0.0.1` + Telegram long-polling in one shared asyncio event loop ([ADR-01](docs/adr/001-shared-event-loop.md)); APScheduler jobs on that same loop ([ADR-07](docs/adr/007-proactive-jobs-shared-loop.md)); voice STT stays opt-in ([ADR-08](docs/adr/008-voice-transcription.md))
 - **SQLite + write queue** for the graph ([ADR-02](docs/adr/002-sqlite-write-queue.md)); **Alembic** for schema changes ([ADR-03](docs/adr/003-alembic.md))
 - **Chroma** for vectors — persistent client, one collection per embedding model ([ADR-04](docs/adr/004-chroma-collections.md)); **stub embedder** in CI
 - **Browser extension** (`apps/extension`): MV3 loopback client ([ADR-05](docs/adr/005-browser-extension-client.md)); Spike S2 captures tabs → `POST /ingest`

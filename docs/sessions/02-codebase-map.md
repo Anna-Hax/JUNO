@@ -31,14 +31,14 @@ JUNO/
 | Config | `config.py` | pydantic-settings from `.env` |
 | CLI | `cli.py` | `juno serve` / `db-init` / `export` / `wipe` / `version` |
 | Runtime | `runtime.py` | Shared asyncio: uvicorn + PTB + inbox watcher + jobs scheduler lifespan |
-| Jobs | `jobs/scheduler.py`, `jobs/registry.py`, `jobs/resurface.py` | AsyncIOScheduler + named cron registry (ADR-07) |
+| Jobs | `jobs/scheduler.py`, `jobs/registry.py`, `jobs/handlers.py`, `jobs/health.py`, `jobs/resurface.py` | AsyncIOScheduler + named cron registry (ADR-07) |
 | API | `api/__init__.py` | FastAPI routes + token + loopback middleware |
 | Bot | `bot/handlers.py`, `bot/services.py`, `bot/review.py` | Telegram allowlist, query, capture, pause/digest/status ([#18](https://github.com/Anna-Hax/JUNO/issues/18) / [#19](https://github.com/Anna-Hax/JUNO/issues/19)); HITL `/review` ([#20](https://github.com/Anna-Hax/JUNO/issues/20)) |
 | Graph DB | `graph/db.py`, `graph/migrations.py`, `graph/ownership.py` | Engine, WAL, write queue, Alembic upgrade/stamp; export/wipe ([#23](https://github.com/Anna-Hax/JUNO/issues/23)) |
 | Vectors | `graph/vectors.py` | Persistent Chroma; one collection per embedding model ([ADR-04](../adr/004-chroma-collections.md)) |
 | Models | `models/__init__.py` | SQLAlchemy tables |
 | Alembic | `alembic/` + `alembic.ini` | Revision `0001` = current ORM ([ADR-03](../adr/003-alembic.md)) |
-| LLM | `llm/embedder.py`, `llm/chat.py` | MiniLM (optional extra) + stub embedder; Ollama / OpenAI-compat / offline chat; health probes |
+| LLM | `llm/embedder.py`, `llm/chat.py`, `llm/transcribe.py` | MiniLM (optional extra) + stub embedder; Ollama / OpenAI-compat / offline chat; opt-in voice STT (ADR-08) |
 | Ingest | `ingest/extractors.py`, `chunking.py`, `pipeline.py`, `watcher.py` | File/URL extract, chunk, persist, inbox watch ([#16](https://github.com/Anna-Hax/JUNO/issues/16)) |
 | RAG | `rag/engine.py` | Vector retrieve, join captures, sourced answer + confidence ([#17](https://github.com/Anna-Hax/JUNO/issues/17)); Telegram query uses this |
 | HITL | `hitl/queue.py` | Review queue; merges stay pending until Approve ([#20](https://github.com/Anna-Hax/JUNO/issues/20)) |
@@ -47,7 +47,7 @@ JUNO/
 
 - `uv run juno serve` → `runtime.main_sync()`
 - `uv run juno db-init` → `Database.migrate()` (Alembic `upgrade head`, or stamp legacy `create_all` DBs)
-- Tests: `test_foundation.py`, `test_migrations.py`, `test_ingest.py`, `test_vectors.py`, `test_embedder.py`, `test_chat.py`, `test_rag.py`, `test_bot.py`, `test_review.py`, `test_bot_review.py`, `test_api.py`, `test_write_queue.py`, `test_integration.py`, `test_export.py`, `test_jobs.py`
+- Tests: `test_foundation.py`, `test_migrations.py`, `test_ingest.py`, `test_vectors.py`, `test_embedder.py`, `test_chat.py`, `test_rag.py`, `test_bot.py`, `test_review.py`, `test_bot_review.py`, `test_api.py`, `test_write_queue.py`, `test_integration.py`, `test_export.py`, `test_jobs.py`, `test_transcribe.py`
 
 ### Dependencies
 
