@@ -37,7 +37,7 @@ HELP_TEXT = (
     "/pause — stop all ingest\n"
     "/resume — resume ingest (processes inbox backlog)\n"
     "/status — capture + module health\n"
-    "/review — HITL Approve/Reject/Skip (merges, IDE, chat batches, resurfacing)\n"
+    "/review — HITL Approve/Reject/Skip (merges, IDE, mobile, resurfacing)\n"
     "Ask a question to search the graph.\n"
     "Forward a message, send a link, attach a doc, or send a voice note to capture."
 )
@@ -215,7 +215,13 @@ async def document_msg(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         return
     finally:
         dest.unlink(missing_ok=True)
-    await update.message.reply_text(format_capture_ack(result))
+    extra = await _queue_mobile_review(
+        svc,
+        result,
+        title=doc.file_name or "Telegram document",
+        reason="Phone/Telegram file — confirm this batch belongs in the graph.",
+    )
+    await update.message.reply_text(format_capture_ack(result) + extra)
 
 
 async def voice_msg(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -249,7 +255,13 @@ async def voice_msg(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         logger.exception("telegram voice ingest failed")
         await update.message.reply_text(clip(f"Voice capture failed: {exc}"))
         return
-    await update.message.reply_text(format_capture_ack(result))
+    extra = await _queue_mobile_review(
+        svc,
+        result,
+        title="Voice memo",
+        reason="Phone voice memo — confirm before treating as graph fact.",
+    )
+    await update.message.reply_text(format_capture_ack(result) + extra)
 
 
 async def _capture_text(update: Update, context: ContextTypes.DEFAULT_TYPE, text: str) -> None:
@@ -262,11 +274,11 @@ async def _capture_text(update: Update, context: ContextTypes.DEFAULT_TYPE, text
         await update.message.reply_text("Capture is paused. /resume to ingest again.")
         return
     url = single_http_url(text)
+    title = None
     try:
         if url:
             result = await svc.pipeline.ingest_url(url, source_type="telegram")
         else:
-            title = None
             if is_forwarded(update.message):
                 title = update.message.forward_sender_name or None
             result = await svc.pipeline.ingest_text(
@@ -278,7 +290,37 @@ async def _capture_text(update: Update, context: ContextTypes.DEFAULT_TYPE, text
         logger.exception("telegram text capture failed")
         await update.message.reply_text(clip(f"Capture failed: {exc}"))
         return
-    await update.message.reply_text(format_capture_ack(result))
+    extra = ""
+    if not url:
+        extra = await _queue_mobile_review(
+            svc,
+            result,
+            title=title or "Telegram note",
+            reason="Phone/Telegram note or forward — confirm this mobile batch.",
+        )
+    await update.message.reply_text(format_capture_ack(result) + extra)
+
+
+async def _queue_mobile_review(
+    svc: BotServices,
+    result: object,
+    *,
+    title: str,
+    reason: str,
+) -> str:
+    from juno.hitl.queue import ReviewQueue
+    from juno.ingest.pipeline import IngestResult
+
+    if svc.db is None or not isinstance(result, IngestResult):
+        return ""
+    if not result.accepted or result.capture_id is None:
+        return ""
+    await ReviewQueue(svc.db).propose_mobile_batch(
+        title=title,
+        capture_ids=[result.capture_id],
+        reason=reason,
+    )
+    return " Queued for /review (mobile/sensitive)."
 
 
 async def _query_text(update: Update, context: ContextTypes.DEFAULT_TYPE, text: str) -> None:

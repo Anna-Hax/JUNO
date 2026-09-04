@@ -17,6 +17,7 @@ Decision = Literal["approve", "reject", "skip"]
 KIND_MERGE = "merge"
 KIND_ERROR_MATCH = "error_match"
 KIND_IDE_BATCH = "ide_batch"
+KIND_MOBILE_BATCH = "mobile_batch"
 KIND_RESURFACE = "resurface"
 STATUS_PENDING = "pending"
 STATUS_SKIPPED = "skipped"
@@ -67,6 +68,17 @@ class ReviewCard:
             if reason:
                 lines.append(str(reason))
             lines.append("Approve to keep this batch in the graph; Reject to leave it unconfirmed.")
+        elif self.kind == KIND_MOBILE_BATCH:
+            n = self.payload.get("capture_ids") or []
+            count = len(n) if isinstance(n, list) else 0
+            title = str(self.payload.get("title") or "mobile capture")
+            lines.append(f"Review phone/Telegram capture: {title} ({count} capture(s)).")
+            reason = self.payload.get("reason")
+            if reason:
+                lines.append(str(reason))
+            lines.append(
+                "Approve to keep this mobile batch in the graph; Reject if it should not stay."
+            )
         elif self.kind == KIND_RESURFACE:
             recent = str(self.payload.get("recent_title") or "recent")
             past = str(self.payload.get("past_title") or "earlier")
@@ -197,6 +209,26 @@ class ReviewQueue:
         """Queue HITL for sensitive or bulk IDE chat sync batches (#68)."""
         return await self.enqueue(
             kind=KIND_IDE_BATCH,
+            confidence=confidence,
+            payload={
+                "title": title,
+                "capture_ids": list(capture_ids),
+                "reason": reason,
+                "confirmed": False,
+            },
+        )
+
+    async def propose_mobile_batch(
+        self,
+        *,
+        title: str,
+        capture_ids: list[int],
+        confidence: float = 0.4,
+        reason: str | None = None,
+    ) -> ReviewCard:
+        """Queue HITL for phone forwards/voice (#92)."""
+        return await self.enqueue(
+            kind=KIND_MOBILE_BATCH,
             confidence=confidence,
             payload={
                 "title": title,
