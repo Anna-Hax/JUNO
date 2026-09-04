@@ -292,6 +292,10 @@ def format_status(
             lines.append(f"• {row.module}: last ok {last_ok} ({extra})")
     else:
         lines.append("Modules: none recorded yet")
+    lines.append(
+        "Serve-down: if this PC or `juno serve` is off, Telegram cannot reply "
+        "(updates queue ~24h). core.last ok is the last heartbeat."
+    )
     return clip("\n".join(lines))
 
 

@@ -117,6 +117,7 @@ def attach_lifespan(fastapi_app: FastAPI) -> FastAPI:
         db: Database = app.state.db
         await db.migrate()
         app.state.capture_paused = await load_capture_paused(db)
+        await persist_module_health(db, "core", detail="juno serve", ok=True)
 
         embedder: Embedder | None = getattr(app.state, "embedder", None)
         if embedder is not None:
