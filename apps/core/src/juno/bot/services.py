@@ -15,7 +15,6 @@ from juno.config import Settings
 from juno.graph.db import Database
 from juno.ingest.pipeline import IngestResult
 from juno.models import AppSetting, Capture, ModuleHealth
-from juno.rag.engine import looks_like_error_query, match_past_errors
 from juno.rag.engine import search as rag_search
 
 BOT_DATA_KEY = "juno"
@@ -155,46 +154,21 @@ async def answer_user_query(svc: BotServices, text: str) -> str:
     if svc.vectors is None:
         return f"Received ({len(text)} chars). Search is not attached in this runtime."
     chat = getattr(svc.app.state, "chat", None) if svc.app is not None else None
-    review = None
-    if svc.db is not None and looks_like_error_query(text):
-        from juno.hitl.queue import ReviewQueue
-
-        review = ReviewQueue(svc.db)
-        outcome = await match_past_errors(
-            text,
-            vectors=svc.vectors,
-            db=svc.db,
-            chat=chat,
-            review=review,
-            n_results=5,
-        )
-    else:
-        outcome = await rag_search(
-            text,
-            vectors=svc.vectors,
-            db=svc.db,
-            chat=chat,
-            n_results=5,
-            mode="auto",
-        )
+    outcome = await rag_search(
+        text,
+        vectors=svc.vectors,
+        db=svc.db,
+        chat=chat,
+        n_results=5,
+        mode="auto",
+    )
     reply = format_search_outcome(outcome)
     if svc.db is None:
         return reply
     browser_hits = [
         hit for hit in outcome.results if getattr(hit, "source_type", None) == "browser"
     ]
-    ide_hits = [hit for hit in outcome.results if getattr(hit, "source_type", None) == "ide"]
     extra: list[str] = []
-    if ide_hits:
-        related = await related_captures(
-            svc.db, hits=ide_hits, source_types=("browser", "upload"), limit=3
-        )
-        if related:
-            extra.append("")
-            extra.append("You also read or uploaded notes on:")
-            for row in related:
-                label = row.title or row.uri or f"capture #{row.id}"
-                extra.append(f"• #{row.id} [{row.source_type}] {label}")
     if browser_hits:
         related = await related_upload_captures(svc.db, browser_hits=browser_hits)
         if related:
@@ -220,35 +194,18 @@ def format_capture_ack(result: IngestResult) -> str:
     )
 
 
-def _ide_kind(row: Capture) -> str:
-    raw = row.raw_json if isinstance(row.raw_json, dict) else {}
-    kind = str(raw.get("kind") or "")
-    if kind == "cursor_error":
-        return "error"
-    return "chat"
-
-
 def format_digest(captures: list[Capture], window: str) -> str:
     label = "today" if window == "today" else "this week"
     if not captures:
         return f"No captures {label}."
     browser = [row for row in captures if row.source_type == "browser"]
-    ide = [row for row in captures if row.source_type == "ide"]
-    other = [row for row in captures if row.source_type not in {"browser", "ide"}]
-    ide_chat = [row for row in ide if _ide_kind(row) == "chat"]
-    ide_err = [row for row in ide if _ide_kind(row) == "error"]
+    other = [row for row in captures if row.source_type != "browser"]
     lines = [f"Digest {label} ({len(captures)}):"]
     if browser:
         lines.append(f"Browser reading ({len(browser)}):")
         lines.extend(_digest_lines(browser))
-    if ide_chat:
-        lines.append(f"IDE chats ({len(ide_chat)}):")
-        lines.extend(_digest_lines(ide_chat))
-    if ide_err:
-        lines.append(f"IDE errors ({len(ide_err)}):")
-        lines.extend(_digest_lines(ide_err))
     if other:
-        if browser or ide:
+        if browser:
             lines.append(f"Uploads / other ({len(other)}):")
         lines.extend(_digest_lines(other))
     return clip("\n".join(lines))

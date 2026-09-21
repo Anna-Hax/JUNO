@@ -40,3 +40,5 @@ apps/extension/dist/
 
 # HuggingFace / models cache (local)
 .cache/
+
+try.md

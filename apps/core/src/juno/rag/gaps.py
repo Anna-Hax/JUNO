@@ -1,4 +1,4 @@
-"""Skill-gap flags: repeat IDE errors and unfinished reads. Do not nag."""
+"""Unfinished-read flags. Do not nag."""
 
 from __future__ import annotations
 
@@ -18,7 +18,6 @@ from juno.models import AppSetting, Capture
 logger = logging.getLogger("juno.gaps")
 
 HIGH_CONFIDENCE = 0.7
-MIN_REPEAT = 2
 UNFINISHED_DAYS = 3
 SEEN_PREFIX = "gaps.seen."
 
@@ -27,7 +26,7 @@ SEEN_PREFIX = "gaps.seen."
 class SkillGap:
     key: str
     topic: str
-    kind: str  # repeat_error | unfinished_read
+    kind: str  # unfinished_read
     count: int
     capture_ids: list[int]
     related: list[str]
@@ -57,7 +56,6 @@ async def find_skill_gaps(db: Database, *, now: datetime | None = None) -> list[
     now = now or datetime.now(UTC)
     captures = await _all_captures(db)
     gaps: list[SkillGap] = []
-    gaps.extend(_repeat_ide_errors(captures))
     gaps.extend(_unfinished_reads(captures, now=now))
     gaps.sort(key=lambda g: (g.confidence, g.count), reverse=True)
     return gaps[:8]
@@ -107,40 +105,6 @@ async def apply_skill_gaps(
             listed += 1
         await _mark_seen(db, gap.seen_key())
     return GapApplyResult(queued=queued, listed=listed, fresh=tuple(fresh))
-
-
-def _repeat_ide_errors(captures: list[Capture]) -> list[SkillGap]:
-    buckets: dict[str, list[Capture]] = defaultdict(list)
-    for cap in captures:
-        if cap.source_type != "ide":
-            continue
-        raw = cap.raw_json if isinstance(cap.raw_json, dict) else {}
-        kind = str(raw.get("kind") or "")
-        title = cap.title or cap.text or ""
-        if kind != "cursor_error" and "error" not in title.lower():
-            continue
-        key = topic_key(title)
-        if len(key) < 6:
-            continue
-        buckets[key].append(cap)
-    gaps: list[SkillGap] = []
-    for key, rows in buckets.items():
-        if len(rows) < MIN_REPEAT:
-            continue
-        related = _related_titles(captures, key, exclude={r.id for r in rows})
-        conf = 0.55 if len(rows) == 2 else 0.8
-        gaps.append(
-            SkillGap(
-                key=f"err.{key}",
-                topic=key,
-                kind="repeat_error",
-                count=len(rows),
-                capture_ids=[r.id for r in rows],
-                related=related,
-                confidence=conf,
-            )
-        )
-    return gaps
 
 
 def _unfinished_reads(captures: list[Capture], *, now: datetime) -> list[SkillGap]:

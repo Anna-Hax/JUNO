@@ -51,6 +51,6 @@ Issue [#107](https://github.com/Anna-Hax/JUNO/issues/107): kinds `journal` / `fl
 
 Highlights on captures (`raw_json.highlights`) become **flashcard drafts**. Approve creates a `flashcards` row (Alembic **`0003`**) that is due for Telegram `/cards` Again/Good (SM-2-lite). Generation is skipped under `/pause`. Cards are never auto-published (see [session 51](../sessions/51-session-flashcards.md)).
 
-## Journal / README drafts (#109)
+## Journal / README drafts (#109) — removed
 
-`/drafts journal|readme` builds a template from recent **IDE** chats/errors (browser captures are ignored). The result is a HITL draft only — **no file is written** into user git repos. See [session 52](../sessions/52-session-journal-drafts.md).
+`/drafts journal|readme` and the polish-job journal from IDE chats were removed with the coding helper (2026-09-22). Flashcard drafts from highlights remain. See [session 52](../sessions/52-session-journal-drafts.md) for what shipped before that.

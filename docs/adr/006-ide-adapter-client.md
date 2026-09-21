@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted (M3 / Spike S3)
+Withdrawn (2026-09-22). Cursor watching, terminal-error capture, and “have I seen this error” retrieval are removed. Juno is not a coding helper. The decision below is historical.
 
 ## Date
 

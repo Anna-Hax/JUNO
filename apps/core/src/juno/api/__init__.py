@@ -138,6 +138,8 @@ def create_app(
     async def ingest(payload: dict[str, Any]) -> dict[str, Any]:
         if app.state.capture_paused:
             raise HTTPException(status_code=423, detail="Capture paused")
+        if str(payload.get("source_type") or "") == "ide":
+            raise HTTPException(status_code=400, detail="IDE capture is not supported")
         pipeline = app.state.pipeline
         if pipeline is None:
             raise HTTPException(status_code=503, detail="Ingest pipeline not ready")

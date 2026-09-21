@@ -226,50 +226,6 @@ class ReviewQueue:
 
         return await self.db.write(write)
 
-    async def propose_error_match(
-        self,
-        *,
-        new_title: str,
-        past_title: str,
-        confidence: float,
-        new_capture_id: int | None = None,
-        past_capture_id: int | None = None,
-        reason: str | None = None,
-    ) -> ReviewCard:
-        """Queue HITL before treating a past IDE error as the same root cause (#68)."""
-        return await self.enqueue(
-            kind=KIND_ERROR_MATCH,
-            confidence=confidence,
-            payload={
-                "new_title": new_title,
-                "past_title": past_title,
-                "new_capture_id": new_capture_id,
-                "past_capture_id": past_capture_id,
-                "reason": reason,
-                "confirmed": False,
-            },
-        )
-
-    async def propose_ide_batch(
-        self,
-        *,
-        title: str,
-        capture_ids: list[int],
-        confidence: float = 0.5,
-        reason: str | None = None,
-    ) -> ReviewCard:
-        """Queue HITL for sensitive or bulk IDE chat sync batches (#68)."""
-        return await self.enqueue(
-            kind=KIND_IDE_BATCH,
-            confidence=confidence,
-            payload={
-                "title": title,
-                "capture_ids": list(capture_ids),
-                "reason": reason,
-                "confirmed": False,
-            },
-        )
-
     async def propose_mobile_batch(
         self,
         *,
@@ -421,10 +377,7 @@ class ReviewQueue:
         if not result.already_decided and result.card.decision == "approve" and result.applied:
             from juno.hitl.trust import record_success
 
-            category = {
-                KIND_MERGE: "merge",
-                KIND_ERROR_MATCH: "ide_error",
-            }.get(result.card.kind)
+            category = {KIND_MERGE: "merge"}.get(result.card.kind)
             if category:
                 await record_success(self.db, category)
         return result

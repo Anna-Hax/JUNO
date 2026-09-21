@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from juno.graph.db import Database
 from juno.models import AppSetting
 
-CATEGORIES = ("merge", "browser", "ide_error", "mobile", "drafts", "prune")
+CATEGORIES = ("merge", "browser", "mobile", "drafts", "prune")
 LOCKED = frozenset({"mobile", "drafts", "prune"})
 DEFAULT_THRESHOLD = 5
 HIGH_CONFIDENCE = 0.8
@@ -109,7 +109,7 @@ async def should_auto_commit(
 def format_trust(dials: list[TrustDial]) -> str:
     lines = ["Trust dials (per category, not a global switch):"]
     lines.extend(f"• {d.summary()}" for d in dials)
-    lines.append("Toggle: /trust merge|browser|ide_error on|off")
+    lines.append("Toggle: /trust merge|browser on|off")
     lines.append("mobile, drafts, and prune stay gated.")
     return "\n".join(lines)
 

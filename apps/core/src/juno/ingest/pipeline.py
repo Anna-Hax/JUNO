@@ -9,7 +9,6 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Protocol
 
-from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from juno.graph.db import Database
@@ -153,30 +152,18 @@ class IngestPipeline:
         if isinstance(uri, str) and uri.startswith(("http://", "https://")) and not text:
             kind = source_type if source_type not in {"api", ""} else "url"
             return await self.ingest_url(uri, source_type=kind)
-        browser_raw = raw or {}
+        stored_raw = raw
         if source_type == "browser":
-            browser_raw = {
-                **browser_raw,
+            stored_raw = {
+                **(raw or {}),
                 "visited_at": (visited_at or datetime.now(UTC)).isoformat(),
                 "uri": uri,
                 "title": title,
             }
             if raw and isinstance(raw.get("metrics"), dict):
-                browser_raw["metrics"] = raw["metrics"]
+                stored_raw["metrics"] = raw["metrics"]
             if raw and isinstance(raw.get("highlights"), list):
-                browser_raw["highlights"] = raw["highlights"]
-        ide_raw = raw
-        if source_type == "ide":
-            ide_raw = {
-                **(raw or {}),
-                "kind": (raw or {}).get("kind") or "cursor_chat",
-                "visited_at": (visited_at or datetime.now(UTC)).isoformat(),
-                "uri": uri,
-                "title": title,
-            }
-            if raw and isinstance(raw.get("bubbles"), list):
-                ide_raw["bubbles"] = raw["bubbles"]
-        stored_raw = browser_raw if source_type == "browser" else ide_raw
+                stored_raw["highlights"] = raw["highlights"]
         return await self.ingest_text(
             text=str(text) if text is not None else "",
             source_type=source_type,
@@ -193,56 +180,33 @@ class IngestPipeline:
         source_type: str,
         captured_at: datetime | None = None,
     ) -> IngestResult:
+        if source_type == "ide":
+            return IngestResult(
+                accepted=False,
+                source_type="ide",
+                status="rejected",
+                capture_id=None,
+                error_reason="IDE capture is not supported",
+                title=extracted.title,
+                uri=extracted.uri,
+            )
         pieces = chunk_text(extracted.text or "")
 
         async def write(
             session: AsyncSession,
         ) -> tuple[int, list[tuple[str, str]], list[str]]:
-            stale: list[str] = []
-            capture: Capture | None = None
-            if source_type == "ide" and extracted.uri:
-                found = await session.execute(
-                    select(Capture).where(
-                        Capture.source_type == "ide",
-                        Capture.uri == extracted.uri,
-                    )
-                )
-                capture = found.scalar_one_or_none()
-                if capture is not None and _ide_unchanged(capture, extracted):
-                    existing = await session.execute(
-                        select(Chunk).where(Chunk.capture_id == capture.id)
-                    )
-                    stored = [
-                        (row.chroma_id, row.text) for row in existing.scalars() if row.chroma_id
-                    ]
-                    await _touch_health(session, ok=True)
-                    if source_type == "ide":
-                        await _touch_health(session, ok=True, module="ide")
-                    return capture.id, stored, []
-                if capture is not None:
-                    old = await session.execute(select(Chunk).where(Chunk.capture_id == capture.id))
-                    stale = [row.chroma_id for row in old.scalars() if row.chroma_id]
-                    await session.execute(delete(Chunk).where(Chunk.capture_id == capture.id))
-                    capture.title = extracted.title
-                    capture.text = extracted.text or None
-                    capture.raw_json = extracted.raw or None
-                    capture.status = "committed"
-                    capture.error_reason = None
-                    if captured_at is not None:
-                        capture.captured_at = captured_at
-            if capture is None:
-                capture = Capture(
-                    source_type=source_type,
-                    uri=extracted.uri,
-                    title=extracted.title,
-                    text=extracted.text or None,
-                    raw_json=extracted.raw or None,
-                    status="committed",
-                )
-                if captured_at is not None:
-                    capture.captured_at = captured_at
-                session.add(capture)
-                await session.flush()
+            capture = Capture(
+                source_type=source_type,
+                uri=extracted.uri,
+                title=extracted.title,
+                text=extracted.text or None,
+                raw_json=extracted.raw or None,
+                status="committed",
+            )
+            if captured_at is not None:
+                capture.captured_at = captured_at
+            session.add(capture)
+            await session.flush()
             stored: list[tuple[str, str]] = []
             for ordinal, piece in enumerate(pieces):
                 chroma_id = f"c{capture.id}-n{ordinal}"
@@ -255,14 +219,10 @@ class IngestPipeline:
                     )
                 )
                 stored.append((chroma_id, piece))
-            reused = {item[0] for item in stored}
-            stale = [cid for cid in stale if cid not in reused]
             await _touch_health(session, ok=True)
             if source_type == "browser":
                 await _touch_health(session, ok=True, module="extension")
-            if source_type == "ide":
-                await _touch_health(session, ok=True, module="ide")
-            return capture.id, stored, stale
+            return capture.id, stored, []
 
         capture_id, stored, stale = await self.db.write(write)
         await self._delete_vectors(stale)
@@ -299,8 +259,6 @@ class IngestPipeline:
             await _touch_health(session, ok=False, error=reason)
             if source_type == "browser":
                 await _touch_health(session, ok=False, error=reason, module="extension")
-            if source_type == "ide":
-                await _touch_health(session, ok=False, error=reason, module="ide")
             return capture.id
 
         capture_id = await self.db.write(write)
@@ -352,16 +310,6 @@ class IngestPipeline:
             await deleter(ids)
         except Exception:  # noqa: BLE001
             logger.exception("vector delete failed")
-
-
-def _ide_unchanged(capture: Capture, extracted: Extracted) -> bool:
-    old = capture.raw_json if isinstance(capture.raw_json, dict) else {}
-    new = extracted.raw if isinstance(extracted.raw, dict) else {}
-    if (capture.text or "") != (extracted.text or ""):
-        return False
-    if old.get("updated_at") and new.get("updated_at"):
-        return old.get("updated_at") == new.get("updated_at")
-    return old.get("composer_id") == new.get("composer_id") and bool(old.get("composer_id"))
 
 
 async def _touch_health(

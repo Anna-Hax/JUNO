@@ -7,7 +7,7 @@ import pytest
 from juno.graph.db import Database
 from juno.hitl.queue import KIND_SKILL_GAP, ReviewQueue
 from juno.models import Capture
-from juno.rag.gaps import apply_skill_gaps, find_skill_gaps, format_gaps
+from juno.rag.gaps import apply_skill_gaps, find_skill_gaps
 
 
 @pytest.fixture
@@ -46,19 +46,6 @@ async def _add(
 
 
 @pytest.mark.asyncio
-async def test_repeat_ide_error_is_high_confidence_gap(db):
-    await _add(db, source="ide", title="sqlite database is locked today", kind="cursor_error")
-    await _add(db, source="ide", title="sqlite database is locked tonight", kind="cursor_error")
-    await _add(db, source="ide", title="sqlite database is locked still", kind="cursor_error")
-    await _add(db, source="upload", title="notes on sqlite locks")
-    gaps = await find_skill_gaps(db)
-    assert any(g.kind == "repeat_error" and g.confidence >= 0.7 for g in gaps)
-    text = format_gaps(gaps)
-    assert "sqlite" in text
-    assert "notes on sqlite" in text.lower() or "Related" in text
-
-
-@pytest.mark.asyncio
 async def test_unfinished_read_queues_hitl_once(db):
     old = datetime.now(UTC) - timedelta(days=5)
     await _add(
@@ -84,8 +71,14 @@ async def test_unfinished_read_queues_hitl_once(db):
 
 @pytest.mark.asyncio
 async def test_pause_skips_gap_apply(db):
-    await _add(db, source="ide", title="boom error traceback a", kind="cursor_error")
-    await _add(db, source="ide", title="boom error traceback b", kind="cursor_error")
+    old = datetime.now(UTC) - timedelta(days=5)
+    await _add(
+        db,
+        source="browser",
+        title="Unfinished article",
+        uri="https://example.test/unread",
+        captured_at=old,
+    )
     gaps = await find_skill_gaps(db)
     skipped = await apply_skill_gaps(db, gaps, paused=True)
     assert skipped.queued == 0
