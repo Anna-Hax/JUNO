@@ -10,7 +10,6 @@
 JUNO/
   apps/core/          # Python agent (source of truth for v1)
   apps/extension/     # Browser capture (M2 / ADR-05)
-  apps/ide/           # Cursor vscdb HTTP client (M3 / ADR-06)
   inbox/              # Manual upload drop zone (watched by juno serve)
   data/               # Runtime DB/vectors (gitignored)
   docs/adr/           # Architecture decisions
@@ -32,7 +31,7 @@ JUNO/
 | CLI | `cli.py` | `juno serve` / `db-init` / `export` / `prune` / `wipe` / `version` |
 | Runtime | `runtime.py` | Shared asyncio: uvicorn + PTB + inbox watcher + jobs scheduler lifespan |
 | Jobs | `jobs/scheduler.py`, `jobs/registry.py`, `jobs/handlers.py`, `jobs/health.py`, `jobs/resurface.py` | AsyncIOScheduler + named cron registry (ADR-07); `module_health.polish` for flashcard/draft ticks ([#114](https://github.com/Anna-Hax/JUNO/issues/114)) |
-| Drafts | `drafts/generate.py`, `drafts/kinds.py`, `drafts/flashcards.py`, `drafts/journal.py` | HITL journal/flashcard/doc; SRS after flashcard approve; IDE journal/README via `/drafts` (ADR-09) |
+| Drafts | `drafts/generate.py`, `drafts/kinds.py`, `drafts/flashcards.py` | HITL flashcards from highlights; SRS after approve (ADR-09). IDE journal/README drafts removed |
 | API | `api/__init__.py` | FastAPI routes + token + loopback middleware |
 | Bot | `bot/handlers.py`, `bot/services.py`, `bot/review.py` | Telegram allowlist, query, capture, pause/digest/status ([#18](https://github.com/Anna-Hax/JUNO/issues/18) / [#19](https://github.com/Anna-Hax/JUNO/issues/19)); HITL `/review` ([#20](https://github.com/Anna-Hax/JUNO/issues/20)); opt-in Slack.com links ([ADR-11](../adr/011-slack-forward.md)) |
 | Graph DB | `graph/db.py`, `graph/migrations.py`, `graph/ownership.py`, `graph/prune.py` | Engine, WAL, write queue, Alembic upgrade/stamp; export/wipe ([#23](https://github.com/Anna-Hax/JUNO/issues/23)); HITL prune/archive ([ADR-12](../adr/012-prune-with-confirm.md)) |
@@ -60,11 +59,6 @@ Optional: `--extra embeddings` for sentence-transformers; `--extra dev` for pyte
 ## Extension (M2)
 
 - `apps/extension/` — MV3 loopback client ([ADR-05](../adr/005-browser-extension-client.md))
-
-## IDE adapter (M3 / Spike S3)
-
-- `apps/ide/cursor_vscdb.py` — read-only Cursor `state.vscdb` wrapper
-- `apps/ide/config.py` / `api.py` / `sync.py` — env paths, loopback HTTP, poll/watch ([ADR-06](../adr/006-ide-adapter-client.md))
 
 ---
 

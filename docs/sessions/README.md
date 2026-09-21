@@ -4,6 +4,8 @@ Living notes for what was implemented, how GitHub is set up, and what to do next
 
 **Next work (global):** [`docs/next-work.md`](../next-work.md) — the living queue. Kept as-is across branch merges; do not recreate `03-next-work.md` here.
 
+**User workflow:** [`docs/workflow.md`](../workflow.md) — feature levels and the agentic loop.
+
 | Doc | Description |
 |-----|-------------|
 | [00-session-m0-bootstrap.md](00-session-m0-bootstrap.md) | **First execute session** — everything done to bootstrap M0 |

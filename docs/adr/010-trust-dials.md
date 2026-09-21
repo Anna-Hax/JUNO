@@ -15,10 +15,10 @@ PRD §8 P2: as the agent earns confidence in a category, that category's gate ca
 ## Decision
 
 1. Store dials in `settings` (`trust.{category}.successes` / `.auto` / `.threshold`). No extra table.
-2. Categories: `merge`, `browser`, `ide_error`, `mobile`, `drafts`, `prune`.
+2. Categories: `merge`, `browser`, `mobile`, `drafts`, `prune`. `ide_error` was removed with the coding helper (2026-09-22).
 3. **`mobile`, `drafts`, and `prune` are locked** — `/trust mobile on` is rejected; `should_auto_commit` is always false.
-4. Five successful Approve taps on `merge` or `ide_error` turns auto-commit **on** for that category. High-confidence (`>= 0.8`) merges then commit without a pending `/review` card (audit row still stored as decided).
-5. Operator can `/trust merge|browser|ide_error on|off`. `/status` lists current dials.
+4. Five successful Approve taps on `merge` turns auto-commit **on** for that category. High-confidence (`>= 0.8`) merges then commit without a pending `/review` card (audit row still stored as decided).
+5. Operator can `/trust merge|browser on|off`. `/status` lists current dials.
 
 ## Consequences
 

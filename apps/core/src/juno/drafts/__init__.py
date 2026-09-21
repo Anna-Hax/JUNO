@@ -10,7 +10,6 @@ from juno.drafts.generate import (
     format_journal_snippet,
     maybe_enqueue_smoke_draft,
 )
-from juno.drafts.journal import queue_ide_journal_draft, queue_ide_readme_draft
 from juno.drafts.kinds import (
     DRAFT_KIND_DOC,
     DRAFT_KIND_FLASHCARD,
@@ -33,7 +32,4 @@ __all__ = [
     "format_journal_snippet",
     "maybe_enqueue_smoke_draft",
     "queue_highlight_flashcards",
-    "queue_ide_journal_draft",
-    "queue_ide_readme_draft",
-    "review_card",
 ]

@@ -38,10 +38,9 @@ HELP_TEXT = (
     "/pause — stop all ingest\n"
     "/resume — resume ingest (processes inbox backlog)\n"
     "/status — capture + module health\n"
-    "/review — HITL Approve/Reject/Skip (merges, IDE, mobile, resurfacing, drafts, prune)\n"
+    "/review — HITL Approve/Reject/Skip (merges, mobile, resurfacing, drafts, prune)\n"
     "/cards — flashcards due (Again/Good); new cards stay drafts until /review\n"
-    "/drafts journal|readme — queue an IDE journal or README draft (never writes files)\n"
-    "/gaps — repeat IDE errors / unfinished reads (low-confidence stays in /review)\n"
+    "/gaps — unfinished reads (low-confidence stays in /review)\n"
     "/trust — per-category auto-commit dials (mobile/drafts/prune stay gated)\n"
     "/prune — list old/unused; /prune confirm queues HITL (never silent delete)\n"
     "Ask a question to search the graph.\n"
@@ -121,36 +120,6 @@ async def jobs_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(msg)
 
 
-async def drafts_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    if not update.message or not _authorized(update, context):
-        return
-    args = [a.lower() for a in (context.args or [])]
-    kind = args[0] if args else "journal"
-    if kind not in {"journal", "readme", "doc"}:
-        await update.message.reply_text("Usage: /drafts journal|readme")
-        return
-    svc = _services(context)
-    if svc is None or svc.db is None:
-        await update.message.reply_text("Drafts unavailable (database not attached).")
-        return
-    from juno.drafts.journal import queue_ide_journal_draft, queue_ide_readme_draft
-
-    paused = False
-    if svc.app is not None:
-        paused = bool(getattr(svc.app.state, "capture_paused", False))
-    if kind == "journal":
-        card = await queue_ide_journal_draft(svc.db, paused=paused)
-    else:
-        card = await queue_ide_readme_draft(svc.db, paused=paused)
-    if card is None:
-        await update.message.reply_text("Draft generation skipped (capture paused).")
-        return
-    await update.message.reply_text(
-        f"Queued {card.payload.get('draft_kind')} draft #{card.id} for /review. "
-        "Approve confirms the draft; Juno does not write files to your repos."
-    )
-
-
 async def gaps_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not update.message or not _authorized(update, context):
         return
@@ -189,9 +158,7 @@ async def trust_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await update.message.reply_text(format_trust(dials))
         return
     if len(args) != 2 or args[0] not in CATEGORIES or args[1] not in {"on", "off"}:
-        await update.message.reply_text(
-            "Usage: /trust   or   /trust merge|browser|ide_error on|off"
-        )
+        await update.message.reply_text("Usage: /trust   or   /trust merge|browser on|off")
         return
     try:
         dial = await set_auto(svc.db, args[0], enabled=args[1] == "on")

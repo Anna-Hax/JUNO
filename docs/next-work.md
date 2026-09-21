@@ -1,8 +1,12 @@
 # Next work
 
-**Last updated:** 2026-09-05  
+**Last updated:** 2026-09-22  
 **Track issues on:** [https://github.com/Anna-Hax/JUNO/issues](https://github.com/Anna-Hax/JUNO/issues)  
 **Package:** `2.0.0` (M5 complete — [`docs/v2.0-release-gate.md`](v2.0-release-gate.md))
+
+**User workflow chart:** [`workflow.md`](workflow.md) (2026-09-22) — feature levels and the agentic loop. No new milestone; further product work stays operator-driven.
+
+**Coding helper removed (2026-09-22):** Cursor watching, IDE error-match, `/drafts journal|readme`, and repeat-IDE-error gaps are out. Reading, inbox, and Telegram capture stay.
 
 Prefer one open issue ≈ one PR (`Closes #N`). This file is kept as-is across branch merges (`merge=ours`).
 
