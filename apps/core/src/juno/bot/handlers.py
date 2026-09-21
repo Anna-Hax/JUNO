@@ -158,9 +158,7 @@ async def trust_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await update.message.reply_text(format_trust(dials))
         return
     if len(args) != 2 or args[0] not in CATEGORIES or args[1] not in {"on", "off"}:
-        await update.message.reply_text(
-            "Usage: /trust   or   /trust merge|browser on|off"
-        )
+        await update.message.reply_text("Usage: /trust   or   /trust merge|browser on|off")
         return
     try:
         dial = await set_auto(svc.db, args[0], enabled=args[1] == "on")
