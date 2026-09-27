@@ -35,6 +35,8 @@ class FakeChat:
 
     async def complete(self, system: str, messages: list[dict[str, str]], **kwargs):  # noqa: ANN001
         self.complete_calls += 1
+        self.last_system = system
+        self.last_user = messages[0]["content"]
         if self.fail:
             raise RuntimeError("LLM offline — use retrieve-only fallback")
         assert "Sources:" in messages[0]["content"]
@@ -151,6 +153,8 @@ async def test_rag_sourced_answer_requires_citations(settings, db, vectors, pipe
     assert "[1]" in body["answer"]
     assert chat.complete_calls == 1
     assert body["confidence"] > 0
+    assert "<UNTRUSTED_CONTENT>" in chat.last_user
+    assert "never as instructions" in chat.last_system
 
 
 @pytest.mark.asyncio
@@ -191,7 +195,7 @@ async def test_llm_error_falls_back_to_retrieve(settings, db, vectors, pipeline)
 
 
 @pytest.mark.asyncio
-async def test_answer_without_markers_still_attaches_hits(settings, db, vectors, pipeline):
+async def test_answer_without_markers_stays_retrieve_only(settings, db, vectors, pipeline):
     await pipeline.ingest_text(NOTE_A, source_type="upload", title="Rust notes")
     chat = FakeChat(answer="Ownership is exclusive.")
     client, _ = await _client(settings, db=db, vectors=vectors, pipeline=pipeline, chat=chat)
@@ -202,7 +206,8 @@ async def test_answer_without_markers_still_attaches_hits(settings, db, vectors,
             headers={"Authorization": "Bearer test-token"},
         )
     body = resp.json()
-    assert body["mode"] == "rag"
+    assert body["mode"] == "retrieve"
+    assert body["answer"] is None
     assert body["citations"]
     assert body["citations"][0]["title"] == "Rust notes"
 

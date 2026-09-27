@@ -1,12 +1,14 @@
 # Next work
 
-**Last updated:** 2026-09-22  
+**Last updated:** 2026-09-27  
 **Track issues on:** [https://github.com/Anna-Hax/JUNO/issues](https://github.com/Anna-Hax/JUNO/issues)  
 **Package:** `2.0.0` (M5 complete — [`docs/v2.0-release-gate.md`](v2.0-release-gate.md))
 
 **User workflow chart:** [`workflow.md`](workflow.md) (2026-09-22) — feature levels and the agentic loop. No new milestone; further product work stays operator-driven.
 
 **Coding helper removed (2026-09-22):** Cursor watching, IDE error-match, `/drafts journal|readme`, and repeat-IDE-error gaps are out. Reading, inbox, and Telegram capture stay.
+
+**Retrieval hardening (2026-09-27):** epic [#128](https://github.com/Anna-Hax/JUNO/issues/128). Retrieved text is untrusted evidence (#129), sourced answers need in-range citations (#130), keyword rank fuses with vectors (#131), resurfacing uses salience (#134), polish queues a topic summary draft (#132), and `/status` plus a local trace cover empty sources (#133). Session [59](sessions/59-session-retrieval-hardening.md).
 
 Prefer one open issue ≈ one PR (`Closes #N`). This file is kept as-is across branch merges (`merge=ours`).
 

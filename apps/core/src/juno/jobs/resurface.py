@@ -14,6 +14,7 @@ from juno.graph.db import Database
 from juno.hitl.queue import KIND_RESURFACE, ReviewQueue
 from juno.models import AppSetting, Capture
 from juno.rag.engine import retrieve
+from juno.rag.salience import has_highlights, salience_score
 
 logger = logging.getLogger("juno.jobs")
 
@@ -70,6 +71,8 @@ async def find_resurface_candidates(
     found: list[ResurfaceCandidate] = []
     seen_pairs: set[tuple[int, int]] = set()
     for cap in recent:
+        if _is_time_only(cap):
+            continue
         query = (cap.text or cap.title or "").strip()[:240]
         if len(query) < 8:
             continue
@@ -82,19 +85,26 @@ async def find_resurface_candidates(
             if pair in seen_pairs:
                 continue
             past = await _load_capture(db, past_id)
-            if past is None or past.captured_at is None:
+            if past is None or past.captured_at is None or _is_time_only(past):
                 continue
             past_at = past.captured_at
             if past_at.tzinfo is None:
                 past_at = past_at.replace(tzinfo=UTC)
             if past_at > stale_before:
                 continue
+            score = salience_score(
+                hit.score,
+                past_at,
+                now,
+                text=hit.text or past.text or "",
+                has_highlights=has_highlights(past.raw_json),
+            )
             seen_pairs.add(pair)
             found.append(
                 ResurfaceCandidate(
                     recent_id=cap.id,
                     past_id=past.id,
-                    score=float(hit.score),
+                    score=score,
                     recent_title=(cap.title or cap.uri or f"capture #{cap.id}"),
                     past_title=(past.title or past.uri or f"capture #{past.id}"),
                     past_source=past.source_type,
@@ -156,6 +166,11 @@ async def apply_resurface_candidates(
             queued += 1
             await _mark_seen(db, candidate.seen_key())
     return {"pushed": pushed, "queued": queued}
+
+
+def _is_time_only(capture: Capture) -> bool:
+    raw = capture.raw_json if isinstance(capture.raw_json, dict) else {}
+    return raw.get("kind") == "time"
 
 
 async def _load_capture(db: Database, capture_id: int) -> Capture | None:

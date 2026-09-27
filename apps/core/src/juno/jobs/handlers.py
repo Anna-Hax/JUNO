@@ -89,7 +89,8 @@ async def resurfacing(app: Any) -> None:
 
 
 async def polish(app: Any) -> None:
-    """Generate HITL flashcard drafts from highlights. No Telegram push; skip when paused."""
+    """Queue HITL flashcards and one topic summary. No Telegram push; skip when paused."""
+    from juno.drafts.consolidate import queue_topic_summary
     from juno.drafts.flashcards import queue_highlight_flashcards
     from juno.jobs.health import record_polish_health
 
@@ -102,9 +103,10 @@ async def polish(app: Any) -> None:
             await record_polish_health(db, detail="polish skipped (paused)", ok=True)
             return
         cards = await queue_highlight_flashcards(db, paused=False)
+        topic = await queue_topic_summary(db, paused=False)
         await record_polish_health(
             db,
-            detail=f"polish flashcards={len(cards)}",
+            detail=f"polish flashcards={len(cards)} topics={1 if topic else 0}",
             ok=True,
         )
     except Exception as exc:  # noqa: BLE001

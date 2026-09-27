@@ -66,6 +66,7 @@ Living notes for what was implemented, how GitHub is set up, and what to do next
 | [56-session-prune-confirm.md](56-session-prune-confirm.md) | **#113** — Prune-with-confirm |
 | [57-session-polish-health.md](57-session-polish-health.md) | **#114** — Polish jobs module health |
 | [58-session-m5-gate.md](58-session-m5-gate.md) | **#115** — M5 gate + v2.0 |
+| [59-session-retrieval-hardening.md](59-session-retrieval-hardening.md) | **#128** — retrieval hardening (#129–#134) |
 | [v1.0-release-gate.md](../v1.0-release-gate.md) | M1 checklist (all P0 closed) |
 | [v1.1-release-gate.md](../v1.1-release-gate.md) | M2 checklist (browser capture) |
 | [v1.2-release-gate.md](../v1.2-release-gate.md) | M3 checklist (IDE capture) |
