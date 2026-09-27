@@ -11,6 +11,7 @@ from fastapi.responses import JSONResponse
 
 from juno.config import Settings, api_token_is_configured, is_loopback_client_host
 from juno.rag.engine import search as rag_search
+from juno.rag.health import status_warnings
 
 _AUTH_DETAIL = "Invalid or missing API token"
 
@@ -132,6 +133,12 @@ def create_app(
             "api_host": settings.juno_api_host,
             "api_port": settings.juno_api_port,
             "modules": modules,
+            "warnings": await status_warnings(
+                db,
+                embedding_fallback=bool(
+                    embedder is not None and actual_backend != settings.embedding_backend
+                ),
+            ),
         }
 
     @app.post("/ingest", dependencies=[Depends(require_token)])
@@ -159,6 +166,7 @@ def create_app(
             chat=getattr(app.state, "chat", None),
             n_results=k,
             mode=mode,
+            trace_dir=settings.juno_data_dir / "traces",
         )
         return outcome.to_dict()
 

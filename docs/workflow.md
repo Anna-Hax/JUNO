@@ -20,14 +20,14 @@ Telegram on this PC is the interface. Capture clients (browser and inbox) only t
 
 | Feature | How you use it | Level |
 | ------- | -------------- | ----- |
-| Natural-language search | Send ordinary text (not a bare link or a forward) | **Shipped** — citations and a confidence score. A sourced paragraph when the local LLM is up; snippet list when it is not |
-| “How has this evolved?” | Ask with words like evolved, over time, timeline, how has my | **Partial** — matching captures come back in time order with dates. No written narrative of how your understanding changed |
+| Natural-language search | Send ordinary text (not a bare link or a forward) | **Shipped** — keyword and vector search together. A sourced paragraph only when the model cites this turn's sources; otherwise a snippet list. Retrieved page text is evidence, not instructions |
+| “How has this evolved?” | Ask with words like evolved, over time, timeline, how has my | **Partial** — matching captures come back in time order with dates, after weak hits are dropped. No written narrative of how your understanding changed |
 | Cross-source lines | Automatic on answers that hit browser captures | **Shipped** — “you also uploaded…” from related inbox rows |
 | On-demand digest | `/digest today` or `/digest week` | **Shipped** — grouped browser reading vs uploads and other notes |
 | Pause / resume | `/pause`, `/resume` | **Shipped** — stops inbox, API ingest, Telegram capture, scheduled pushes, and draft/flashcard generation. Resume drains the inbox backlog |
-| Module health | `/status` | **Shipped** — core, extension, ide, jobs, polish heartbeats, LLM/embedder, trust dials, serve-down reminder |
+| Module health | `/status` | **Shipped** — core, extension, jobs, polish heartbeats, LLM/embedder, trust dials, serve-down reminder. Also warns when the embedder fell back to the stub, or the extension heartbeat is fresh but nothing was stored in the last 7 days |
 | Job switches | `/jobs` and `/jobs daily\|weekly\|resurface\|polish on\|off` | **Shipped** |
-| Review queue | `/review` with Approve / Reject / Skip | **Shipped** for merges, resurfacing, flashcard drafts, unfinished reads, and prune. **Partial** for mobile and Slack: the text is already in the graph when the card appears; Reject does not pull it back out |
+| Review queue | `/review` with Approve / Reject / Skip | **Shipped** for merges, resurfacing, flashcard drafts, topic summaries, unfinished reads, and prune. **Partial** for mobile and Slack: the text is already in the graph when the card appears; Reject does not pull it back out |
 | Flashcards | `/cards` (Again / Good) | **Shipped** as spaced repetition after you approve the draft. New cards are not studyable until `/review` Approve |
 | Skill gaps | `/gaps` | **Partial** — unfinished reads (low scroll, not revisited). Low-confidence flags go to `/review`. The same gap is not nagged twice |
 | Trust dial | `/trust` and `/trust merge\|browser on\|off` | **Shipped** as an explicit per-category switch. Five Approves on merge can turn auto-commit on. `mobile`, `drafts`, and `prune` stay gated and cannot be turned on |
@@ -59,8 +59,8 @@ Telegram on this PC is the interface. Capture clients (browser and inbox) only t
 | ------- | ------------ | ----- |
 | Morning digest | Scheduled Telegram push (same grouping as `/digest today`) | **Shipped** — skipped while paused; `/jobs daily off` disables it |
 | Weekly digest | Scheduled push | **Shipped** |
-| “This came up again” | Push when a new capture matches something older | **Shipped** for a high-confidence match. A weaker match waits in `/review` instead of being pushed |
-| Polish tick | No push | **Shipped** — queues highlight flashcards for `/review`. Skipped while paused |
+| “This came up again” | Push when a new capture matches something older | **Shipped** for a high-salience match (relevance, recency, and whether the note is substantial). A weaker match waits in `/review` instead of being pushed |
+| Polish tick | No push | **Shipped** — queues highlight flashcards and one topic summary for `/review`. Approve confirms the summary and does not publish it. Skipped while paused |
 | Topic merge | Usually invisible until `/review` | **Partial** — proposed graph links wait for Approve unless the merge trust dial auto-commits a high-confidence one. There is no rich “one node per concept” browser |
 | Learning your edits | Trust counters on Approve | **Partial** — success counts can loosen merge only. Draft wording does not learn your voice |
 

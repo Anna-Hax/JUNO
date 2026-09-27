@@ -259,18 +259,28 @@ async def status_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     health: list = []
     if svc.db is not None:
         health = await all_module_health(svc.db)
+    from juno.rag.health import status_warnings
+
+    actual_backend = getattr(embedder, "backend", settings.embedding_backend)
+    warnings = await status_warnings(
+        svc.db,
+        embedding_fallback=bool(
+            embedder is not None and actual_backend != settings.embedding_backend
+        ),
+    )
     body = format_status(
         paused=svc.is_paused(),
         llm_healthy=llm_healthy,
         llm_provider=getattr(chat, "name", None) or settings.llm_provider,
         llm_model=getattr(chat, "model", None) or settings.llm_model,
         embedding_model=getattr(embedder, "model_id", settings.embedding_model),
-        embedding_backend=getattr(embedder, "backend", settings.embedding_backend),
+        embedding_backend=actual_backend,
         chroma_collection=chroma_collection,
         chroma_count=chroma_count,
         health=health,
         api_host=settings.juno_api_host,
         api_port=settings.juno_api_port,
+        warnings=warnings,
     )
     if svc.db is not None:
         from juno.hitl.trust import list_dials

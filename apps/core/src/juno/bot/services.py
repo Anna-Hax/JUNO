@@ -161,6 +161,7 @@ async def answer_user_query(svc: BotServices, text: str) -> str:
         chat=chat,
         n_results=5,
         mode="auto",
+        trace_dir=svc.settings.juno_data_dir / "traces",
     )
     reply = format_search_outcome(outcome)
     if svc.db is None:
@@ -236,6 +237,7 @@ def format_status(
     llm_provider: str | None = None,
     llm_model: str | None = None,
     embedding_backend: str | None = None,
+    warnings: list[str] | None = None,
 ) -> str:
     llm = "healthy" if llm_healthy else "offline (retrieve-only)"
     if llm_provider:
@@ -262,6 +264,10 @@ def format_status(
             lines.append(f"• {row.module}: last ok {last_ok} ({extra})")
     else:
         lines.append("Modules: none recorded yet")
+    if warnings:
+        lines.append("Warnings:")
+        for warning in warnings:
+            lines.append(f"• {warning}")
     lines.append(
         "Serve-down: if this PC or `juno serve` is off, Telegram cannot reply "
         "(updates queue ~24h). core.last ok is the last heartbeat."
